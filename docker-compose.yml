@@ -1,0 +1,46 @@
+version: '2'
+
+services:
+
+  dev:
+    build:
+      dockerfile: dev/Dockerfile
+      context: .
+    volumes:
+      - ./dev/lifecycle:/opt/lifecycle
+      - ./vendor/gopkg.in:/go/src/gopkg.in
+      - ./vendor/golang.org:/go/src/golang.org
+      - ./vendor/github.com/:/go/src/github.com/
+      - .:/go/src/shadow/jancajthaml
+      - ./src:/go/src/sparrow
+    working_dir: /go/src/shadow/jancajthaml
+    environment:
+      - GOOS
+      - GOARCH
+      - GOPATH=/go
+      - COMPOSE_PROJECT_NAME
+    entrypoint: ["/bin/sh"]
+    privileged: true
+
+  sync:
+    extends: dev
+    entrypoint: ["govendor"]
+    command: ["sync", "-v"]
+
+  fetch:
+    extends: dev
+    entrypoint: ["govendor"]
+    command: ["fetch", "github.com/pebbe/zmq4"]
+
+  lint:
+    extends: dev
+    entrypoint: ["/opt/lifecycle/lint"]
+
+  package:
+    extends: dev
+    entrypoint: ["/opt/lifecycle/package"]
+
+  test:
+    extends: dev
+    entrypoint: ["go"]
+    command: ["test", "-v", "./src/...", "-benchmem", "-bench=."]
