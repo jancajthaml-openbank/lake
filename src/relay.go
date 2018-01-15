@@ -17,33 +17,20 @@ package main
 import (
 	"runtime"
 
-	//log "github.com/sirupsen/logrus"
-
 	zmq "github.com/pebbe/zmq4"
+	log "github.com/sirupsen/logrus"
 )
 
 // FIXME use tombs
 func StartRelay() {
-	//go func() {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
-	//defer func() {
-	//runtime.UnlockOSThread()
 
-	//if err := recover(); err != nil {
-	//utils.FatalLogger.Printf("ZMQ PULL fatal crash : %v", err)
-	//os.Exit(1)
-	//}
-	//}()
+	log.Info("Starting ZMQ Relay")
 
-	//forever:
-	//utils.InfoLogger.Printf("ZMQ PULL work")
 	for {
 		relayMessages()
 	}
-
-	//goto forever
-	//}()
 }
 
 func relayMessages() (err error) {
@@ -57,10 +44,10 @@ func relayMessages() (err error) {
 pullCreation:
 	receiver, err = zmq.NewSocket(zmq.PULL)
 	if err != nil && err.Error() == "resource temporarily unavailable" {
-		//utils.ErrorLogger.Printf("Resources unavailable in connect")
+		log.Error("Resources unavailable in connect")
 		goto pullCreation
 	} else if err != nil {
-		//utils.ErrorLogger.Printf("Unable to bing ZMQ socket %v", err)
+		log.Errorf("Unable to bing ZMQ socket %v", err)
 		return
 	}
 	receiver.SetConflate(true)
@@ -69,10 +56,10 @@ pullCreation:
 pubCreation:
 	sender, err = zmq.NewSocket(zmq.PUB)
 	if err != nil && err.Error() == "resource temporarily unavailable" {
-		//utils.ErrorLogger.Printf("Resources unavailable in connect")
+		log.Error("Resources unavailable in connect")
 		goto pubCreation
 	} else if err != nil {
-		//utils.ErrorLogger.Printf("Unable to bing ZMQ socket %v", err)
+		log.Errorf("Unable to bing ZMQ socket %v", err)
 		return
 	}
 	sender.SetConflate(false)
@@ -80,13 +67,13 @@ pubCreation:
 
 pullConnection:
 	if err = receiver.Bind("tcp://*:5562"); err != nil {
-		//utils.ErrorLogger.Printf("Unable to bind receiver to ZMQ address %v", err)
+		log.Errorf("Unable to bind receiver to ZMQ address %v", err)
 		goto pullConnection
 	}
 
 pubConnection:
 	if err = sender.Bind("tcp://*:5561"); err != nil {
-		//utils.ErrorLogger.Printf("Unable to bind sender to ZMQ address %v", err)
+		log.Errorf("Unable to bind sender to ZMQ address %v", err)
 		goto pubConnection
 	}
 

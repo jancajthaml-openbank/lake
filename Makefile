@@ -3,7 +3,7 @@ CORES := $$(getconf _NPROCESSORS_ONLN)
 MACOSX_DEPLOYMENT_TARGET := $$(sw_vers -productVersion)
 
 .PHONY: all
-all: bootstrap bundle test bbtest
+all: bootstrap package test
 
 .PHONY: bootstrap
 bootstrap:
