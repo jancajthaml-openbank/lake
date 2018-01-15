@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -eo pipefail
+
+trap exit INT TERM
+trap "kill 0" EXIT
+
+################################################################################
+
+analyse() {
+  echo -e "\n[info] analysing ${1}"
+
+  if [ -d ${1} ] ; then
+    (gofmt -s -w ./${1} || :) &
+    (golint ./${1}/... || :) &
+    (misspell ./${1} || :) &
+    (go vet ./${1}/... || :) &
+    (gocyclo -over 10 ./${1} || :) &
+    wait
+  fi
+}
+
+################################################################################
+
+analyse src

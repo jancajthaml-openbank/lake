@@ -3,7 +3,11 @@ CORES := $$(getconf _NPROCESSORS_ONLN)
 MACOSX_DEPLOYMENT_TARGET := $$(sw_vers -productVersion)
 
 .PHONY: all
-all: prepare-dev bundle test bbtest
+all: bootstrap bundle test bbtest
+
+.PHONY: bootstrap
+bootstrap:
+	docker-compose build go
 
 .PHONY: fetch
 fetch:
@@ -38,14 +42,15 @@ package:
 	VERSION=$(VERSION) \
 	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) \
 	docker-compose run --rm package
-
-.PHONY: bundle
-bundle: package
-	docker-compose build queue
+	docker-compose build service
 
 .PHONY: run
 run:
-	docker-compose -f docker-compose-run.yml up
+	docker-compose run --rm --service-ports service run
+
+.PHONY: version
+version:
+	docker-compose run --rm service version
 
 .PHONY: perf
 perf: build-perf

@@ -5,11 +5,16 @@ import (
 	"testing"
 )
 
-func TestStub(t *testing.T) {
+func init() {
+	// Setup ZMQ relay here and share it between tests
+	go StartRelay()
+}
+
+func TestRelay(t *testing.T) {
 	fmt.Println("Test Not implemented")
 }
 
-func BenchmarkStub(b *testing.B) {
+func BenchmarkRelay(b *testing.B) {
 	fmt.Println("Benchmark Not implemented")
 	b.SetBytes(16)
 

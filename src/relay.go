@@ -15,7 +15,6 @@
 package main
 
 import (
-	"os"
 	"runtime"
 
 	//log "github.com/sirupsen/logrus"
@@ -24,26 +23,32 @@ import (
 )
 
 // FIXME use tombs
-func StartZMQRelay() {
-	go func() {
-		defer func() {
-			runtime.UnlockOSThread()
+func StartRelay() {
+	//go func() {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	//defer func() {
+	//runtime.UnlockOSThread()
 
-			if err := recover(); err != nil {
-				//utils.FatalLogger.Printf("ZMQ PULL fatal crash : %v", err)
-				os.Exit(1)
-			}
-		}()
+	//if err := recover(); err != nil {
+	//utils.FatalLogger.Printf("ZMQ PULL fatal crash : %v", err)
+	//os.Exit(1)
+	//}
+	//}()
 
-		runtime.LockOSThread()
-	forever:
-		//utils.InfoLogger.Printf("ZMQ PULL work")
+	//forever:
+	//utils.InfoLogger.Printf("ZMQ PULL work")
+	for {
 		relayMessages()
-		goto forever
-	}()
+	}
+
+	//goto forever
+	//}()
 }
 
 func relayMessages() (err error) {
+	// FIXME add gracefull crash
+
 	var (
 		receiver *zmq.Socket
 		sender   *zmq.Socket
@@ -58,7 +63,7 @@ pullCreation:
 		//utils.ErrorLogger.Printf("Unable to bing ZMQ socket %v", err)
 		return
 	}
-	reciever.SetConflate(true)
+	receiver.SetConflate(true)
 	defer receiver.Close()
 
 pubCreation:

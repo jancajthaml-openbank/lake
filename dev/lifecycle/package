@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -eo pipefail
+trap exit INT TERM
+trap "kill 0" EXIT
+
+################################################################################
+
+dist=/go/src/shadow/jancajthaml/bin
+arch=amd64
+platforms=(linux)
+#platforms=(linux darwin)
+build=$(git rev-parse HEAD 2> /dev/null || :)
+
+export LD_LIBRARY_PATH=/usr/lib
+
+################################################################################
+
+echo "[info] cleaning"
+
+if [ -d ${dist} ] && [ "$(ls -A ${dist})" ] ; then
+  rm -rf ${dist}/*
+fi
+
+if [ -n "${VERSION}" ] ; then
+  version="${VERSION}"
+elif [ -n "${GIT_TAG_NAME}" ] && [[ "${GIT_TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]] ; then
+  version="${GIT_TAG_NAME}"
+else
+  version="snapshot-${build}"
+fi
+
+################################################################################
+
+
+package_osx() {
+  cd /go/src/sparrow && \
+    CGO_ENABLED=0 \
+    MACOSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET:=10.6} \
+    GOOS=darwin \
+    GOARCH=${arch} \
+    go build -a -o ${dist}/${1}-darwin-${version} \
+    --ldflags "-X main.version=$version -X main.build=$build"
+}
+
+package_linux() {
+  cd /go/src/sparrow && \
+    CGO_ENABLED=1 \
+    GOOS=linux \
+    GOARCH=${arch} \
+    go build -a -o ${dist}/${1}-linux-${version} \
+    --ldflags "-X main.version=$version -X main.build=$build"
+}
+
+package_service() {
+  echo "[info] building ${2} binary sparrow/${1}"
+
+  case ${2} in
+    darwin)
+      package_osx ${1}
+      ;;
+    linux)
+      package_linux ${1}
+      ;;
+    esac
+
+  if [ $? -eq 0 ] ; then
+    chmod +x ${dist}/${1}-${2}-${version}
+  else
+    exit
+  fi
+}
+
+################################################################################
+
+echo "[info] building ${version}"
+
+for platform in "${platforms[@]}" ; do
+  package_service lake ${platform} &
+done
+wait
+
+if [ ! -f ${dist}/lake-linux-${version} ] ; then
+  echo "[error] ${dist}/lake-linux-${version} not found"
+  exit
+fi
+
+cp ${dist}/lake-linux-${version} ${dist}/lake
+
+echo "[info] done"
+
+################################################################################

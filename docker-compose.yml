@@ -2,10 +2,11 @@ version: '2'
 
 services:
 
-  dev:
+  go:
     build:
       dockerfile: dev/Dockerfile
       context: .
+    image: dev_lake
     volumes:
       - ./dev/lifecycle:/opt/lifecycle
       - ./vendor/gopkg.in:/go/src/gopkg.in
@@ -19,28 +20,38 @@ services:
       - GOARCH
       - GOPATH=/go
       - COMPOSE_PROJECT_NAME
-    entrypoint: ["/bin/sh"]
+    entrypoint: ["go"]
     privileged: true
 
+  service:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    image: lake
+    restart: "no"
+    ports:
+      - "5562"
+      - "5561"
+    command: ["run"]
+
   sync:
-    extends: dev
+    extends: go
     entrypoint: ["govendor"]
     command: ["sync", "-v"]
 
   fetch:
-    extends: dev
+    extends: go
     entrypoint: ["govendor"]
-    command: ["fetch", "github.com/pebbe/zmq4"]
+    command: ["fetch", "github.com/spf13/viper"]
 
   lint:
-    extends: dev
+    extends: go
     entrypoint: ["/opt/lifecycle/lint"]
 
   package:
-    extends: dev
+    extends: go
     entrypoint: ["/opt/lifecycle/package"]
 
   test:
-    extends: dev
-    entrypoint: ["go"]
+    extends: go
     command: ["test", "-v", "./src/...", "-benchmem", "-bench=."]
