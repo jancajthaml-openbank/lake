@@ -57,4 +57,3 @@ RUN go get -u \
         github.com/golang/lint/golint \
         github.com/fzipp/gocyclo \
         github.com/client9/misspell/cmd/misspell
-
