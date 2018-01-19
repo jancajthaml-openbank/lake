@@ -50,8 +50,10 @@ RUN wget -O go.tgz "https://golang.org/dl/go${GOLANG_VERSION}.${GOOS}-${GOARCH}.
 
 ENV PATH "${GOPATH}/bin:${LD_LIBRARY_PATH}/go/bin:${PATH}"
 
-RUN go get -u -ldflags '-w -s' \
-    github.com/kardianos/govendor \
-    github.com/fzipp/gocyclo \
-    github.com/client9/misspell/cmd/misspell \
-    github.com/golang/lint/golint
+RUN go get -u \
+        \
+        github.com/golang/dep/cmd/dep \
+        github.com/Masterminds/glide \
+        github.com/golang/lint/golint \
+        github.com/fzipp/gocyclo \
+        github.com/client9/misspell/cmd/misspell

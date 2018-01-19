@@ -36,13 +36,23 @@ services:
 
   sync:
     extends: go
-    entrypoint: ["govendor"]
-    command: ["sync", "-v"]
+    entrypoint: ["dep"]
+    command: ["ensure"]
+
+  init:
+    extends: go
+    entrypoint: ["dep"]
+    command: ["init"]
+
+  update:
+    extends: go
+    entrypoint: ["dep"]
+    command: ["ensure", "-update"]
 
   fetch:
     extends: go
     entrypoint: ["govendor"]
-    command: ["fetch", "github.com/spf13/viper"]
+    command: ["ensure", "-add", "github.com/stretchr/testify"]
 
   lint:
     extends: go
@@ -54,4 +64,19 @@ services:
 
   test:
     extends: go
+    environment:
+      - GOMAXPROCS=1
     command: ["test", "-v", "./src/...", "-benchmem", "-bench=."]
+
+  bbtest:
+    build:
+      context: .
+      dockerfile: bbtest/Dockerfile
+    image: bbtest_lake
+    depends_on:
+      - service
+    environment:
+      - COMPOSE_PROJECT_NAME
+    volumes:
+      - ./bbtest:/opt/bbtest
+      - /var/run/docker.sock:/var/run/docker.sock

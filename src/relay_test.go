@@ -11,14 +11,15 @@ func init() {
 }
 
 func TestRelay(t *testing.T) {
-	fmt.Println("Test Not implemented")
+	t.Log("Relays message")
+	{
+		fmt.Println("Test Not implemented")
+	}
 }
 
 func BenchmarkRelay(b *testing.B) {
-	fmt.Println("Benchmark Not implemented")
 	b.SetBytes(16)
-
 	for n := 0; n < b.N; n++ {
-		fmt.Sprintf("Not implemented")
+
 	}
 }

@@ -1,4 +1,2 @@
 bin
-vendor/github.com
-vendor/golang.org
-vendor/gopkg.in
+vendor
