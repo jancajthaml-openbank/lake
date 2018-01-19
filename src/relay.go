@@ -50,7 +50,7 @@ pullCreation:
 		log.Errorf("Unable to bing ZMQ socket %v", err)
 		return
 	}
-	receiver.SetConflate(true)
+	receiver.SetConflate(false)
 	defer receiver.Close()
 
 pubCreation:

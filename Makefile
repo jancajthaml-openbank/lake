@@ -37,6 +37,17 @@ sync:
 test:
 	docker-compose run --rm test
 
+.PHONY: bbtest
+bbtest:
+	@echo "[info] stopping older runs"
+	@(docker rm -f $$(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
+	@echo "[info] running bbtest"
+	@docker-compose run --rm bbtest
+	@echo "[info] stopping runs"
+	@(docker rm -f $$(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
+	@(docker rm -f $$(docker ps -aqf "name=bbtest") || :) &> /dev/null
+
+
 .PHONY: package
 package:
 	VERSION=$(VERSION) \

@@ -72,7 +72,7 @@ func setupLogger(params RunParams) {
 	log.Infof("Log level set to %v", strings.ToUpper(params.LogLevel))
 	log.SetLevel(level)
 
-	if params.Log != "" {
+	if len(params.Log) > 0 {
 		file, err := os.Create(params.Log)
 		if err != nil {
 			log.Warnf("Unable to create %s: %v", params.Log, err)
