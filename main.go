@@ -28,6 +28,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/jancajthaml-openbank/lake/commands"
 )
 
 var (
@@ -63,7 +65,7 @@ func CmdRoot(cmd *cobra.Command, args []string) {
 	cmd.Help()
 }
 
-func setupLogger(params RunParams) {
+func setupLogger(params commands.RunParams) {
 	level, err := log.ParseLevel(params.LogLevel)
 	if err != nil {
 		log.Warnf("Invalid log level %v, using level WARN", params.LogLevel)
@@ -110,7 +112,7 @@ func init() {
 
 // CmdRun is a main entrypoint for application provided parameters
 func CmdRun(cmd *cobra.Command, args []string) {
-	params := RunParams{
+	params := commands.RunParams{
 		viper.GetString("log"),
 		viper.GetString("log.level"),
 	}
@@ -120,7 +122,7 @@ func CmdRun(cmd *cobra.Command, args []string) {
 
 	log.Infof(">>> Starting <<<")
 
-	go StartRelay()
+	go commands.StartRelay()
 
 	exitSignal := make(chan os.Signal)
 	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
