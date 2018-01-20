@@ -25,7 +25,8 @@ import (
 
 const backoff = 50 * time.Millisecond
 
-func StartRelay() {
+// StartQueue start autorecovery ZMQ in-order queue
+func StartQueue() {
 	log.Info("Starting ZMQ Relay")
 
 	for {
@@ -79,7 +80,7 @@ func relayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
 		if err == nil {
 			break
 		}
-		log.Info("Unable to bind reciever to ZMQ address ", err)
+		log.Info("Unable to bind receiver to ZMQ address ", err)
 		time.Sleep(backoff)
 	}
 

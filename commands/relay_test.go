@@ -31,12 +31,14 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string) {
 		err     error
 	)
 
-	channel, err = zmq.NewSocket(zmq.SUB)
-	for err != nil {
+	for {
+		channel, err = zmq.NewSocket(zmq.SUB)
+		if err == nil {
+			break
+		}
 		if err.Error() == "resource temporarily unavailable" {
 			log.Warn("Test : Resources unavailable in connect")
 			time.Sleep(time.Millisecond)
-			channel, err = zmq.NewSocket(zmq.SUB)
 		} else {
 			log.Warn("Test : Unable to connect ZMQ socket", err)
 			return
@@ -68,7 +70,6 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string) {
 			log.Info("Test : Error while receiving ZMQ message ", err)
 			continue
 		}
-		//callback(chunk)
 		callback <- chunk
 	}
 }
@@ -83,12 +84,14 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string) {
 		err     error
 	)
 
-	channel, err = zmq.NewSocket(zmq.PUSH)
-	for err != nil {
+	for {
+		channel, err = zmq.NewSocket(zmq.PUSH)
+		if err == nil {
+			break
+		}
 		if err.Error() == "resource temporarily unavailable" {
 			log.Warn("Test : Resources unavailable in connect")
 			time.Sleep(time.Millisecond)
-			channel, err = zmq.NewSocket(zmq.PUSH)
 		} else {
 			log.Warn("Test : Unable to connect ZMQ socket ", err)
 			return
@@ -154,6 +157,7 @@ func TestRelayInOrder(t *testing.T) {
 			}
 		}()
 
+		time.Sleep(300 * time.Millisecond)
 		for _, msg := range expectedData {
 			pushChannel <- msg
 		}
