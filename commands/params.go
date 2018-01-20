@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package commands
 
 // RunParams is a structure of application parameters
 type RunParams struct {

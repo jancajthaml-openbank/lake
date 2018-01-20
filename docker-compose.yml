@@ -9,12 +9,8 @@ services:
     image: dev_lake
     volumes:
       - ./dev/lifecycle:/opt/lifecycle
-      - ./vendor/gopkg.in:/go/src/gopkg.in
-      - ./vendor/golang.org:/go/src/golang.org
-      - ./vendor/github.com/:/go/src/github.com/
-      - .:/go/src/shadow/jancajthaml
-      - ./src:/go/src/sparrow
-    working_dir: /go/src/shadow/jancajthaml
+      - .:/go/src/github.com/jancajthaml-openbank/lake
+    working_dir: /go/src/github.com/jancajthaml-openbank/lake
     environment:
       - GOOS
       - GOARCH
@@ -66,7 +62,7 @@ services:
     extends: go
     environment:
       - GOMAXPROCS=1
-    command: ["test", "-v", "./src/...", "-benchmem", "-bench=."]
+    command: ["test", "-v", "./...", "-benchmem", "-bench=."]
 
   bbtest:
     build:

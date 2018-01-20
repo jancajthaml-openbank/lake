@@ -4,9 +4,11 @@ ZMQ data lake for openbank project
 
 ## Building
 
-```
-make
-```
+`make`
+
+## Public API
+
+`go get github.com/jancajthaml-openbank/lake/utils`
 
 ## Usage
 ```

@@ -6,7 +6,7 @@ trap "kill 0" EXIT
 
 ################################################################################
 
-dist=/go/src/shadow/jancajthaml/bin
+dist=bin
 arch=amd64
 platforms=(linux)
 #platforms=(linux darwin)
@@ -34,26 +34,24 @@ fi
 
 
 package_osx() {
-  cd /go/src/sparrow && \
     CGO_ENABLED=0 \
     MACOSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET:=10.6} \
     GOOS=darwin \
     GOARCH=${arch} \
-    go build -a -o ${dist}/${1}-darwin-${version} \
+    go build -v -a -o ${dist}/${1}-darwin-${version} \
     --ldflags "-X main.version=$version -X main.build=$build"
 }
 
 package_linux() {
-  cd /go/src/sparrow && \
     CGO_ENABLED=1 \
     GOOS=linux \
     GOARCH=${arch} \
-    go build -a -o ${dist}/${1}-linux-${version} \
+    go build -v -a -o ${dist}/${1}-linux-${version} \
     --ldflags "-X main.version=$version -X main.build=$build"
 }
 
 package_service() {
-  echo "[info] building ${2} binary sparrow/${1}"
+  echo "[info] building ${2} binary ${1}"
 
   case ${2} in
     darwin)
