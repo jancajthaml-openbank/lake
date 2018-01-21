@@ -24,9 +24,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const backoff = 50 * time.Millisecond
+const backoff = 5 * time.Millisecond
 
-// StartQueue start autorecovery ZMQ in-order queue
+// StartQueue start autorecovery ZMQ connection
 func StartQueue(params RunParams) {
 	log.Info("Starting ZMQ Relay")
 
@@ -58,7 +58,7 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 			log.Warn("Resources unavailable in connect")
 			time.Sleep(backoff)
 		} else {
-			log.Warn("Unable to bind ZMQ socket", err)
+			log.Warn("Unable to bind ZMQ socket: ", err)
 			return
 		}
 	}
@@ -74,7 +74,7 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 			log.Warn("Resources unavailable in connect")
 			time.Sleep(backoff)
 		} else {
-			log.Warn("Unable to bind ZMQ socket", err)
+			log.Warn("Unable to bind ZMQ socket: ", err)
 			return
 		}
 	}
@@ -86,7 +86,7 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 		if err == nil {
 			break
 		}
-		log.Info("Unable to bind receiver to ZMQ address ", err)
+		log.Info("Unable to bind receiver to ZMQ address: ", err)
 		time.Sleep(backoff)
 	}
 
@@ -95,7 +95,7 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 		if err == nil {
 			break
 		}
-		log.Info("Unable to bind sender to ZMQ address", err)
+		log.Info("Unable to bind sender to ZMQ address: ", err)
 		time.Sleep(backoff)
 	}
 
@@ -111,10 +111,10 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 		case zmq.ErrorSocketClosed:
 			fallthrough
 		case zmq.ErrorContextClosed:
-			log.Info("ZMQ connection closed", err)
+			log.Info("ZMQ connection closed: ", err)
 			return
 		default:
-			log.Info("Error while receiving ZMQ message", err)
+			log.Info("Error while receiving ZMQ message: ", err)
 			continue
 		}
 	}

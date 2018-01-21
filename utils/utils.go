@@ -24,7 +24,7 @@ import (
 
 const bufferSize = 100
 
-// ZMQClient is a fascade to use Publish and Receive in distributed system
+// ZMQClient is a fascade for ZMQ queue
 type ZMQClient struct {
 	push    chan string
 	sub     chan string
@@ -60,7 +60,7 @@ func NewZMQClient(region, host string) *ZMQClient {
 	}
 }
 
-// Stop stops ZMQ connections and cloces fascade channels
+// Stop ZMQ connections and close ZMQClient channels
 func (client *ZMQClient) Stop() {
 	if client == nil {
 		log.Warn("Stop called on nil Client")
@@ -83,7 +83,7 @@ func (client *ZMQClient) Stop() {
 	}
 }
 
-// Publish sends message to remote destination
+// Publish message to remote destination
 func (client *ZMQClient) Publish(destination, message string) {
 	if client == nil {
 		log.Warn("Publish called on nil Client")
@@ -98,7 +98,7 @@ func (client *ZMQClient) Publish(destination, message string) {
 	client.push <- (destination + " " + client.region + " " + message)
 }
 
-// Receive receives message for this region
+// Receive message for this region
 func (client *ZMQClient) Receive() []string {
 	if client == nil {
 		log.Warn("Receive called on nil Client")

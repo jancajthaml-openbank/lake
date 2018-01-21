@@ -20,7 +20,7 @@ func TestZMQClientGracefull(t *testing.T) {
 	go commands.RelayMessages(ctx, cancel, params)
 	defer cancel()
 
-	t.Log("called publis methods on Stopped client")
+	t.Log("called public methods on Stopped client")
 	{
 		client := NewZMQClient("xxx", "0.0.0.0")
 		client.Stop()
@@ -43,7 +43,7 @@ func TestZMQClientLicecycle(t *testing.T) {
 	clientTo := NewZMQClient("to", "0.0.0.0")
 	snitch := NewZMQClient("", "0.0.0.0")
 
-	t.Log("verify topics isolation")
+	t.Log("clients communication")
 	{
 		clientFrom.Publish("to", "msg-to-from")
 		clientTo.Publish("from", "msg-from-to")
@@ -52,7 +52,7 @@ func TestZMQClientLicecycle(t *testing.T) {
 		assert.Equal(t, []string{"from", "msg-to-from"}, clientTo.Receive())
 	}
 
-	t.Log("verify messages format")
+	t.Log("only expected messages exchanged")
 	{
 		relayed := [][]string{
 			snitch.Receive(),
@@ -67,11 +67,14 @@ func TestZMQClientLicecycle(t *testing.T) {
 		assert.ElementsMatch(t, expected, relayed)
 	}
 
-	clientFrom.Stop()
-	clientTo.Stop()
-	snitch.Stop()
+	t.Log("stops properly")
+	{
+		clientFrom.Stop()
+		clientTo.Stop()
+		snitch.Stop()
 
-	assert.Nil(t, clientTo.Receive())
-	assert.Nil(t, clientFrom.Receive())
-	assert.Nil(t, snitch.Receive())
+		assert.Nil(t, clientTo.Receive())
+		assert.Nil(t, clientFrom.Receive())
+		assert.Nil(t, snitch.Receive())
+	}
 }
