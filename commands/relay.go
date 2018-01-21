@@ -106,7 +106,6 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
 		switch err {
 		case nil:
 			sender.SendBytes(chunk, 0)
-			//log.Infof("relayed \"%v\"", string(chunk))
 		case zmq.ErrorSocketClosed:
 			fallthrough
 		case zmq.ErrorContextClosed:

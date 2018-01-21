@@ -47,7 +47,7 @@ func NewZMQClient(region, host string) *ZMQClient {
 	go StartZMQPush(ctx, host, region, client.push)
 
 	for {
-		client.push <- (region + " ")
+		client.push <- (region + "]")
 		select {
 		case <-client.sub:
 			log.Infof("ZMQ Client \"%v\" ready", region)
@@ -75,6 +75,8 @@ func (client *ZMQClient) Stop() {
 		close(client.sub)
 
 		client.running = false
+
+		log.Infof("ZMQ Client \"%v\" closed", client.region)
 	}
 }
 
@@ -105,7 +107,7 @@ func (client *ZMQClient) Receive() []string {
 
 	for {
 		data := <-client.sub
-		if data == (client.region + " ") {
+		if data == (client.region + "]") {
 			continue
 		}
 		return strings.Split(data, " ")

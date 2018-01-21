@@ -10,6 +10,20 @@ import (
 	"github.com/jancajthaml-openbank/lake/commands"
 )
 
+func TestZMQClientGracefull(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	go commands.RelayMessages(ctx, cancel)
+	defer cancel()
+
+	t.Log("called publis methods on Stopped client")
+	{
+		client := NewZMQClient("xxx", "0.0.0.0")
+		client.Stop()
+		client.Publish("xxx", "yyy", "zzz")
+		client.Receive()
+	}
+}
+
 func TestZMQClientLicecycle(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	go commands.RelayMessages(ctx, cancel)
@@ -50,5 +64,4 @@ func TestZMQClientLicecycle(t *testing.T) {
 	assert.Nil(t, clientTo.Receive())
 	assert.Nil(t, clientFrom.Receive())
 	assert.Nil(t, snitch.Receive())
-
 }
