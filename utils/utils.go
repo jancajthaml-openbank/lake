@@ -35,8 +35,9 @@ func NewZMQClient(channel string, host string) *ZMQClient {
 		make(chan string, bufferSize),
 	}
 
-	StartZMQPush(host, channel, client.pub)
-	StartZMQSub(host, channel, client.sub)
+	// FIXME add cancelable context to enable stopping actor system
+	go StartZMQPush(host, channel, client.pub)
+	go StartZMQSub(host, channel, client.sub)
 
 	return client
 }
