@@ -26,23 +26,29 @@ import (
 
 const backoff = 50 * time.Millisecond
 
-func StartZMQSub(host string, topic string, recieveChannel chan string) {
+func StartZMQSub(master context.Context, host string, topic string, recieveChannel chan string) {
 	log.Debugf("ZMQ SUB %s work", topic)
 
 	for {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(master)
 		go workZMQSub(ctx, cancel, host, topic, recieveChannel)
 		<-ctx.Done()
+		if master.Err() != nil {
+			break
+		}
 	}
 }
 
-func StartZMQPush(host, topic string, publishChannel chan string) {
+func StartZMQPush(master context.Context, host, topic string, publishChannel chan string) {
 	log.Debugf("ZMQ PUSH %s work", topic)
 
 	for {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(master)
 		go workZMQPush(ctx, cancel, host, topic, publishChannel)
 		<-ctx.Done()
+		if master.Err() != nil {
+			break
+		}
 	}
 }
 
@@ -92,6 +98,7 @@ func workZMQSub(ctx context.Context, cancel context.CancelFunc, host, topic stri
 		if err != nil {
 			break
 		}
+
 		chunk, err = channel.Recv(0)
 
 		switch err {

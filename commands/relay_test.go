@@ -119,17 +119,12 @@ func TestRelayInOrder(t *testing.T) {
 
 		accumulatedData := make([]string, 0)
 		expectedData := []string{
-			"4OFbyWZYPp",
-			"WOJzlG0Oim",
-			"l9eJ54BAws",
-			"lbb5cqE124",
-			"aQEoXjdLBm",
-			"SdWLoPDNCq",
-			"ccdYX61idt",
-			"sAfS4xNqja",
-			"rtTMT2IBq9",
-			"IaR17LvB4w",
-			"XJ2bVz2l5k",
+			"A",
+			"B",
+			"C",
+			"D",
+			"E",
+			"F",
 		}
 
 		pushChannel := make(chan string, len(expectedData))
