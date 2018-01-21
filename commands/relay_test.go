@@ -14,12 +14,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func init() {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	go relayMessages(ctx, cancel)
-}
-
 func sub(ctx context.Context, cancel context.CancelFunc, callback chan string) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
@@ -133,6 +127,7 @@ func TestRelayInOrder(t *testing.T) {
 		var wg sync.WaitGroup
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
+		go RelayMessages(ctx, cancel)
 		go push(ctx, cancel, pushChannel)
 		go sub(ctx, cancel, subChannel)
 
@@ -161,6 +156,7 @@ func TestRelayInOrder(t *testing.T) {
 	}
 }
 
+/*
 func BenchmarkRelay(b *testing.B) {
 	capacity := 1000
 	pushChannel := make(chan string, capacity)
@@ -179,4 +175,4 @@ func BenchmarkRelay(b *testing.B) {
 		pushChannel <- msg
 		<-subChannel
 	}
-}
+}*/

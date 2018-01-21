@@ -31,12 +31,12 @@ func StartQueue() {
 
 	for {
 		ctx, cancel := context.WithCancel(context.Background())
-		go relayMessages(ctx, cancel)
+		go RelayMessages(ctx, cancel)
 		<-ctx.Done()
 	}
 }
 
-func relayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
+func RelayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -47,12 +47,14 @@ func relayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
 		sender   *zmq.Socket
 	)
 
-	receiver, err = zmq.NewSocket(zmq.PULL)
-	for err != nil {
+	for {
+		receiver, err = zmq.NewSocket(zmq.PULL)
+		if err == nil {
+			break
+		}
 		if err.Error() == "resource temporarily unavailable" {
 			log.Warn("Resources unavailable in connect")
 			time.Sleep(backoff)
-			receiver, err = zmq.NewSocket(zmq.SUB)
 		} else {
 			log.Warn("Unable to bind ZMQ socket", err)
 			return
@@ -61,12 +63,14 @@ func relayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
 	receiver.SetConflate(false)
 	defer receiver.Close()
 
-	sender, err = zmq.NewSocket(zmq.PUB)
-	for err != nil {
+	for {
+		sender, err = zmq.NewSocket(zmq.PUB)
+		if err == nil {
+			break
+		}
 		if err.Error() == "resource temporarily unavailable" {
 			log.Warn("Resources unavailable in connect")
 			time.Sleep(backoff)
-			sender, err = zmq.NewSocket(zmq.SUB)
 		} else {
 			log.Warn("Unable to bind ZMQ socket", err)
 			return
@@ -102,6 +106,7 @@ func relayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
 		switch err {
 		case nil:
 			sender.SendBytes(chunk, 0)
+			//log.Infof("relayed \"%v\"", string(chunk))
 		case zmq.ErrorSocketClosed:
 			fallthrough
 		case zmq.ErrorContextClosed:

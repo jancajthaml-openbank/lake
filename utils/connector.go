@@ -100,12 +100,9 @@ func workZMQSub(ctx context.Context, cancel context.CancelFunc, host, topic stri
 		}
 
 		chunk, err = channel.Recv(0)
-
 		switch err {
 		case nil:
-			if len(chunk) != 0 {
-				recieveChannel <- chunk
-			}
+			recieveChannel <- chunk
 		case zmq.ErrorSocketClosed:
 			fallthrough
 		case zmq.ErrorContextClosed:
