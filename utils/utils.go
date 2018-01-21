@@ -42,9 +42,17 @@ func NewZMQClient(channel string, host string) *ZMQClient {
 }
 
 func (client *ZMQClient) Publish(destinationSystem, originSystem, message string) {
+	if client == nil {
+		log.Warnf("Publish : client was  nil ... %v %v %v", destinationSystem, originSystem, message)
+		return
+	}
 	client.pub <- (destinationSystem + " " + originSystem + " " + message)
 }
 
 func (client *ZMQClient) Receive() []string {
+	if client == nil {
+		log.Warn("Recieve : client was  nil")
+		return nil
+	}
 	return strings.Split(<-client.sub, " ")
 }
