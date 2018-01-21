@@ -11,22 +11,32 @@ import (
 )
 
 func TestZMQClientGracefull(t *testing.T) {
+	params := commands.RunParams{
+		PullPort: 5562,
+		PubPort:  5561,
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	go commands.RelayMessages(ctx, cancel)
+	go commands.RelayMessages(ctx, cancel, params)
 	defer cancel()
 
 	t.Log("called publis methods on Stopped client")
 	{
 		client := NewZMQClient("xxx", "0.0.0.0")
 		client.Stop()
-		client.Publish("xxx", "yyy", "zzz")
+		client.Publish("yyy", "zzz")
 		client.Receive()
 	}
 }
 
 func TestZMQClientLicecycle(t *testing.T) {
+	params := commands.RunParams{
+		PullPort: 5562,
+		PubPort:  5561,
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	go commands.RelayMessages(ctx, cancel)
+	go commands.RelayMessages(ctx, cancel, params)
 	defer cancel()
 
 	clientFrom := NewZMQClient("from", "0.0.0.0")
@@ -35,11 +45,11 @@ func TestZMQClientLicecycle(t *testing.T) {
 
 	t.Log("verify topics isolation")
 	{
-		clientFrom.Publish("to", "from", "msg-to-from")
-		clientTo.Publish("from", "to", "msg-from-to")
+		clientFrom.Publish("to", "msg-to-from")
+		clientTo.Publish("from", "msg-from-to")
 
-		assert.Equal(t, []string{"from", "to", "msg-from-to"}, clientFrom.Receive())
-		assert.Equal(t, []string{"to", "from", "msg-to-from"}, clientTo.Receive())
+		assert.Equal(t, []string{"to", "msg-from-to"}, clientFrom.Receive())
+		assert.Equal(t, []string{"from", "msg-to-from"}, clientTo.Receive())
 	}
 
 	t.Log("verify messages format")
@@ -50,8 +60,8 @@ func TestZMQClientLicecycle(t *testing.T) {
 		}
 
 		expected := [][]string{
-			{"from", "to", "msg-from-to"},
-			{"to", "from", "msg-to-from"},
+			{"to", "msg-from-to"},
+			{"from", "msg-to-from"},
 		}
 
 		assert.ElementsMatch(t, expected, relayed)

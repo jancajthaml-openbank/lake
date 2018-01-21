@@ -56,7 +56,9 @@ func workZMQSub(ctx context.Context, cancel context.CancelFunc, host, topic stri
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
-	defer recover()
+	defer func() {
+		recover()
+	}()
 
 	var (
 		chunk   string
@@ -120,7 +122,9 @@ func workZMQPush(ctx context.Context, cancel context.CancelFunc, host, topic str
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
-	defer recover()
+	defer func() {
+		recover()
+	}()
 
 	var (
 		channel *zmq.Socket

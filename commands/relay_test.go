@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 
@@ -14,7 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func sub(ctx context.Context, cancel context.CancelFunc, callback chan string) {
+func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -41,7 +42,7 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string) {
 	defer channel.Close()
 
 	for {
-		err = channel.Connect("tcp://0.0.0.0:5561")
+		err = channel.Connect(fmt.Sprintf("tcp://0.0.0.0:%d", port))
 		if err == nil {
 			break
 		}
@@ -68,7 +69,7 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string) {
 	}
 }
 
-func push(ctx context.Context, cancel context.CancelFunc, data chan string) {
+func push(ctx context.Context, cancel context.CancelFunc, data chan string, port int) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -94,7 +95,7 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string) {
 	defer channel.Close()
 
 	for {
-		err = channel.Connect("tcp://0.0.0.0:5562")
+		err = channel.Connect(fmt.Sprintf("tcp://0.0.0.0:%d", port))
 		if err == nil {
 			break
 		}
@@ -108,9 +109,13 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string) {
 }
 
 func TestRelayInOrder(t *testing.T) {
+	params := RunParams{
+		PullPort: 5562,
+		PubPort:  5561,
+	}
+
 	t.Log("Relays message")
 	{
-
 		accumulatedData := make([]string, 0)
 		expectedData := []string{
 			"A",
@@ -127,9 +132,9 @@ func TestRelayInOrder(t *testing.T) {
 		var wg sync.WaitGroup
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
-		go RelayMessages(ctx, cancel)
-		go push(ctx, cancel, pushChannel)
-		go sub(ctx, cancel, subChannel)
+		go RelayMessages(ctx, cancel, params)
+		go push(ctx, cancel, pushChannel, params.PullPort)
+		go sub(ctx, cancel, subChannel, params.PubPort)
 
 		wg.Add(1)
 		go func() {
@@ -158,15 +163,22 @@ func TestRelayInOrder(t *testing.T) {
 
 /*
 func BenchmarkRelay(b *testing.B) {
-	capacity := 1000
+	params := RunParams{
+		PullPort: 5862,
+		PubPort:  5861,
+	}
+
+	capacity := 100
 	pushChannel := make(chan string, capacity)
 	subChannel := make(chan string, capacity)
 	msg := "aaaaaaaa"
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go push(ctx, cancel, pushChannel)
-	go sub(ctx, cancel, subChannel)
+
+	go RelayMessages(ctx, cancel, params)
+	go push(ctx, cancel, pushChannel, params.PullPort)
+	go sub(ctx, cancel, subChannel, params.PubPort)
 
 	b.ResetTimer()
 	b.SetBytes(376)
@@ -175,4 +187,5 @@ func BenchmarkRelay(b *testing.B) {
 		pushChannel <- msg
 		<-subChannel
 	}
-}*/
+}
+*/

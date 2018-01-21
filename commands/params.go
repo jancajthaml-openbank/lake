@@ -16,6 +16,8 @@ package commands
 
 // RunParams is a structure of application parameters
 type RunParams struct {
+	PullPort int
+	PubPort  int
 	Log      string
 	LogLevel string
 }

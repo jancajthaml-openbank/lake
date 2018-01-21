@@ -16,6 +16,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"runtime"
 	"time"
 
@@ -26,17 +27,18 @@ import (
 const backoff = 50 * time.Millisecond
 
 // StartQueue start autorecovery ZMQ in-order queue
-func StartQueue() {
+func StartQueue(params RunParams) {
 	log.Info("Starting ZMQ Relay")
 
 	for {
 		ctx, cancel := context.WithCancel(context.Background())
-		go RelayMessages(ctx, cancel)
+		go RelayMessages(ctx, cancel, params)
 		<-ctx.Done()
 	}
 }
 
-func RelayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
+// RelayMessages buffers and relays messages in order
+func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunParams) (err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -80,7 +82,7 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
 	defer sender.Close()
 
 	for {
-		err = receiver.Bind("tcp://*:5562")
+		err = receiver.Bind(fmt.Sprintf("tcp://*:%d", params.PullPort))
 		if err == nil {
 			break
 		}
@@ -89,7 +91,7 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
 	}
 
 	for {
-		err = sender.Bind("tcp://*:5561")
+		err = sender.Bind(fmt.Sprintf("tcp://*:%d", params.PubPort))
 		if err == nil {
 			break
 		}

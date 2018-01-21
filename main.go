@@ -112,15 +112,17 @@ func init() {
 // Run setups and starts application
 func Run(cmd *cobra.Command, args []string) {
 	params := commands.RunParams{
-		viper.GetString("log"),
-		viper.GetString("log.level"),
+		PullPort: 5562,
+		PubPort:  5561,
+		Log:      viper.GetString("log"),
+		LogLevel: viper.GetString("log.level"),
 	}
 
 	setupLogger(params)
 
 	log.Infof(">>> Starting <<<")
 
-	go commands.StartQueue()
+	go commands.StartQueue(params)
 
 	exitSignal := make(chan os.Signal)
 	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)

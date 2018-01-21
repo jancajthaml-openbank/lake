@@ -80,7 +80,7 @@ func (client *ZMQClient) Stop() {
 	}
 }
 
-func (client *ZMQClient) Publish(destinationSystem, originSystem, message string) {
+func (client *ZMQClient) Publish(destination, message string) {
 	if client == nil {
 		log.Warn("Publish called on nil Client")
 		return
@@ -91,7 +91,7 @@ func (client *ZMQClient) Publish(destinationSystem, originSystem, message string
 		return
 	}
 
-	client.push <- (destinationSystem + " " + originSystem + " " + message)
+	client.push <- (destination + " " + client.region + " " + message)
 }
 
 func (client *ZMQClient) Receive() []string {
@@ -110,6 +110,6 @@ func (client *ZMQClient) Receive() []string {
 		if data == (client.region + "]") {
 			continue
 		}
-		return strings.Split(data, " ")
+		return strings.Split(data, " ")[1:]
 	}
 }
