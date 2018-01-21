@@ -86,7 +86,7 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 		if err == nil {
 			break
 		}
-		log.Info("Unable to bind receiver to ZMQ address: ", err)
+		log.Warn("ZMQ receiver unable to bind: ", err)
 		time.Sleep(backoff)
 	}
 
@@ -95,14 +95,14 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 		if err == nil {
 			break
 		}
-		log.Info("Unable to bind sender to ZMQ address: ", err)
+		log.Warn("ZMQ sender unable to bind: ", err)
 		time.Sleep(backoff)
 	}
 
 	for {
 		err = ctx.Err()
 		if err != nil {
-			break
+			return
 		}
 		chunk, err = receiver.RecvBytes(zmq.DONTWAIT)
 		switch err {
@@ -117,5 +117,4 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 			continue
 		}
 	}
-	return
 }

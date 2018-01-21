@@ -52,7 +52,7 @@ func NewZMQClient(region, host string) *ZMQClient {
 		client.push <- (region + "]")
 		select {
 		case <-client.sub:
-			log.Infof("ZMQ Client \"%v\" ready", region)
+			log.Infof("ZMQClient(%v) ready", region)
 			return client
 		case <-time.After(10 * time.Millisecond):
 			continue
@@ -67,11 +67,6 @@ func (client *ZMQClient) Stop() {
 		return
 	}
 
-	if !client.running {
-		log.Warnf("ZMQ Client \"%v\" is closed", client.region)
-		return
-	}
-
 	if client.running {
 		client.stop()
 		client.push <- ""
@@ -80,7 +75,7 @@ func (client *ZMQClient) Stop() {
 
 		client.running = false
 
-		log.Infof("ZMQ Client \"%v\" closed", client.region)
+		log.Infof("ZMQClient(%v) closed", client.region)
 	}
 }
 
@@ -92,7 +87,7 @@ func (client *ZMQClient) Publish(destination, message string) {
 	}
 
 	if !client.running {
-		log.Warnf("ZMQ Client \"%v\" is closed", client.region)
+		log.Warnf("ZMQClient(%v) is closed", client.region)
 		return
 	}
 
@@ -107,7 +102,7 @@ func (client *ZMQClient) Receive() []string {
 	}
 
 	if !client.running {
-		log.Warnf("ZMQ Client \"%v\" is closed", client.region)
+		log.Warnf("ZMQClient(%v) is closed", client.region)
 		return nil
 	}
 

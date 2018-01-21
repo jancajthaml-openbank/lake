@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -17,7 +18,10 @@ func TestZMQClientGracefull(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go commands.RelayMessages(ctx, cancel, params)
-	defer cancel()
+	defer func() {
+		cancel()
+		time.Sleep(100 * time.Millisecond) // INFO give ZMQ time to really unbind
+	}()
 
 	t.Log("called public methods on Stopped client")
 	{
@@ -36,7 +40,10 @@ func TestZMQClientLicecycle(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go commands.RelayMessages(ctx, cancel, params)
-	defer cancel()
+	defer func() {
+		cancel()
+		time.Sleep(100 * time.Millisecond) // INFO give ZMQ time to really unbind
+	}()
 
 	clientFrom := NewZMQClient("from", "0.0.0.0")
 	clientTo := NewZMQClient("to", "0.0.0.0")
