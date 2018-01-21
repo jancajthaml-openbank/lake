@@ -160,32 +160,3 @@ func TestRelayInOrder(t *testing.T) {
 		wg.Wait()
 	}
 }
-
-/*
-func BenchmarkRelay(b *testing.B) {
-	params := RunParams{
-		PullPort: 5862,
-		PubPort:  5861,
-	}
-
-	capacity := 100
-	pushChannel := make(chan string, capacity)
-	subChannel := make(chan string, capacity)
-	msg := "aaaaaaaa"
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go RelayMessages(ctx, cancel, params)
-	go push(ctx, cancel, pushChannel, params.PullPort)
-	go sub(ctx, cancel, subChannel, params.PubPort)
-
-	b.ResetTimer()
-	b.SetBytes(376)
-
-	for i := 0; i < b.N; i++ {
-		pushChannel <- msg
-		<-subChannel
-	}
-}
-*/
