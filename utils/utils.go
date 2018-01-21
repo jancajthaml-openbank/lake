@@ -24,6 +24,7 @@ import (
 
 const bufferSize = 100
 
+// ZMQClient is a fascade to use Publish and Receive in distributed system
 type ZMQClient struct {
 	push    chan string
 	sub     chan string
@@ -32,6 +33,7 @@ type ZMQClient struct {
 	region  string
 }
 
+// NewZMQClient returns instance of ZMQClient with both channels ready
 func NewZMQClient(region, host string) *ZMQClient {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -43,8 +45,8 @@ func NewZMQClient(region, host string) *ZMQClient {
 		region:  region,
 	}
 
-	go StartZMQSub(ctx, host, region, client.sub)
-	go StartZMQPush(ctx, host, region, client.push)
+	go startSubRoutine(ctx, host, region, client.sub)
+	go startPushRoutine(ctx, host, region, client.push)
 
 	for {
 		client.push <- (region + "]")
@@ -58,6 +60,7 @@ func NewZMQClient(region, host string) *ZMQClient {
 	}
 }
 
+// Stop stops ZMQ connections and cloces fascade channels
 func (client *ZMQClient) Stop() {
 	if client == nil {
 		log.Warn("Stop called on nil Client")
@@ -80,6 +83,7 @@ func (client *ZMQClient) Stop() {
 	}
 }
 
+// Publish sends message to remote destination
 func (client *ZMQClient) Publish(destination, message string) {
 	if client == nil {
 		log.Warn("Publish called on nil Client")
@@ -94,6 +98,7 @@ func (client *ZMQClient) Publish(destination, message string) {
 	client.push <- (destination + " " + client.region + " " + message)
 }
 
+// Receive receives message for this region
 func (client *ZMQClient) Receive() []string {
 	if client == nil {
 		log.Warn("Receive called on nil Client")

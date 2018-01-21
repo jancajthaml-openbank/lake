@@ -26,7 +26,7 @@ import (
 
 const backoff = 50 * time.Millisecond
 
-func StartZMQSub(master context.Context, host string, topic string, recieveChannel chan string) {
+func startSubRoutine(master context.Context, host string, topic string, recieveChannel chan string) {
 	log.Debugf("ZMQ SUB %s work", topic)
 
 	for {
@@ -39,7 +39,7 @@ func StartZMQSub(master context.Context, host string, topic string, recieveChann
 	}
 }
 
-func StartZMQPush(master context.Context, host, topic string, publishChannel chan string) {
+func startPushRoutine(master context.Context, host, topic string, publishChannel chan string) {
 	log.Debugf("ZMQ PUSH %s work", topic)
 
 	for {
