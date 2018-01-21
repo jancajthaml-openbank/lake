@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -16,7 +15,7 @@ func TestZMQClientGracefull(t *testing.T) {
 		PubPort:  5561,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithCancel(context.Background())
 	go commands.RelayMessages(ctx, cancel, params)
 	defer cancel()
 
@@ -35,7 +34,7 @@ func TestZMQClientLicecycle(t *testing.T) {
 		PubPort:  5561,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithCancel(context.Background())
 	go commands.RelayMessages(ctx, cancel, params)
 	defer cancel()
 

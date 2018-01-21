@@ -104,7 +104,7 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 		if err != nil {
 			break
 		}
-		chunk, err = receiver.RecvBytes(0)
+		chunk, err = receiver.RecvBytes(zmq.DONTWAIT)
 		switch err {
 		case nil:
 			sender.SendBytes(chunk, 0)
@@ -114,7 +114,6 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 			log.Info("ZMQ connection closed: ", err)
 			return
 		default:
-			log.Info("Error while receiving ZMQ message: ", err)
 			continue
 		}
 	}

@@ -74,6 +74,7 @@ func (client *ZMQClient) Stop() {
 
 	if client.running {
 		client.stop()
+		client.push <- ""
 		close(client.push)
 		close(client.sub)
 

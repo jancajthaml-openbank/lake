@@ -127,6 +127,7 @@ func workZMQPush(ctx context.Context, cancel context.CancelFunc, host, topic str
 	}()
 
 	var (
+		chunk   string
 		channel *zmq.Socket
 		err     error
 	)
@@ -157,10 +158,11 @@ func workZMQPush(ctx context.Context, cancel context.CancelFunc, host, topic str
 	}
 
 	for {
+		chunk = <-publishChannel
 		err = ctx.Err()
 		if err != nil {
 			break
 		}
-		channel.Send(<-publishChannel, 0)
+		channel.Send(chunk, 0)
 	}
 }
