@@ -22,31 +22,25 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const bufferSize = 100
-
-// ZMQClient is a fascade for ZMQ queue
-type ZMQClient struct {
-	push    chan string
-	sub     chan string
-	stop    context.CancelFunc
-	running bool
-	region  string
+func validRegion(region string) bool {
+	if len(region) == 0 || region == "[" {
+		log.Warn("invalid region")
+		return false
+	}
+	return true
 }
 
 // NewZMQClient returns instance of ZMQClient with both channels ready
 func NewZMQClient(region, host string) *ZMQClient {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	client := &ZMQClient{
-		push:    make(chan string, bufferSize),
-		sub:     make(chan string, bufferSize),
-		stop:    cancel,
-		running: true,
-		region:  region,
+	if !validRegion(region) {
+		return nil
 	}
 
-	go startSubRoutine(ctx, host, region, client.sub)
-	go startPushRoutine(ctx, host, region, client.push)
+	ctx, cancel := context.WithCancel(context.Background())
+	client := newClient(region, host, cancel)
+
+	go startSubRoutine(ctx, client)
+	go startPushRoutine(ctx, client)
 
 	for {
 		client.push <- (region + "]")
@@ -67,26 +61,46 @@ func (client *ZMQClient) Stop() {
 		return
 	}
 
-	if client.running {
+	if len(client.host) > 0 {
 		client.stop()
 		client.push <- ""
 		close(client.push)
 		close(client.sub)
 
-		client.running = false
+		client.host = ""
 
 		log.Infof("ZMQClient(%v) closed", client.region)
 	}
 }
 
+// Broadcast message
+func (client *ZMQClient) Broadcast(message string) {
+	if client == nil {
+		log.Warn("Broadcast called on nil Client")
+		return
+	}
+
+	if len(client.host) == 0 {
+		log.Warnf("ZMQClient(%v) is closed", client.region)
+		return
+	}
+
+	client.push <- ("[ " + message)
+}
+
 // Publish message to remote destination
 func (client *ZMQClient) Publish(destination, message string) {
+	if len(destination) == 0 {
+		client.Broadcast(message)
+		return
+	}
+
 	if client == nil {
 		log.Warn("Publish called on nil Client")
 		return
 	}
 
-	if !client.running {
+	if len(client.host) == 0 {
 		log.Warnf("ZMQClient(%v) is closed", client.region)
 		return
 	}
@@ -101,7 +115,7 @@ func (client *ZMQClient) Receive() []string {
 		return nil
 	}
 
-	if !client.running {
+	if len(client.host) == 0 {
 		log.Warnf("ZMQClient(%v) is closed", client.region)
 		return nil
 	}

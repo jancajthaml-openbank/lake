@@ -26,12 +26,12 @@ import (
 
 const backoff = 50 * time.Millisecond
 
-func startSubRoutine(master context.Context, host string, topic string, recieveChannel chan string) {
-	log.Debugf("ZMQ SUB %s work", topic)
+func startSubRoutine(master context.Context, client *ZMQClient) {
+	log.Debugf("ZMQ SUB %s work", client.region)
 
 	for {
 		ctx, cancel := context.WithCancel(master)
-		go workZMQSub(ctx, cancel, host, topic, recieveChannel)
+		go workZMQSub(ctx, cancel, client)
 		<-ctx.Done()
 		if master.Err() != nil {
 			break
@@ -39,12 +39,12 @@ func startSubRoutine(master context.Context, host string, topic string, recieveC
 	}
 }
 
-func startPushRoutine(master context.Context, host, topic string, publishChannel chan string) {
-	log.Debugf("ZMQ PUSH %s work", topic)
+func startPushRoutine(master context.Context, client *ZMQClient) {
+	log.Debugf("ZMQ PUSH %s work", client.region)
 
 	for {
 		ctx, cancel := context.WithCancel(master)
-		go workZMQPush(ctx, cancel, host, topic, publishChannel)
+		go workZMQPush(ctx, cancel, client)
 		<-ctx.Done()
 		if master.Err() != nil {
 			break
@@ -52,7 +52,7 @@ func startPushRoutine(master context.Context, host, topic string, publishChannel
 	}
 }
 
-func workZMQSub(ctx context.Context, cancel context.CancelFunc, host, topic string, recieveChannel chan string) {
+func workZMQSub(ctx context.Context, cancel context.CancelFunc, client *ZMQClient) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -83,7 +83,7 @@ func workZMQSub(ctx context.Context, cancel context.CancelFunc, host, topic stri
 	defer channel.Close()
 
 	for {
-		err = channel.Connect(fmt.Sprintf("tcp://%s:%d", host, 5561))
+		err = channel.Connect(fmt.Sprintf("tcp://%s:%d", client.host, 5561))
 		if err == nil {
 			break
 		}
@@ -91,8 +91,8 @@ func workZMQSub(ctx context.Context, cancel context.CancelFunc, host, topic stri
 		time.Sleep(backoff)
 	}
 
-	if err = channel.SetSubscribe(topic); err != nil {
-		log.Warn("Subscription to %s failed ", topic, err)
+	if err = channel.SetSubscribe(client.region); err != nil {
+		log.Warn("Subscription to %s failed ", client.region, err)
 		return
 	}
 
@@ -105,7 +105,7 @@ func workZMQSub(ctx context.Context, cancel context.CancelFunc, host, topic stri
 		chunk, err = channel.Recv(0)
 		switch err {
 		case nil:
-			recieveChannel <- chunk
+			client.sub <- chunk
 		case zmq.ErrorSocketClosed:
 			fallthrough
 		case zmq.ErrorContextClosed:
@@ -118,7 +118,7 @@ func workZMQSub(ctx context.Context, cancel context.CancelFunc, host, topic stri
 	}
 }
 
-func workZMQPush(ctx context.Context, cancel context.CancelFunc, host, topic string, publishChannel chan string) {
+func workZMQPush(ctx context.Context, cancel context.CancelFunc, client *ZMQClient) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -149,7 +149,7 @@ func workZMQPush(ctx context.Context, cancel context.CancelFunc, host, topic str
 	defer channel.Close()
 
 	for {
-		err = channel.Connect(fmt.Sprintf("tcp://%s:%d", host, 5562))
+		err = channel.Connect(fmt.Sprintf("tcp://%s:%d", client.host, 5562))
 		if err == nil {
 			break
 		}
@@ -158,7 +158,7 @@ func workZMQPush(ctx context.Context, cancel context.CancelFunc, host, topic str
 	}
 
 	for {
-		chunk = <-publishChannel
+		chunk = <-client.push
 		err = ctx.Err()
 		if err != nil {
 			break
