@@ -16,53 +16,22 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strings"
 	"syscall"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/jancajthaml-openbank/lake/commands"
 )
 
 var (
-	rootCmd = &cobra.Command{
-		Use:   "lake",
-		Short: "ZMQ Queue",
-		Long:  "Single point data lake",
-		Run:   Help,
-	}
-
-	runCmd = &cobra.Command{
-		Use:   "run",
-		Short: "Run the lake",
-		Long:  "Run the lake",
-		Run:   Run,
-	}
-
-	versionCmd = &cobra.Command{
-		Use:   "version",
-		Short: "Print the version",
-		Long:  "",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("%s (build: %s)\n", version, build)
-		},
-	}
-
 	version string
 	build   string
 )
-
-// Help prints help
-func Help(cmd *cobra.Command, args []string) {
-	cmd.Help()
-}
 
 func setupLogger(params commands.RunParams) {
 	level, err := log.ParseLevel(params.LogLevel)
@@ -86,31 +55,14 @@ func setupLogger(params commands.RunParams) {
 }
 
 func init() {
-	viper.AddConfigPath(filepath.Join("/", ".lake"))
-
-	viper.SetConfigName("config")
-	viper.SetConfigType("yml")
-	viper.AddConfigPath(".")
-	viper.ReadInConfig()
-
 	viper.SetEnvPrefix("LAKE")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
-	runCmd.Flags().StringP("log-level", "", "", "verbosity of logger")
-	runCmd.Flags().StringP("log", "l", "", "file to send logs to; default is STDOUT")
-
-	viper.BindPFlag("log", runCmd.Flags().Lookup("log"))
-	viper.BindPFlag("log.level", runCmd.Flags().Lookup("log-level"))
-
 	viper.SetDefault("log.level", "DEBUG")
-
-	rootCmd.AddCommand(runCmd)
-	rootCmd.AddCommand(versionCmd)
 }
 
-// Run setups and starts application
-func Run(cmd *cobra.Command, args []string) {
+func main() {
 	params := commands.RunParams{
 		PullPort: 5562,
 		PubPort:  5561,
@@ -129,10 +81,4 @@ func Run(cmd *cobra.Command, args []string) {
 	<-exitSignal
 
 	log.Infof(">>> Terminating <<<")
-}
-
-func main() {
-	if err := rootCmd.Execute(); err != nil {
-		log.Fatal(err)
-	}
 }
