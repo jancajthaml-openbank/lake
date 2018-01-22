@@ -47,7 +47,6 @@ bbtest:
 	@(docker rm -f $$(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
 	@(docker rm -f $$(docker ps -aqf "name=bbtest") || :) &> /dev/null
 
-
 .PHONY: package
 package:
 	VERSION=$(VERSION) \

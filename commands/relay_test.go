@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 
@@ -14,13 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func init() {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	go relayMessages(ctx, cancel)
-}
-
-func sub(ctx context.Context, cancel context.CancelFunc, callback chan string) {
+func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -31,12 +26,14 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string) {
 		err     error
 	)
 
-	channel, err = zmq.NewSocket(zmq.SUB)
-	for err != nil {
+	for {
+		channel, err = zmq.NewSocket(zmq.SUB)
+		if err == nil {
+			break
+		}
 		if err.Error() == "resource temporarily unavailable" {
 			log.Warn("Test : Resources unavailable in connect")
 			time.Sleep(time.Millisecond)
-			channel, err = zmq.NewSocket(zmq.SUB)
 		} else {
 			log.Warn("Test : Unable to connect ZMQ socket", err)
 			return
@@ -45,7 +42,7 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string) {
 	defer channel.Close()
 
 	for {
-		err = channel.Connect("tcp://0.0.0.0:5561")
+		err = channel.Connect(fmt.Sprintf("tcp://0.0.0.0:%d", port))
 		if err == nil {
 			break
 		}
@@ -68,12 +65,11 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string) {
 			log.Info("Test : Error while receiving ZMQ message ", err)
 			continue
 		}
-		//callback(chunk)
 		callback <- chunk
 	}
 }
 
-func push(ctx context.Context, cancel context.CancelFunc, data chan string) {
+func push(ctx context.Context, cancel context.CancelFunc, data chan string, port int) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -83,12 +79,14 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string) {
 		err     error
 	)
 
-	channel, err = zmq.NewSocket(zmq.PUSH)
-	for err != nil {
+	for {
+		channel, err = zmq.NewSocket(zmq.PUSH)
+		if err == nil {
+			break
+		}
 		if err.Error() == "resource temporarily unavailable" {
 			log.Warn("Test : Resources unavailable in connect")
 			time.Sleep(time.Millisecond)
-			channel, err = zmq.NewSocket(zmq.PUSH)
 		} else {
 			log.Warn("Test : Unable to connect ZMQ socket ", err)
 			return
@@ -97,7 +95,7 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string) {
 	defer channel.Close()
 
 	for {
-		err = channel.Connect("tcp://0.0.0.0:5562")
+		err = channel.Connect(fmt.Sprintf("tcp://0.0.0.0:%d", port))
 		if err == nil {
 			break
 		}
@@ -111,22 +109,21 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string) {
 }
 
 func TestRelayInOrder(t *testing.T) {
+	params := RunParams{
+		PullPort: 5562,
+		PubPort:  5561,
+	}
+
 	t.Log("Relays message")
 	{
-
 		accumulatedData := make([]string, 0)
 		expectedData := []string{
-			"4OFbyWZYPp",
-			"WOJzlG0Oim",
-			"l9eJ54BAws",
-			"lbb5cqE124",
-			"aQEoXjdLBm",
-			"SdWLoPDNCq",
-			"ccdYX61idt",
-			"sAfS4xNqja",
-			"rtTMT2IBq9",
-			"IaR17LvB4w",
-			"XJ2bVz2l5k",
+			"A",
+			"B",
+			"C",
+			"D",
+			"E",
+			"F",
 		}
 
 		pushChannel := make(chan string, len(expectedData))
@@ -135,8 +132,9 @@ func TestRelayInOrder(t *testing.T) {
 		var wg sync.WaitGroup
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
-		go push(ctx, cancel, pushChannel)
-		go sub(ctx, cancel, subChannel)
+		go RelayMessages(ctx, cancel, params)
+		go push(ctx, cancel, pushChannel, params.PullPort)
+		go sub(ctx, cancel, subChannel, params.PubPort)
 
 		wg.Add(1)
 		go func() {
@@ -154,30 +152,11 @@ func TestRelayInOrder(t *testing.T) {
 			}
 		}()
 
+		time.Sleep(300 * time.Millisecond)
 		for _, msg := range expectedData {
 			pushChannel <- msg
 		}
 
 		wg.Wait()
-	}
-}
-
-func BenchmarkRelay(b *testing.B) {
-	capacity := 1000
-	pushChannel := make(chan string, capacity)
-	subChannel := make(chan string, capacity)
-	msg := "aaaaaaaa"
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go push(ctx, cancel, pushChannel)
-	go sub(ctx, cancel, subChannel)
-
-	b.ResetTimer()
-	b.SetBytes(376)
-
-	for i := 0; i < b.N; i++ {
-		pushChannel <- msg
-		<-subChannel
 	}
 }

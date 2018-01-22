@@ -16,6 +16,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"runtime"
 	"time"
 
@@ -23,19 +24,21 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const backoff = 50 * time.Millisecond
+const backoff = 5 * time.Millisecond
 
-func StartRelay() {
+// StartQueue start autorecovery ZMQ connection
+func StartQueue(params RunParams) {
 	log.Info("Starting ZMQ Relay")
 
 	for {
 		ctx, cancel := context.WithCancel(context.Background())
-		go relayMessages(ctx, cancel)
+		go RelayMessages(ctx, cancel, params)
 		<-ctx.Done()
 	}
 }
 
-func relayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
+// RelayMessages buffers and relays messages in order
+func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunParams) (err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -46,28 +49,32 @@ func relayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
 		sender   *zmq.Socket
 	)
 
-	receiver, err = zmq.NewSocket(zmq.PULL)
-	for err != nil {
+	for {
+		receiver, err = zmq.NewSocket(zmq.PULL)
+		if err == nil {
+			break
+		}
 		if err.Error() == "resource temporarily unavailable" {
 			log.Warn("Resources unavailable in connect")
 			time.Sleep(backoff)
-			receiver, err = zmq.NewSocket(zmq.SUB)
 		} else {
-			log.Warn("Unable to bind ZMQ socket", err)
+			log.Warn("Unable to bind ZMQ socket: ", err)
 			return
 		}
 	}
 	receiver.SetConflate(false)
 	defer receiver.Close()
 
-	sender, err = zmq.NewSocket(zmq.PUB)
-	for err != nil {
+	for {
+		sender, err = zmq.NewSocket(zmq.PUB)
+		if err == nil {
+			break
+		}
 		if err.Error() == "resource temporarily unavailable" {
 			log.Warn("Resources unavailable in connect")
 			time.Sleep(backoff)
-			sender, err = zmq.NewSocket(zmq.SUB)
 		} else {
-			log.Warn("Unable to bind ZMQ socket", err)
+			log.Warn("Unable to bind ZMQ socket: ", err)
 			return
 		}
 	}
@@ -75,41 +82,39 @@ func relayMessages(ctx context.Context, cancel context.CancelFunc) (err error) {
 	defer sender.Close()
 
 	for {
-		err = receiver.Bind("tcp://*:5562")
+		err = receiver.Bind(fmt.Sprintf("tcp://*:%d", params.PullPort))
 		if err == nil {
 			break
 		}
-		log.Info("Unable to bind reciever to ZMQ address ", err)
+		log.Warn("ZMQ receiver unable to bind: ", err)
 		time.Sleep(backoff)
 	}
 
 	for {
-		err = sender.Bind("tcp://*:5561")
+		err = sender.Bind(fmt.Sprintf("tcp://*:%d", params.PubPort))
 		if err == nil {
 			break
 		}
-		log.Info("Unable to bind sender to ZMQ address", err)
+		log.Warn("ZMQ sender unable to bind: ", err)
 		time.Sleep(backoff)
 	}
 
 	for {
 		err = ctx.Err()
 		if err != nil {
-			break
+			return
 		}
-		chunk, err = receiver.RecvBytes(0)
+		chunk, err = receiver.RecvBytes(zmq.DONTWAIT)
 		switch err {
 		case nil:
 			sender.SendBytes(chunk, 0)
 		case zmq.ErrorSocketClosed:
 			fallthrough
 		case zmq.ErrorContextClosed:
-			log.Info("ZMQ connection closed", err)
+			log.Info("ZMQ connection closed: ", err)
 			return
 		default:
-			log.Info("Error while receiving ZMQ message", err)
 			continue
 		}
 	}
-	return
 }

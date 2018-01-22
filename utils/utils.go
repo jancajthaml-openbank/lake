@@ -15,36 +15,102 @@
 package utils
 
 import (
+	"context"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
 const bufferSize = 100
 
+// ZMQClient is a fascade for ZMQ queue
 type ZMQClient struct {
-	pub chan string
-	sub chan string
+	push    chan string
+	sub     chan string
+	stop    context.CancelFunc
+	running bool
+	region  string
 }
 
-func NewZMQClient(channel string, host string) *ZMQClient {
-	log.Infof("Creating new client %v", channel)
+// NewZMQClient returns instance of ZMQClient with both channels ready
+func NewZMQClient(region, host string) *ZMQClient {
+	ctx, cancel := context.WithCancel(context.Background())
 
 	client := &ZMQClient{
-		make(chan string, bufferSize),
-		make(chan string, bufferSize),
+		push:    make(chan string, bufferSize),
+		sub:     make(chan string, bufferSize),
+		stop:    cancel,
+		running: true,
+		region:  region,
 	}
 
-	StartZMQPush(host, channel, client.pub)
-	StartZMQSub(host, channel, client.sub)
+	go startSubRoutine(ctx, host, region, client.sub)
+	go startPushRoutine(ctx, host, region, client.push)
 
-	return client
+	for {
+		client.push <- (region + "]")
+		select {
+		case <-client.sub:
+			log.Infof("ZMQClient(%v) ready", region)
+			return client
+		case <-time.After(10 * time.Millisecond):
+			continue
+		}
+	}
 }
 
-func (client *ZMQClient) Publish(destinationSystem, originSystem, message string) {
-	client.pub <- (destinationSystem + " " + originSystem + " " + message)
+// Stop ZMQ connections and close ZMQClient channels
+func (client *ZMQClient) Stop() {
+	if client == nil {
+		log.Warn("Stop called on nil Client")
+		return
+	}
+
+	if client.running {
+		client.stop()
+		client.push <- ""
+		close(client.push)
+		close(client.sub)
+
+		client.running = false
+
+		log.Infof("ZMQClient(%v) closed", client.region)
+	}
 }
 
+// Publish message to remote destination
+func (client *ZMQClient) Publish(destination, message string) {
+	if client == nil {
+		log.Warn("Publish called on nil Client")
+		return
+	}
+
+	if !client.running {
+		log.Warnf("ZMQClient(%v) is closed", client.region)
+		return
+	}
+
+	client.push <- (destination + " " + client.region + " " + message)
+}
+
+// Receive message for this region
 func (client *ZMQClient) Receive() []string {
-	return strings.Split(<-client.sub, " ")
+	if client == nil {
+		log.Warn("Receive called on nil Client")
+		return nil
+	}
+
+	if !client.running {
+		log.Warnf("ZMQClient(%v) is closed", client.region)
+		return nil
+	}
+
+	for {
+		data := <-client.sub
+		if data == (client.region + "]") {
+			continue
+		}
+		return strings.Split(data, " ")[1:]
+	}
 }

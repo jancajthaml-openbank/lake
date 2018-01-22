@@ -26,23 +26,29 @@ import (
 
 const backoff = 50 * time.Millisecond
 
-func StartZMQSub(host string, topic string, recieveChannel chan string) {
+func startSubRoutine(master context.Context, host string, topic string, recieveChannel chan string) {
 	log.Debugf("ZMQ SUB %s work", topic)
 
 	for {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(master)
 		go workZMQSub(ctx, cancel, host, topic, recieveChannel)
 		<-ctx.Done()
+		if master.Err() != nil {
+			break
+		}
 	}
 }
 
-func StartZMQPush(host, topic string, publishChannel chan string) {
+func startPushRoutine(master context.Context, host, topic string, publishChannel chan string) {
 	log.Debugf("ZMQ PUSH %s work", topic)
 
 	for {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(master)
 		go workZMQPush(ctx, cancel, host, topic, publishChannel)
 		<-ctx.Done()
+		if master.Err() != nil {
+			break
+		}
 	}
 }
 
@@ -50,6 +56,9 @@ func workZMQSub(ctx context.Context, cancel context.CancelFunc, host, topic stri
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
+	defer func() {
+		recover()
+	}()
 
 	var (
 		chunk   string
@@ -92,13 +101,11 @@ func workZMQSub(ctx context.Context, cancel context.CancelFunc, host, topic stri
 		if err != nil {
 			break
 		}
-		chunk, err = channel.Recv(0)
 
+		chunk, err = channel.Recv(0)
 		switch err {
 		case nil:
-			if len(chunk) != 0 {
-				recieveChannel <- chunk
-			}
+			recieveChannel <- chunk
 		case zmq.ErrorSocketClosed:
 			fallthrough
 		case zmq.ErrorContextClosed:
@@ -115,8 +122,12 @@ func workZMQPush(ctx context.Context, cancel context.CancelFunc, host, topic str
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
+	defer func() {
+		recover()
+	}()
 
 	var (
+		chunk   string
 		channel *zmq.Socket
 		err     error
 	)
@@ -147,10 +158,11 @@ func workZMQPush(ctx context.Context, cancel context.CancelFunc, host, topic str
 	}
 
 	for {
+		chunk = <-publishChannel
 		err = ctx.Err()
 		if err != nil {
 			break
 		}
-		channel.Send(<-publishChannel, 0)
+		channel.Send(chunk, 0)
 	}
 }

@@ -8,15 +8,25 @@ trap "kill 0" EXIT
 ################################################################################
 
 scan() {
-  echo -e "\n[info] analysing ${1}"
-
   if [ -d ${1} ] ; then
-    (gofmt -s -w ./${1} || :) &
-    (golint ./${1}/... || :) &
-    (misspell ./${1} || :) &
-    (go vet ./${1}/... || :) &
-    (gocyclo -over 10 ./${1} || :) &
-    wait
+    out=$(\
+      (gofmt -s -w ./${1} || :) &
+      (golint ./${1}/... || :) &
+      (misspell ./${1} || :) &
+      (go vet ./${1}/... || :) &
+      (gocyclo -over 15 ./${1} || :) &
+      wait\
+    )
+    issues=$(sed '/^\s*#/d;/^\s*$/d' <<< "${out}" | wc -l)
+    if [ "${issues}" -eq "0" ] ; then
+      echo -e "[info] ${1}\t[ no issues ]"
+    elif [ "${issues}" -eq "1" ] ; then
+      echo -e "[warn] ${1}\t[ 1 issue ]"
+      echo "${out}"
+    else
+      echo -e "[warn] ${1}\t[ ${issues} issues ]"
+      echo "${out}"
+    fi
   fi
 }
 

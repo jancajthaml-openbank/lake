@@ -20,7 +20,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"syscall"
 
@@ -37,14 +36,14 @@ var (
 		Use:   "lake",
 		Short: "ZMQ Queue",
 		Long:  "Single point data lake",
-		Run:   CmdRoot,
+		Run:   Help,
 	}
 
 	runCmd = &cobra.Command{
 		Use:   "run",
 		Short: "Run the lake",
 		Long:  "Run the lake",
-		Run:   CmdRun,
+		Run:   Run,
 	}
 
 	versionCmd = &cobra.Command{
@@ -60,8 +59,8 @@ var (
 	build   string
 )
 
-// CmdRoot prints usage and help
-func CmdRoot(cmd *cobra.Command, args []string) {
+// Help prints help
+func Help(cmd *cobra.Command, args []string) {
 	cmd.Help()
 }
 
@@ -110,19 +109,20 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 }
 
-// CmdRun is a main entrypoint for application provided parameters
-func CmdRun(cmd *cobra.Command, args []string) {
+// Run setups and starts application
+func Run(cmd *cobra.Command, args []string) {
 	params := commands.RunParams{
-		viper.GetString("log"),
-		viper.GetString("log.level"),
+		PullPort: 5562,
+		PubPort:  5561,
+		Log:      viper.GetString("log"),
+		LogLevel: viper.GetString("log.level"),
 	}
 
 	setupLogger(params)
-	runtime.GC()
 
 	log.Infof(">>> Starting <<<")
 
-	go commands.StartRelay()
+	go commands.StartQueue(params)
 
 	exitSignal := make(chan os.Signal)
 	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)

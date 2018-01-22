@@ -23,7 +23,7 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
-    image: lake
+    image: openbank/lake
     restart: "no"
     ports:
       - "5562"
@@ -62,7 +62,7 @@ services:
     extends: go
     environment:
       - GOMAXPROCS=1
-    command: ["test", "-v", "./...", "-benchmem", "-bench=."]
+    command: ["test", "-v", "./...", "-benchmem", "-bench=.", "-timeout=20s"]
 
   bbtest:
     build:
