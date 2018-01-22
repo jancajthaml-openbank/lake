@@ -2,27 +2,13 @@
 
 ZMQ data lake for openbank project
 
-## Building
-
-`make`
+[![Go Report Card](https://goreportcard.com/badge/github.com/jancajthaml-openbank/lake)](https://goreportcard.com/report/github.com/jancajthaml-openbank/lake) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b993ac79fcb54b76b712568e338d5a3b)](https://www.codacy.com/app/jancajthaml_openbank/lake?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jancajthaml-openbank/lake&amp;utm_campaign=Badge_Grade) [![codebeat badge](https://codebeat.co/badges/d8e2b702-3435-4893-a5bf-4558fba353f8)](https://codebeat.co/projects/github-com-jancajthaml-openbank-lake-master)
 
 ## Public API
 
 `go get github.com/jancajthaml-openbank/lake/utils`
 
-## Usage
-```
-Usage:
-  lake help         Help about any command
-  lake run [flags]  Run the lake
-
-Use "lake [command] --help" for more information about a command.
-
-Flags:
-  -l, --log string          file to send logs to; default is STDOUT
-      --log-level string    log level
-```
-
 ## License
 
 Licensed under Apache 2.0 see LICENSE.md for details
+
