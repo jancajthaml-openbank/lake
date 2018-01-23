@@ -33,7 +33,22 @@ var (
 	build   string
 )
 
-func setupLogger(params commands.RunParams) {
+func setupLogOutput(params commands.RunParams) {
+	if len(params.Log) == 0 {
+		return
+	}
+
+	file, err := os.Create(params.Log)
+	if err != nil {
+		log.Warnf("Unable to create %s: %v", params.Log, err)
+		return
+	}
+	defer file.Close()
+
+	log.SetOutput(bufio.NewWriter(file))
+}
+
+func setupLogLevel(params commands.RunParams) {
 	level, err := log.ParseLevel(params.LogLevel)
 	if err != nil {
 		log.Warnf("Invalid log level %v, using level WARN", params.LogLevel)
@@ -41,17 +56,6 @@ func setupLogger(params commands.RunParams) {
 	}
 	log.Infof("Log level set to %v", strings.ToUpper(params.LogLevel))
 	log.SetLevel(level)
-
-	if len(params.Log) > 0 {
-		file, err := os.Create(params.Log)
-		if err != nil {
-			log.Warnf("Unable to create %s: %v", params.Log, err)
-			return
-		}
-		defer file.Close()
-
-		log.SetOutput(bufio.NewWriter(file))
-	}
 }
 
 func init() {
@@ -70,7 +74,8 @@ func main() {
 		LogLevel: viper.GetString("log.level"),
 	}
 
-	setupLogger(params)
+	setupLogOutput(params)
+	setupLogLevel(params)
 
 	log.Infof(">>> Starting <<<")
 
