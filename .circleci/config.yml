@@ -1,0 +1,238 @@
+version: 2
+
+jobs:
+  test:
+    docker:
+      - image: library/debian:stretch
+        environment:
+          - LANG: C.UTF-8
+          - DEBIAN_FRONTEND: noninteractive
+          - GOLANG_VERSION: 1.9
+          - LD_LIBRARY_PATH: /usr/lib
+          - GOPATH: /go
+          - GOARCH: amd64
+          - CGO_ENABLED: 1
+          - GOOS: linux
+          - GOROOT: /usr/lib/go
+
+    working_directory: /go/src/github.com/jancajthaml-openbank/lake
+    steps:
+      - checkout
+
+      - run:
+          name: Setup environment
+          command: |
+            apt-get update && \
+            apt-get -y install --no-install-recommends \
+                ca-certificates=20161130+nmu1 \
+                pkg-config=0.29-4+b1 \
+                libzmq3-dev=4.2.1-4 \
+                cmake=3.7.2-1 \
+                gcc=4:6.3.0-4 \
+                g++=4:6.3.0-4 \
+                zlib1g-dev=1:1.2.8.dfsg-5 \
+                libmpc-dev=1.0.3-1+b2 \
+                libmpfr-dev=3.1.5-1 \
+                libgmp-dev=2:6.1.2+dfsg-1 \
+                patch=2.7.5-1+b2 \
+                git=1:2.11.0-3+deb9u2 \
+                wget=1.18-5+deb9u1 \
+                tar=1.29b-1.1 && \
+            apt-get clean && rm -rf /var/lib/apt/lists/*
+
+            wget -O go.tgz "https://golang.org/dl/go${GOLANG_VERSION}.${GOOS}-${GOARCH}.tar.gz" && \
+            echo 'd70eadefce8e160638a9a6db97f7192d8463069ab33138893ad3bf31b0650a79 *go.tgz' | sha256sum -c - && \
+            tar -C "${LD_LIBRARY_PATH}" -xzf go.tgz && rm go.tgz
+
+            ${LD_LIBRARY_PATH}/go/bin/go get -u github.com/golang/dep/cmd/dep
+
+      - run:
+          name: Install dependencies
+          command: |
+            ${GOPATH}/bin/dep ensure
+
+      - run:
+          name: Unit test
+          command: |
+            ${LD_LIBRARY_PATH}/go/bin/go test -v ./... -benchmem -bench=. -timeout=20s
+
+      - run:
+          name: Cleanup older buils
+          command: |
+            dist=bin
+            if [ -d ${dist} ] && [ "$(ls -A ${dist})" ] ; then
+              rm -rf ${dist}/*
+            fi
+
+      - run:
+          name: Package binary
+          command: |
+            dist=bin
+            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+            build=$(git rev-parse HEAD 2> /dev/null || :)
+
+            if [ -n "${VERSION}" ] ; then
+              version="${VERSION}"
+            elif [ -n "${GIT_TAG_NAME}" ] && [[ "${GIT_TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]] ; then
+              version="${GIT_TAG_NAME}"
+            else
+              version="snapshot-${build}"
+            fi
+
+            ${LD_LIBRARY_PATH}/go/bin/go clean
+
+            ${LD_LIBRARY_PATH}/go/bin/go build -a -o ${dist}/lake \
+              --ldflags "-X main.version=$version -X main.build=$build"
+
+            chmod +x ${dist}/lake
+
+      - run:
+          name: Verify binaries
+          command: |
+            dist=bin
+            if [ -d ${dist} ] ; then
+              ls -al ${dist}
+            else
+              exit 1
+            fi
+
+      - persist_to_workspace:
+          root: /go/src/github.com/jancajthaml-openbank/lake/bin
+          paths:
+            - lake
+
+  build:
+    docker:
+      - image: docker:17.09.0-ce-git
+        environment:
+          - LANG: C.UTF-8
+          - GOARCH: amd64
+          - GOOS: linux
+          - GOBIN: /usr/lib/go/bin/go
+
+    working_directory: /app
+    steps:
+      - attach_workspace:
+          at: /go/src/github.com/jancajthaml-openbank/lake/bin
+
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Link artifacts
+          command: |
+            mkdir -p /app/bin
+
+            cp -r /go/src/github.com/jancajthaml-openbank/lake \
+              /app/bin/lake
+
+      - run:
+          name: Build lake Docker image
+          command: |
+            docker build -t lake .
+
+      - deploy:
+          name: Login to DockerHUB
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+
+      - deploy:
+          name: Push images to DockerHUB
+          command: |
+            VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
+
+            echo "releasing lake snapshot ${VERSION}"
+            docker tag lake "openbank/lake:${VERSION}"
+            docker push "openbank/lake:${VERSION}"
+
+            if git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$" ; then
+              git pull --tags
+
+              VERSION=$(git tag | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$" | sort -t. -k 1,1n -k 2,2n -k 3,3n | tail -1)
+
+              echo "releasing lake version ${VERSION} and updating latest"
+              docker tag lake "openbank/lake:latest"
+              docker push "openbank/lake:latest"
+              docker tag lake "openbank/lake:${VERSION}"
+              docker push "openbank/lake:${VERSION}"
+            fi
+
+      - run:
+          name: Verify artifacts
+          command: |
+            docker images
+
+  performance:
+    machine: true
+    environment:
+      - PERSISTENCE_PATH: /home/circleci/project/dev/data
+      - LOGS_PATH: /home/circleci/project/dev/logs
+
+    working_directory: /home/circleci/project
+
+    steps:
+
+      - run:
+          name: Start tests
+          command: |
+            echo "not implemented"
+
+  bbtest:
+    machine: true
+    environment:
+      - PERSISTENCE_PATH: /home/circleci/project/dev/data
+      - LOGS_PATH: /home/circleci/project/dev/logs
+
+    working_directory: /home/circleci/project
+
+    steps:
+
+      - run:
+          name: Run bbtest
+          command: |
+            echo "not implemented"
+
+  report:
+    docker:
+      - image: docker:17.09.0-ce-git
+        environment:
+          - LANG: C.UTF-8
+
+    steps:
+
+      - attach_workspace:
+          at: /home/circleci/project
+
+      - run:
+          name: Vertify artifacts
+          command: |
+            ls -al /home/circleci/project
+
+      - store_artifacts:
+          path: /home/circleci/project/bbtest_lake.log
+          destination: bbtest_lake.log
+
+      - store_artifacts:
+          path: /home/circleci/project/perf_lake.log
+          destination: perf_lake.log
+
+workflows:
+  version: 2
+  validate_and_publish:
+    jobs:
+      - test
+      - build:
+          requires:
+            - test
+      - performance:
+          requires:
+            - build
+      - bbtest:
+          requires:
+            - build
+      - report:
+          requires:
+            - bbtest
+            - performance
+
