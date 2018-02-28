@@ -36,6 +36,15 @@ func NewZMQClient(region, host string) *ZMQClient {
 		return nil
 	}
 
+	/*
+		conn, err := net.DialTimeout("tcp", host+":"+80, time.Duration(100)*time.Millisecond)
+		if err != nil {
+			//fmt.Println(err)
+			return nil
+		}*/
+
+	// FIXME check if host exist or return right there
+
 	ctx, cancel := context.WithCancel(context.Background())
 	client := newClient(region, host, cancel)
 
@@ -43,9 +52,13 @@ func NewZMQClient(region, host string) *ZMQClient {
 	go startPushRoutine(ctx, client)
 
 	for {
+		if client.host == "" {
+			return nil
+		}
 		client.push <- (region + "]")
 		select {
 		case <-client.sub:
+			// FIXME validate that sub is "region + ]"
 			log.Infof("ZMQClient(%v) ready", region)
 			return client
 		case <-time.After(10 * time.Millisecond):

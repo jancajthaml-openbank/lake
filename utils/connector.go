@@ -85,6 +85,7 @@ func workZMQSub(ctx context.Context, cancel context.CancelFunc, client *ZMQClien
 	for {
 		err = channel.Connect(fmt.Sprintf("tcp://%s:%d", client.host, 5561))
 		if err == nil {
+			// FIXME check error here
 			break
 		}
 		log.Info("Unable to connect to ZMQ address ", err)

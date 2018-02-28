@@ -67,6 +67,8 @@ func init() {
 }
 
 func main() {
+	log.Infof(">>> Setup <<<")
+
 	params := commands.RunParams{
 		PullPort: 5562,
 		PubPort:  5561,
@@ -81,9 +83,12 @@ func main() {
 
 	go commands.StartQueue(params)
 
+	// FIXME add health check port 80
+
 	exitSignal := make(chan os.Signal)
 	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
 	<-exitSignal
 
 	log.Infof(">>> Terminating <<<")
+	log.Infof(">>> Terminated <<<")
 }

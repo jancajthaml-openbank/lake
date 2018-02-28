@@ -26,4 +26,6 @@ RUN apt-get update && \
 
 COPY bin/lake /entrypoint
 
+RUN chmod +x /entrypoint
+
 ENTRYPOINT ["/entrypoint"]
