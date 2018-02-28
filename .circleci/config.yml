@@ -14,6 +14,7 @@ jobs:
           - CGO_ENABLED: 1
           - GOOS: linux
           - GOROOT: /usr/lib/go
+          - DIST: /go/src/github.com/jancajthaml-openbank/lake/bin
 
     working_directory: /go/src/github.com/jancajthaml-openbank/lake
     steps:
@@ -59,15 +60,13 @@ jobs:
       - run:
           name: Cleanup older buils
           command: |
-            dist=bin
-            if [ -d ${dist} ] && [ "$(ls -A ${dist})" ] ; then
-              rm -rf ${dist}/*
+            if [ -d ${DIST} ] && [ "$(ls -A ${DIST})" ] ; then
+              rm -rf ${DIST}/*
             fi
 
       - run:
           name: Package binary
           command: |
-            dist=bin
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 
             build=$(git rev-parse HEAD 2> /dev/null || :)
@@ -82,18 +81,13 @@ jobs:
 
             ${LD_LIBRARY_PATH}/go/bin/go clean
 
-            ${LD_LIBRARY_PATH}/go/bin/go build -a -o ${dist}/lake \
+            ${LD_LIBRARY_PATH}/go/bin/go build -a -o ${DIST}/lake \
               --ldflags "-X main.version=$version -X main.build=$build"
-
-            chmod +x ${dist}/lake
 
       - run:
           name: Verify binaries
           command: |
-            dist=bin
-            if [ -d ${dist} ] ; then
-              ls -al ${dist}
-            else
+            if [ ! -d ${DIST} ] ; then
               exit 1
             fi
 
