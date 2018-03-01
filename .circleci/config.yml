@@ -122,7 +122,7 @@ jobs:
           name: Link artifacts
           command: |
             mkdir -p /app/bin
-            cp /go/src/github.com/jancajthaml-openbank/lake/bin/wall /app/bin/lake
+            cp /go/src/github.com/jancajthaml-openbank/lake/bin/lake /app/bin/lake
 
       - run:
           name: Build lake Docker image
@@ -137,28 +137,25 @@ jobs:
       - deploy:
           name: Push images to DockerHUB
           command: |
-            VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
+            if git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
+              echo "release commit"
 
-            echo "releasing lake snapshot ${VERSION}"
-            docker tag lake "openbank/lake:${VERSION}"
-            docker push "openbank/lake:${VERSION}"
-
-            if git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$" ; then
-              git pull --tags
-
-              VERSION=$(git tag | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$" | sort -t. -k 1,1n -k 2,2n -k 3,3n | tail -1)
+              git fetch --tags --force
+              VERSION=$(git tag | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" | sort -t. -k 1,1n -k 2,2n -k 3,3n | tail -1 | sed 's/\v//g')
 
               echo "releasing lake version ${VERSION} and updating latest"
               docker tag lake "openbank/lake:latest"
               docker push "openbank/lake:latest"
               docker tag lake "openbank/lake:${VERSION}"
               docker push "openbank/lake:${VERSION}"
-            fi
+            else
+              VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
 
-      - run:
-          name: Verify artifacts
-          command: |
-            docker images
+              docker tag lake "openbank/lake:${VERSION}"
+              docker push "openbank/lake:${VERSION}"
+
+              echo "pushed openbank/lake:${VERSION}"
+            fi
 
   performance:
     machine: true
