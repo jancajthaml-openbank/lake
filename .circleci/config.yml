@@ -118,6 +118,7 @@ jobs:
           command: |
             mkdir -p /app/bin
             cp /go/src/github.com/jancajthaml-openbank/lake/bin/lake /app/bin/lake
+            ls -al /app/bin
 
       - run:
           name: Build lake Docker image
