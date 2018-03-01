@@ -82,12 +82,12 @@ jobs:
             ${LD_LIBRARY_PATH}/go/bin/go clean
 
             ${LD_LIBRARY_PATH}/go/bin/go build -a -o ${DIST}/lake \
-            --ldflags "-X main.version=$version -X main.build=$build"
+              --ldflags "-X main.version=$version -X main.build=$build"
 
       - run:
           name: Verify binaries
           command: |
-            if [ ! -f ${DIST}/lake ] ; then
+            if [ ! -d ${DIST} ] ; then
               exit 1
             fi
 
@@ -118,7 +118,6 @@ jobs:
           command: |
             mkdir -p /app/bin
             cp /go/src/github.com/jancajthaml-openbank/lake/bin/lake /app/bin/lake
-            ls -al /app/bin
 
       - run:
           name: Build lake Docker image
@@ -216,12 +215,27 @@ jobs:
             ls -al /home/circleci/project
 
       - store_artifacts:
+          path: /home/circleci/project/bbtest_server.log
+          destination: bbtest_server.log
+
+      - store_artifacts:
           path: /home/circleci/project/bbtest_lake.log
           destination: bbtest_lake.log
+      - store_artifacts:
+          path: /home/circleci/project/bbtest_queue.log
+          destination: bbtest_queue.log
+
+      - store_artifacts:
+          path: /home/circleci/project/perf_server.log
+          destination: perf_server.log
 
       - store_artifacts:
           path: /home/circleci/project/perf_lake.log
           destination: perf_lake.log
+
+      - store_artifacts:
+          path: /home/circleci/project/perf_queue.log
+          destination: perf_queue.log
 
 workflows:
   version: 2
@@ -241,4 +255,3 @@ workflows:
           requires:
             - bbtest
             - performance
-
