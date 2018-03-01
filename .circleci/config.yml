@@ -81,8 +81,11 @@ jobs:
 
             ${LD_LIBRARY_PATH}/go/bin/go clean
 
+            CGO_ENABLED=1 \
+            GOOS=linux \
+            GOARCH=${GOARCH} \
             ${LD_LIBRARY_PATH}/go/bin/go build -a -o ${DIST}/lake \
-              --ldflags "-X main.version=$version -X main.build=$build"
+            --ldflags "-X main.version=$version -X main.build=$build"
 
       - run:
           name: Verify binaries

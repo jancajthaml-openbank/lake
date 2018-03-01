@@ -28,7 +28,7 @@ RUN groupadd -r lake && useradd --no-log-init -r -g lake lake
 
 USER lake
 
-COPY --chown=lake bin/lake /entrypoint
+COPY --chown=lake:lake bin/lake /entrypoint
 
 RUN chmod +x /entrypoint
 
