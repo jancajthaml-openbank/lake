@@ -122,9 +122,7 @@ jobs:
           name: Link artifacts
           command: |
             mkdir -p /app/bin
-
-            cp -r /go/src/github.com/jancajthaml-openbank/lake \
-              /app/bin/lake
+            cp /go/src/github.com/jancajthaml-openbank/lake/bin/wall /app/bin/lake
 
       - run:
           name: Build lake Docker image
