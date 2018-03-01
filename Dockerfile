@@ -30,6 +30,4 @@ USER lake
 
 COPY --chown=lake:lake bin/lake /entrypoint
 
-RUN chmod +x /entrypoint
-
 ENTRYPOINT ["/entrypoint"]

@@ -86,11 +86,13 @@ jobs:
             GOARCH=${GOARCH} \
             ${LD_LIBRARY_PATH}/go/bin/go build -a -o ${DIST}/lake \
             --ldflags "-X main.version=$version -X main.build=$build"
+            chmod +x ${DIST}/lake
+            ls -al ${DIST}
 
       - run:
           name: Verify binaries
           command: |
-            if [ ! -d ${DIST} ] ; then
+            if [ ! -f ${DIST}/lake ] ; then
               exit 1
             fi
 
