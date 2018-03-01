@@ -187,8 +187,8 @@ jobs:
               VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
             fi
 
-            echo "pulling openbank/wall:${VERSION}"
-            docker pull openbank/wall:${VERSION}
+            echo "pulling openbank/lake:${VERSION}"
+            docker pull openbank/lake:${VERSION}
 
             echo "[info] stopping older runs"
             (docker rm -f $(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
