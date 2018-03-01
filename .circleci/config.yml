@@ -117,9 +117,7 @@ jobs:
           name: Link artifacts
           command: |
             mkdir -p /app/bin
-
-            cp -r /go/src/github.com/jancajthaml-openbank/lake \
-              /app/bin/lake
+            cp /go/src/github.com/jancajthaml-openbank/lake/bin/lake /app/bin/lake
 
       - run:
           name: Build lake Docker image
@@ -134,28 +132,25 @@ jobs:
       - deploy:
           name: Push images to DockerHUB
           command: |
-            VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
+            if git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
+              echo "release commit"
 
-            echo "releasing lake snapshot ${VERSION}"
-            docker tag lake "openbank/lake:${VERSION}"
-            docker push "openbank/lake:${VERSION}"
-
-            if git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$" ; then
-              git pull --tags
-
-              VERSION=$(git tag | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$" | sort -t. -k 1,1n -k 2,2n -k 3,3n | tail -1)
+              git fetch --tags --force
+              VERSION=$(git tag | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" | sort -t. -k 1,1n -k 2,2n -k 3,3n | tail -1 | sed 's/\v//g')
 
               echo "releasing lake version ${VERSION} and updating latest"
               docker tag lake "openbank/lake:latest"
               docker push "openbank/lake:latest"
               docker tag lake "openbank/lake:${VERSION}"
               docker push "openbank/lake:${VERSION}"
-            fi
+            else
+              VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
 
-      - run:
-          name: Verify artifacts
-          command: |
-            docker images
+              docker tag lake "openbank/lake:${VERSION}"
+              docker push "openbank/lake:${VERSION}"
+
+              echo "pushed openbank/lake:${VERSION}"
+            fi
 
   performance:
     machine: true
@@ -181,11 +176,27 @@ jobs:
     working_directory: /home/circleci/project
 
     steps:
+      - checkout
 
       - run:
-          name: Run bbtest
+          name: Run blackbox tests
           command: |
-            echo "not implemented"
+            if git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
+              VERSION=$(git tag | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" | sort -t. -k 1,1n -k 2,2n -k 3,3n | tail -1 | sed 's/\v//g')
+            else
+              VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
+            fi
+
+            echo "pulling openbank/lake:${VERSION}"
+            docker pull openbank/lake:${VERSION}
+
+            echo "[info] stopping older runs"
+            (docker rm -f $(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
+            echo "[info] running bbtest"
+            VERSION=${VERSION} docker-compose run --rm bbtest
+            echo "[info] stopping runs"
+            (docker rm -f $(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
+            (docker rm -f $(docker ps -aqf "name=bbtest") || :) &> /dev/null
 
   report:
     docker:
@@ -204,12 +215,27 @@ jobs:
             ls -al /home/circleci/project
 
       - store_artifacts:
+          path: /home/circleci/project/bbtest_server.log
+          destination: bbtest_server.log
+
+      - store_artifacts:
           path: /home/circleci/project/bbtest_lake.log
           destination: bbtest_lake.log
+      - store_artifacts:
+          path: /home/circleci/project/bbtest_queue.log
+          destination: bbtest_queue.log
+
+      - store_artifacts:
+          path: /home/circleci/project/perf_server.log
+          destination: perf_server.log
 
       - store_artifacts:
           path: /home/circleci/project/perf_lake.log
           destination: perf_lake.log
+
+      - store_artifacts:
+          path: /home/circleci/project/perf_queue.log
+          destination: perf_queue.log
 
 workflows:
   version: 2
@@ -229,4 +255,3 @@ workflows:
           requires:
             - bbtest
             - performance
-

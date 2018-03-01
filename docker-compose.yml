@@ -68,11 +68,14 @@ services:
     build:
       context: .
       dockerfile: bbtest/Dockerfile
-    image: bbtest_lake
-    depends_on:
-      - service
+    image: lake_bbtest
+    container_name: lake_bbtest
+    working_dir: /opt/bbtest
     environment:
       - COMPOSE_PROJECT_NAME
+      - VERSION
     volumes:
+      - ./logs:/logs
       - ./bbtest:/opt/bbtest
       - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers

@@ -24,12 +24,9 @@ RUN apt-get update && \
       libzmq5=4.2.1-4 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN groupadd -r lake && useradd --no-log-init -r -g lake lake
-
-USER lake
-
-COPY --chown=lake bin/lake /entrypoint
-
+COPY bin/lake /entrypoint
 RUN chmod +x /entrypoint
+
+STOPSIGNAL SIGTERM
 
 ENTRYPOINT ["/entrypoint"]
