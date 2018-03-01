@@ -25,7 +25,8 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY bin/lake /entrypoint
-
 RUN chmod +x /entrypoint
+
+STOPSIGNAL SIGTERM
 
 ENTRYPOINT ["/entrypoint"]
