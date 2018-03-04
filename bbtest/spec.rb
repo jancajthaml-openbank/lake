@@ -10,13 +10,13 @@ RSpec.configure do |config|
 
   Dir.glob("./helpers/*_helper.rb") { |f| load f }
   config.include EventuallyHelper, :type => :feature
+  config.include ZMQHelper, :type => :feature
   Dir.glob("./steps/*_steps.rb") { |f| load f, true }
 
   config.before(:suite) do |_|
     print "[ suite starting ]\n"
 
-    # fixme to tenant helper (yeah dont use global constats)
-    $tenant_id = nil
+    ZMQHelper.start()
 
     get_containers = lambda do |image|
       containers = %x(docker ps -aqf "ancestor=#{image}" 2>/dev/null)
@@ -39,6 +39,8 @@ RSpec.configure do |config|
 
   config.after(:suite) do |_|
     print "\n[ suite ending   ]\n"
+
+    ZMQHelper.stop()
 
     get_containers = lambda do |image|
       containers = %x(docker ps -aqf "ancestor=#{image}" 2>/dev/null)

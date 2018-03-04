@@ -28,7 +28,6 @@ services:
     ports:
       - "5562"
       - "5561"
-    command: ["run"]
 
   sync:
     extends: go
