@@ -17,7 +17,7 @@ FROM library/debian:stretch
 MAINTAINER Jan Cajthaml <jan.cajthaml@gmail.com>
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    GOLANG_VERSION=1.10 \
+    GOLANG_VERSION="1.10" \
     LD_LIBRARY_PATH=/usr/lib \
     GOPATH=/go \
     GOARCH=amd64 \
