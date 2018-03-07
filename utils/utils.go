@@ -36,30 +36,31 @@ func NewZMQClient(region, host string) *ZMQClient {
 		return nil
 	}
 
-	/*
-		conn, err := net.DialTimeout("tcp", host+":"+80, time.Duration(100)*time.Millisecond)
-		if err != nil {
-			//fmt.Println(err)
-			return nil
-		}*/
-
-	// FIXME check if host exist or return right there
-
 	ctx, cancel := context.WithCancel(context.Background())
 	client := newClient(region, host, cancel)
 
 	go startSubRoutine(ctx, client)
 	go startPushRoutine(ctx, client)
 
+	var stash []string
+
+	probe := (region + "]")
+
 	for {
 		if client.host == "" {
 			return nil
 		}
-		client.push <- (region + "]")
+		client.push <- probe
 		select {
-		case <-client.sub:
-			// FIXME validate that sub is "region + ]"
-			log.Infof("ZMQClient(%v) ready", region)
+		case msg := <-client.sub:
+			if msg != probe {
+				stash = append(stash, msg)
+				continue
+			}
+			log.Infof("ZMQClient (%v) ready", region)
+			for _, msg := range stash {
+				client.sub <- msg
+			}
 			return client
 		case <-time.After(10 * time.Millisecond):
 			continue
@@ -82,7 +83,7 @@ func (client *ZMQClient) Stop() {
 
 		client.host = ""
 
-		log.Infof("ZMQClient(%v) closed", client.region)
+		log.Infof("ZMQClient (%v) closed", client.region)
 	}
 }
 
@@ -94,7 +95,7 @@ func (client *ZMQClient) Broadcast(message string) {
 	}
 
 	if len(client.host) == 0 {
-		log.Warnf("ZMQClient(%v) is closed", client.region)
+		log.Warnf("ZMQClient (%v) is already closed", client.region)
 		return
 	}
 
@@ -114,7 +115,7 @@ func (client *ZMQClient) Publish(destination, message string) {
 	}
 
 	if len(client.host) == 0 {
-		log.Warnf("ZMQClient(%v) is closed", client.region)
+		log.Warnf("ZMQClient (%v) is closed", client.region)
 		return
 	}
 
@@ -129,7 +130,7 @@ func (client *ZMQClient) Receive() []string {
 	}
 
 	if len(client.host) == 0 {
-		log.Warnf("ZMQClient(%v) is closed", client.region)
+		log.Warnf("ZMQClient (%v) is closed", client.region)
 		return nil
 	}
 
