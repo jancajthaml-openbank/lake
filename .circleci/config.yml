@@ -67,8 +67,7 @@ jobs:
       - run:
           name: Package binary
           command: |
-            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-
+            mkdir -p /tmp
             build=$(git rev-parse HEAD 2> /dev/null || :)
 
             if [ -n "${VERSION}" ] ; then
@@ -87,7 +86,7 @@ jobs:
       - run:
           name: Verify binaries
           command: |
-            if [ ! -d ${DIST} ] ; then
+            if [ ! -f ${DIST}/lake ] ; then
               exit 1
             fi
 
