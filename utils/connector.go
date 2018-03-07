@@ -27,7 +27,7 @@ import (
 const backoff = 50 * time.Millisecond
 
 func startSubRoutine(master context.Context, client *ZMQClient) {
-	log.Debugf("ZMQ SUB %s work", client.region)
+	log.Debugf("Binding queue (pull from %s)", client.region)
 
 	for {
 		ctx, cancel := context.WithCancel(master)
@@ -40,7 +40,7 @@ func startSubRoutine(master context.Context, client *ZMQClient) {
 }
 
 func startPushRoutine(master context.Context, client *ZMQClient) {
-	log.Debugf("ZMQ PUSH %s work", client.region)
+	log.Debugf("Binding queue (push from %s)", client.region)
 
 	for {
 		ctx, cancel := context.WithCancel(master)
