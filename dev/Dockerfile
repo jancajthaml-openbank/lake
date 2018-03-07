@@ -17,7 +17,7 @@ FROM library/debian:stretch
 MAINTAINER Jan Cajthaml <jan.cajthaml@gmail.com>
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    GOLANG_VERSION=1.9 \
+    GOLANG_VERSION="1.10" \
     LD_LIBRARY_PATH=/usr/lib \
     GOPATH=/go \
     GOARCH=amd64 \
@@ -45,7 +45,7 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN wget -O go.tgz "https://golang.org/dl/go${GOLANG_VERSION}.${GOOS}-${GOARCH}.tar.gz" && \
-            echo 'd70eadefce8e160638a9a6db97f7192d8463069ab33138893ad3bf31b0650a79 *go.tgz' | sha256sum -c - && \
+            echo 'b5a64335f1490277b585832d1f6c7f8c6c11206cba5cd3f771dcb87b98ad1a33 *go.tgz' | sha256sum -c - && \
             tar -C "${LD_LIBRARY_PATH}" -xzf go.tgz && rm go.tgz
 
 ENV PATH "${GOPATH}/bin:${LD_LIBRARY_PATH}/go/bin:${PATH}"
