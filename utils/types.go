@@ -14,7 +14,6 @@ type ZMQClient struct {
 }
 
 func newClient(region, host string, cancel context.CancelFunc) *ZMQClient {
-
 	return &ZMQClient{
 		push:   make(chan string, bufferSize),
 		sub:    make(chan string, bufferSize),
