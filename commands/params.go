@@ -16,8 +16,12 @@ package commands
 
 // RunParams is a structure of application parameters
 type RunParams struct {
+	// PullPort represents ZMQ PULL binding
 	PullPort int
-	PubPort  int
-	Log      string
+	// PubPort represents ZMQ PUB binding
+	PubPort int
+	// Log represents log output
+	Log string
+	// LogLevel ignorecase log level
 	LogLevel string
 }

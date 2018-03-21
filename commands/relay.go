@@ -44,7 +44,7 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 	defer cancel()
 
 	var (
-		chunk    []byte
+		chunk    string
 		receiver *zmq.Socket
 		sender   *zmq.Socket
 	)
@@ -104,10 +104,11 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 		if err != nil {
 			return
 		}
-		chunk, err = receiver.RecvBytes(zmq.DONTWAIT)
+		chunk, err = receiver.Recv(zmq.DONTWAIT)
 		switch err {
 		case nil:
-			sender.SendBytes(chunk, 0)
+			sender.Send(chunk, 0)
+			log.Debug(chunk)
 		case zmq.ErrorSocketClosed:
 			fallthrough
 		case zmq.ErrorContextClosed:
