@@ -48,8 +48,10 @@ bbtest:
 
 .PHONY: package
 package:
+	\
 	VERSION=$(VERSION) \
-		docker-compose run --rm package
+	\
+	docker-compose run --rm package
 	docker-compose build service
 
 .PHONY: run

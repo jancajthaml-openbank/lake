@@ -16,14 +16,20 @@ package main
 
 import (
 	"bufio"
+	"context"
+	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/viper"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/jancajthaml-openbank/lake/commands"
 )
@@ -63,6 +69,7 @@ func init() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
+	viper.SetDefault("http.port", 8080)
 	viper.SetDefault("log.level", "DEBUG")
 }
 
@@ -74,23 +81,48 @@ func main() {
 		PubPort:  5561,
 		Log:      viper.GetString("log"),
 		LogLevel: viper.GetString("log.level"),
+		HTTPPort: viper.GetInt("http.port"),
 	}
 
 	setupLogOutput(params)
 	setupLogLevel(params)
 
+	gin.SetMode(gin.ReleaseMode)
+
+	router := gin.New()
+
+	router.GET("/health", func(c *gin.Context) {
+		c.String(200, "")
+	})
+
 	log.Infof(">>> Starting <<<")
 
 	go commands.StartQueue(params)
 
-	log.Infof(">>> Started <<<")
-
-	// FIXME add health check port 80
-
 	exitSignal := make(chan os.Signal)
 	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
+
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", params.HTTPPort),
+		Handler: router,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil {
+			exitSignal <- syscall.SIGTERM
+		}
+	}()
+
+	log.Infof(">>> Started <<<")
+
 	<-exitSignal
 
 	log.Infof(">>> Terminating <<<")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown:", err)
+	}
+
 	log.Infof(">>> Terminated <<<")
 }
