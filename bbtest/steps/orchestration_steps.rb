@@ -1,4 +1,6 @@
-step "no containers are running" do ||
+step "no lakes are running" do ||
+  raise "openbank/lake:#{ENV.fetch("VERSION", "latest")} image not found" if %x(docker images -q openbank/lake:#{ENV.fetch("VERSION", "latest")} 2> /dev/null).strip.empty?
+
   containers = %x(docker ps -a | awk '{ print $1,$2 }' | grep openbank/lake | awk '{print $1 }' 2>/dev/null)
   containers = ($? == 0 ? containers.split("\n") : []).map(&:strip).reject(&:empty?)
 
@@ -18,8 +20,8 @@ step "no containers are running" do ||
   }
 end
 
-step "container is started" do ||
-  send "no containers are running"
+step "lake is started" do ||
+  send "no lakes are running"
 
   id = %x(docker run \
     -d \
@@ -39,7 +41,7 @@ step "container is started" do ||
   }
 end
 
-step "container should be running" do ||
+step "lake should be running" do ||
   containers = %x(docker ps -a | awk '{ print $1,$2 }' | grep openbank/lake | awk '{print $1 }' 2>/dev/null)
   expect($?).to be_success
   expect(containers).not_to be_empty
@@ -47,6 +49,10 @@ step "container should be running" do ||
   containers.split("\n").map(&:strip).reject(&:empty?).each { |id|
     send ":container running state is :state", id, true
   }
+end
+
+step "lake should be healthy" do ||
+  # not implemented yet
 end
 
 step ":container running state is :state" do |container, state|

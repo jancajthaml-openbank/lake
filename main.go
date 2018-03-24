@@ -83,6 +83,8 @@ func main() {
 
 	go commands.StartQueue(params)
 
+	log.Infof(">>> Started <<<")
+
 	// FIXME add health check port 80
 
 	exitSignal := make(chan os.Signal)

@@ -62,7 +62,6 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 			return
 		}
 	}
-	receiver.SetConflate(false)
 	defer receiver.Close()
 
 	for {
@@ -78,7 +77,6 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 			return
 		}
 	}
-	sender.SetConflate(false)
 	defer sender.Close()
 
 	for {

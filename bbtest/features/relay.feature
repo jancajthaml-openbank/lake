@@ -1,7 +1,9 @@
 Feature: Relay message
 
   Scenario: setup
-    Given container is started
+    Given lake is started
+    And lake should be running
+    And lake should be healthy
 
   Scenario: relay message
     When lake recieves "A b"
