@@ -9,7 +9,6 @@ trap exit INT TERM
 dist=bin
 arch=amd64
 platforms=(linux)
-#platforms=(linux darwin)
 build=$(git rev-parse HEAD 2> /dev/null || :)
 
 export LD_LIBRARY_PATH=/usr/lib
@@ -37,7 +36,7 @@ package_linux() {
   GOOS=linux \
   GOARCH=${arch} \
   go build -a -o ${dist}/${1}-linux-${version} \
-  --ldflags "-X main.version=$version -X main.build=$build"
+  --ldflags "-X main.version=$version -X main.build=${build}"
 }
 
 package_service() {

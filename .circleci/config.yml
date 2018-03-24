@@ -1,68 +1,135 @@
 version: 2
 
+# ---------------------------------------------------------------------------- #
+
+workflows:
+
+  version: 2
+
+  commit:
+    jobs:
+      - setup
+      - test:
+          requires:
+            - setup
+      - build:
+          requires:
+            - setup
+      - package:
+          requires:
+            - build
+      - bbtest:
+          requires:
+            - package
+
+  rolling:
+    triggers:
+      - schedule:
+          cron: "0,5,10,15,20,25,30,35,40,45,50,55 * * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - bbtest
+
+# ---------------------------------------------------------------------------- #
+
 jobs:
-  test:
+
+  # -------------------------------------------------------------------------- #
+
+  setup:
+
     docker:
-      - image: library/debian:stretch
+      - image: docker:17.09.0-ce-git
         environment:
           - LANG: C.UTF-8
-          - DEBIAN_FRONTEND: noninteractive
-          - GOLANG_VERSION: "1.10"
-          - LD_LIBRARY_PATH: /usr/lib
-          - GOPATH: /go
           - GOARCH: amd64
-          - CGO_ENABLED: 1
           - GOOS: linux
-          - GOROOT: /usr/lib/go
+          - GOBIN: /usr/lib/go/bin/go
+
+    working_directory: /home/circleci/project
+
+    steps:
+
+      - checkout
+
+      - setup_remote_docker
+
+      - run:
+          name: Build images
+          command: |
+            if [ -s .purge ] ; then
+              docker build -t openbankdev/lake_bbtest ./bbtest &
+              docker build -t openbankdev/lake_base ./dev &
+              wait
+            else
+              echo "skipping"
+            fi
+
+      - run:
+          name: Login to DockerHUB
+          command: |
+            if [ -s .purge ] ; then
+              docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+            else
+              echo "skipping"
+            fi
+
+      - deploy:
+          name: Push to docker hub
+          command: |
+            if [ -s .purge ] ; then
+              upload_to_docker_hub() {
+                docker tag ${1} "${1}:latest"
+                docker push "${1}:latest"
+              }
+
+              upload_to_docker_hub openbankdev/lake_bbtest &
+              upload_to_docker_hub openbankdev/lake_base &
+              wait
+            else
+              echo "skipping"
+            fi
+
+  # -------------------------------------------------------------------------- #
+
+  test:
+
+    docker:
+      - image: openbankdev/lake_base
+        environment:
           - DIST: /go/src/github.com/jancajthaml-openbank/lake/bin
 
     working_directory: /go/src/github.com/jancajthaml-openbank/lake
+
     steps:
+
       - checkout
 
-      - run:
-          name: Setup environment
-          command: |
-            apt-get update && \
-            apt-get -y install --no-install-recommends \
-                ca-certificates=20161130+nmu1 \
-                pkg-config=0.29-4+b1 \
-                libzmq3-dev=4.2.1-4 \
-                cmake=3.7.2-1 \
-                gcc=4:6.3.0-4 \
-                g++=4:6.3.0-4 \
-                zlib1g-dev=1:1.2.8.dfsg-5 \
-                libmpc-dev=1.0.3-1+b2 \
-                libmpfr-dev=3.1.5-1 \
-                libgmp-dev=2:6.1.2+dfsg-1 \
-                patch=2.7.5-1+b2 \
-                git=1:2.11.0-3+deb9u2 \
-                wget=1.18-5+deb9u1 \
-                tar=1.29b-1.1 && \
-            apt-get clean && rm -rf /var/lib/apt/lists/*
+      - run: dep ensure
 
-            wget -O go.tgz "https://golang.org/dl/go${GOLANG_VERSION}.${GOOS}-${GOARCH}.tar.gz" && \
-            echo 'b5a64335f1490277b585832d1f6c7f8c6c11206cba5cd3f771dcb87b98ad1a33 *go.tgz' | sha256sum -c - && \
-            tar -C "${LD_LIBRARY_PATH}" -xzf go.tgz && rm go.tgz
+      - run: go test -v ./... -benchmem -bench=. -timeout=20s
 
-            ${LD_LIBRARY_PATH}/go/bin/go get -u github.com/golang/dep/cmd/dep
+  # -------------------------------------------------------------------------- #
 
-      - run:
-          name: Install dependencies
-          command: |
-            ${GOPATH}/bin/dep ensure
+  build:
 
-      - run:
-          name: Unit test
-          command: |
-            ${LD_LIBRARY_PATH}/go/bin/go test -v ./... -benchmem -bench=. -timeout=20s
+    docker:
+      - image: openbankdev/lake_base
+        environment:
+          - DIST: /go/src/github.com/jancajthaml-openbank/lake/bin
 
-      - run:
-          name: Cleanup older buils
-          command: |
-            if [ -d ${DIST} ] && [ "$(ls -A ${DIST})" ] ; then
-              rm -rf ${DIST}/*
-            fi
+    working_directory: /go/src/github.com/jancajthaml-openbank/lake
+
+    steps:
+
+      - checkout
+
+      - run: dep ensure
+
+      - run: if [ -d ${DIST} ] && [ "$(ls -A ${DIST})" ] ; then rm -rf ${DIST}/* ; fi
 
       - run:
           name: Package binary
@@ -78,104 +145,93 @@ jobs:
               version="snapshot-${build}"
             fi
 
-            ${LD_LIBRARY_PATH}/go/bin/go clean
+            go clean
 
-            ${LD_LIBRARY_PATH}/go/bin/go build -a -o ${DIST}/lake \
+            go build -a -o ${DIST}/lake \
               --ldflags "-X main.version=$version -X main.build=$build"
 
-      - run:
-          name: Verify binaries
-          command: |
-            if [ ! -f ${DIST}/lake ] ; then
-              exit 1
-            fi
+      - run: if [ ! -f ${DIST}/lake ] ; then exit 1 ; fi
 
       - persist_to_workspace:
           root: /go/src/github.com/jancajthaml-openbank/lake/bin
           paths:
             - lake
 
-  build:
+  # -------------------------------------------------------------------------- #
+
+  package:
+
     docker:
       - image: docker:17.09.0-ce-git
-        environment:
-          - LANG: C.UTF-8
-          - GOARCH: amd64
-          - GOOS: linux
-          - GOBIN: /usr/lib/go/bin/go
 
     working_directory: /app
+
     steps:
+
       - attach_workspace:
           at: /go/src/github.com/jancajthaml-openbank/lake/bin
 
       - checkout
+
       - setup_remote_docker
 
-      - run:
-          name: Link artifacts
-          command: |
-            mkdir -p /app/bin
-            cp /go/src/github.com/jancajthaml-openbank/lake/bin/lake /app/bin/lake
+      - run: mkdir -p /app/bin
 
-      - run:
-          name: Build lake Docker image
-          command: |
-            docker build -t lake .
+      - run: cp /go/src/github.com/jancajthaml-openbank/lake/bin/lake /app/bin/lake
 
-      - deploy:
-          name: Login to DockerHUB
-          command: |
-            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+      - run: docker build -t openbank/lake .
+
+      - run: docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
 
       - deploy:
           name: Push images to DockerHUB
           command: |
-            if git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
-              echo "release commit"
+            upload_to_docker_hub() {
+              docker tag ${1} "${1}:${2}"
+              docker push "${1}:${2}"
+            }
 
+            if git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
               git fetch --tags --force
               VERSION=$(git tag | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" | sort -t. -k 1,1n -k 2,2n -k 3,3n | tail -1 | sed 's/\v//g')
-
-              echo "releasing lake version ${VERSION} and updating latest"
-              docker tag lake "openbank/lake:latest"
-              docker push "openbank/lake:latest"
-              docker tag lake "openbank/lake:${VERSION}"
-              docker push "openbank/lake:${VERSION}"
+              upload_to_docker_hub openbank/lake latest
+              upload_to_docker_hub openbank/lake ${VERSION}
             else
               VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
-
-              docker tag lake "openbank/lake:${VERSION}"
-              docker push "openbank/lake:${VERSION}"
-
-              echo "pushed openbank/lake:${VERSION}"
+              upload_to_docker_hub openbank/lake ${VERSION}
             fi
 
-  performance:
-    machine: true
-    environment:
-      - PERSISTENCE_PATH: /home/circleci/project/dev/data
-      - LOGS_PATH: /home/circleci/project/dev/logs
-
-    working_directory: /home/circleci/project
-
-    steps:
-
-      - run:
-          name: Start tests
-          command: |
-            echo "not implemented"
+  # -------------------------------------------------------------------------- #
 
   bbtest:
     machine: true
+
     environment:
       - PERSISTENCE_PATH: /home/circleci/project/dev/data
-      - LOGS_PATH: /home/circleci/project/dev/logs
 
     working_directory: /home/circleci/project
 
     steps:
+
       - checkout
+
+      - run:
+          name: Prepare blackbox tests
+          command: |
+            if git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
+              VERSION=$(git tag | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" | sort -t. -k 1,1n -k 2,2n -k 3,3n | tail -1 | sed 's/\v//g')
+            else
+              VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
+            fi
+
+            pull() {
+              echo "pulling ${1}:${2}"
+              docker pull ${1}:${2}
+            }
+
+            pull openbank/lake ${VERSION} & \
+            pull openbankdev/lake_bbtest latest & \
+            wait
 
       - run:
           name: Run blackbox tests
@@ -186,71 +242,14 @@ jobs:
               VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
             fi
 
-            echo "pulling openbank/lake:${VERSION}"
-            docker pull openbank/lake:${VERSION}
-
-            echo "[info] stopping older runs"
-            (docker rm -f $(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
-            echo "[info] running bbtest"
             VERSION=${VERSION} docker-compose run --rm bbtest
-            echo "[info] stopping runs"
-            (docker rm -f $(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
-            (docker rm -f $(docker ps -aqf "name=bbtest") || :) &> /dev/null
-
-  report:
-    docker:
-      - image: docker:17.09.0-ce-git
-        environment:
-          - LANG: C.UTF-8
-
-    steps:
-
-      - attach_workspace:
-          at: /home/circleci/project
-
-      - run:
-          name: Vertify artifacts
-          command: |
-            ls -al /home/circleci/project
 
       - store_artifacts:
-          path: /home/circleci/project/bbtest_server.log
-          destination: bbtest_server.log
+          path: /home/circleci/project/reports
+          destination: reports
 
-      - store_artifacts:
-          path: /home/circleci/project/bbtest_lake.log
-          destination: bbtest_lake.log
-      - store_artifacts:
-          path: /home/circleci/project/bbtest_queue.log
-          destination: bbtest_queue.log
+      - run: (docker rm -f $(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
 
-      - store_artifacts:
-          path: /home/circleci/project/perf_server.log
-          destination: perf_server.log
+      - run: (docker rm -f $(docker ps -aqf "name=bbtest") || :) &> /dev/null
 
-      - store_artifacts:
-          path: /home/circleci/project/perf_lake.log
-          destination: perf_lake.log
-
-      - store_artifacts:
-          path: /home/circleci/project/perf_queue.log
-          destination: perf_queue.log
-
-workflows:
-  version: 2
-  validate_and_publish:
-    jobs:
-      - test
-      - build:
-          requires:
-            - test
-      - performance:
-          requires:
-            - build
-      - bbtest:
-          requires:
-            - build
-      - report:
-          requires:
-            - bbtest
-            - performance
+# ---------------------------------------------------------------------------- #

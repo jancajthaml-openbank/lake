@@ -1,12 +1,16 @@
 version: '2'
 
+# ---------------------------------------------------------------------------- #
+
 services:
+
+  # -------------------------------------------------------------------------- #
 
   go:
     build:
       dockerfile: dev/Dockerfile
       context: .
-    image: dev_lake
+    image: openbankdev/lake_base
     volumes:
       - ./dev/lifecycle:/opt/lifecycle
       - .:/go/src/github.com/jancajthaml-openbank/lake
@@ -19,6 +23,8 @@ services:
     entrypoint: ["go"]
     privileged: true
 
+  # -------------------------------------------------------------------------- #
+
   service:
     build:
       dockerfile: Dockerfile
@@ -29,33 +35,47 @@ services:
       - "5562"
       - "5561"
 
+  # -------------------------------------------------------------------------- #
+
   sync:
     extends: go
     entrypoint: ["dep"]
     command: ["ensure"]
+
+  # -------------------------------------------------------------------------- #
 
   init:
     extends: go
     entrypoint: ["dep"]
     command: ["init"]
 
+  # -------------------------------------------------------------------------- #
+
   update:
     extends: go
     entrypoint: ["dep"]
     command: ["ensure", "-update"]
+
+  # -------------------------------------------------------------------------- #
 
   fetch:
     extends: go
     entrypoint: ["govendor"]
     command: ["ensure", "-add", "github.com/stretchr/testify"]
 
+  # -------------------------------------------------------------------------- #
+
   lint:
     extends: go
     entrypoint: ["/opt/lifecycle/lint"]
 
+  # -------------------------------------------------------------------------- #
+
   package:
     extends: go
     entrypoint: ["/opt/lifecycle/package"]
+
+  # -------------------------------------------------------------------------- #
 
   test:
     extends: go
@@ -63,12 +83,13 @@ services:
       - GOMAXPROCS=1
     command: ["test", "-v", "./...", "-benchmem", "-bench=.", "-timeout=20s"]
 
+  # -------------------------------------------------------------------------- #
+
   bbtest:
     build:
       context: .
       dockerfile: bbtest/Dockerfile
-    image: lake_bbtest
-    container_name: lake_bbtest
+    image: openbankdev/lake_bbtest
     working_dir: /opt/bbtest
     environment:
       - COMPOSE_PROJECT_NAME
@@ -78,3 +99,5 @@ services:
       - ./bbtest:/opt/bbtest
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/containers:/var/lib/docker/containers
+
+# ---------------------------------------------------------------------------- #
