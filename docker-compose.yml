@@ -60,8 +60,8 @@ services:
 
   fetch:
     extends: go
-    entrypoint: ["govendor"]
-    command: ["ensure", "-add", "github.com/stretchr/testify"]
+    entrypoint: ["dep"]
+    command: ["ensure", "-add", "github.com/gin-gonic/gin"]
 
   # -------------------------------------------------------------------------- #
 

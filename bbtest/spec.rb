@@ -18,6 +18,8 @@ RSpec.configure do |config|
 
     ZMQHelper.start()
 
+    $http_client = HTTPClient.new()
+
     get_containers = lambda do |image|
       containers = %x(docker ps -aqf "ancestor=#{image}" 2>/dev/null)
       return ($? == 0 ? containers.split("\n") : [])
@@ -29,7 +31,7 @@ RSpec.configure do |config|
 
     get_containers.call("openbank/lake").each { |container| teardown_container.call(container) }
 
-    ["/logs"].each { |folder|
+    ["/reports"].each { |folder|
       FileUtils.mkdir_p folder
       FileUtils.rm_rf Dir.glob("#{folder}/*")
     }
@@ -52,7 +54,7 @@ RSpec.configure do |config|
       label = ($? == 0 ? label.strip : container)
 
       %x(docker kill --signal="TERM" #{container} >/dev/null 2>&1 || :)
-      %x(docker logs #{container} >/logs/#{label}.log 2>&1)
+      %x(docker logs #{container} >/reports/#{label}.log 2>&1)
       %x(docker rm -f #{container} &>/dev/null || :)
     end
 

@@ -14,7 +14,7 @@ step "no lakes are running" do ||
       label = %x(docker inspect --format='{{.Name}}' #{id})
       label = ($? == 0 ? label.strip : id)
 
-      %x(docker logs #{id} >/logs/#{label}.log 2>&1)
+      %x(docker logs #{id} >/reports/#{label}.log 2>&1)
       %x(docker rm -f #{id} &>/dev/null || :)
     }
   }
@@ -26,8 +26,11 @@ step "lake is started" do ||
   id = %x(docker run \
     -d \
     -h lake \
+    -e LAKE_LOG_LEVEL=DEBUG \
+    -e LAKE_HTTP_PORT=8080 \
     -p 5561 \
     -p 5562 \
+    -p 8080 \
     --net=lake_default \
     --net-alias=lake \
     --name=lake \
@@ -49,11 +52,13 @@ step "lake should be running" do ||
   containers.split("\n").map(&:strip).reject(&:empty?).each { |id|
     send ":container running state is :state", id, true
   }
+
+  eventually(timeout: 4) {
+    resp = $http_client.lake.health_check()
+    expect(resp.status).to eq(200)
+  }
 end
 
-step "lake should be healthy" do ||
-  # not implemented yet
-end
 
 step ":container running state is :state" do |container, state|
   eventually(timeout: 3) {
