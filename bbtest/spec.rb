@@ -42,8 +42,6 @@ RSpec.configure do |config|
   config.after(:suite) do |_|
     print "\n[ suite ending   ]\n"
 
-    ZMQHelper.stop()
-
     get_containers = lambda do |image|
       containers = %x(docker ps -aqf "ancestor=#{image}" 2>/dev/null)
       return ($? == 0 ? containers.split("\n") : [])
@@ -59,6 +57,8 @@ RSpec.configure do |config|
     end
 
     get_containers.call("openbank/lake").each { |container| teardown_container.call(container) }
+
+    ZMQHelper.stop()
 
     print "[ suite ended    ]"
   end
