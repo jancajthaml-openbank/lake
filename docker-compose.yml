@@ -97,6 +97,7 @@ services:
     volumes:
       - ./logs:/logs
       - ./bbtest:/opt/bbtest
+      - ./reports:/reports
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/containers:/var/lib/docker/containers
 

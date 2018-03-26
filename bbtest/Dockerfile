@@ -12,35 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM library/ruby:2
+FROM ruby:2.5.0-stretch
 
 MAINTAINER Jan Cajthaml <jan.cajthaml@gmail.com>
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        netcat-openbsd \
-        bsdmainutils \
-        libzmq3-dev && \
+    \
+        libzmq3-dev=4.2.1-4 \
+    \
+    && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN gem install \
-    turnip:2.1.1 \
-    excon \
-    bigdecimal \
-    turnip_formatter:0.5.0 \
-    rspec_junit_formatter \
-    byebug \
-    rspec-instafail \
-    ffi-rzmq:2.0.4
+    \
+        turnip:2.1.1 \
+        turnip_formatter:0.5.0 \
+        rspec_junit_formatter:0.3.0 \
+        rspec-instafail:1.0.0 \
+        excon:0.61.0 \
+        bigdecimal:1.3.4 \
+        byebug:10.0.1 \
+        ffi-rzmq:2.0.4
 
 RUN curl -L https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce.tgz | \
     tar -xzvf - --strip-components=1 -C /usr/bin docker/docker && \
     chmod a+x /usr/bin/docker
 
-RUN curl -Lo /usr/local/bin/docker-compose https://github.com/docker/compose/releases/download/1.17.1/docker-compose-Linux-x86_64 && \
-    chmod a+x /usr/local/bin/docker-compose
-
 WORKDIR /opt/bbtest
 
 ENTRYPOINT ["rspec", "--require", "/opt/bbtest/spec.rb"]
-CMD ["--pattern", "/opt/bbtest/features/*.feature"]
+CMD ["--format", "documentation", "--format", "RspecJunitFormatter", "--out", "rspec.xml", "--pattern", "/opt/bbtest/features/*.feature"]
