@@ -14,7 +14,7 @@ module ZMQHelper
       raise "unable to bind SUB" unless pull_channel.connect("tcp://lake:5561") >= 0
       pub_channel = ctx.socket(ZMQ::PUSH)
       raise "unable to bind PUSH" unless pub_channel.connect("tcp://lake:5562") >= 0
-    rescue ContextError => e
+    rescue ContextError => _
       raise "Failed to allocate context or socket!"
     end
 
