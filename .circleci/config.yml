@@ -60,38 +60,26 @@ jobs:
       - run:
           name: Build images
           command: |
-            if [ -s .purge ] ; then
-              docker build -t openbankdev/lake_bbtest ./bbtest &
-              docker build -t openbankdev/lake_base ./dev &
-              wait
-            else
-              echo "skipping"
-            fi
+            docker build -t openbankdev/lake_bbtest ./bbtest &
+            docker build -t openbankdev/lake_base ./dev &
+            wait
 
       - run:
           name: Login to DockerHUB
           command: |
-            if [ -s .purge ] ; then
-              docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-            else
-              echo "skipping"
-            fi
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
 
       - deploy:
           name: Push to docker hub
           command: |
-            if [ -s .purge ] ; then
-              upload_to_docker_hub() {
-                docker tag ${1} "${1}:latest"
-                docker push "${1}:latest"
-              }
+            upload_to_docker_hub() {
+              docker tag ${1} "${1}:latest"
+              docker push "${1}:latest"
+            }
 
-              upload_to_docker_hub openbankdev/lake_bbtest &
-              upload_to_docker_hub openbankdev/lake_base &
-              wait
-            else
-              echo "skipping"
-            fi
+            upload_to_docker_hub openbankdev/lake_bbtest &
+            upload_to_docker_hub openbankdev/lake_base &
+            wait
 
   # -------------------------------------------------------------------------- #
 
