@@ -42,4 +42,4 @@ RUN curl -L https://download.docker.com/linux/static/stable/x86_64/docker-17.09.
 WORKDIR /opt/bbtest
 
 ENTRYPOINT ["rspec", "--require", "/opt/bbtest/spec.rb"]
-CMD ["--format", "documentation", "--format", "RspecJunitFormatter", "--out", "rspec.xml", "--pattern", "/opt/bbtest/features/*.feature"]
+CMD ["--format", "documentation", "--format", "RspecJunitFormatter", "--out", "junit.xml", "--pattern", "/opt/bbtest/features/*.feature"]

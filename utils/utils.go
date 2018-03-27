@@ -62,7 +62,7 @@ func NewZMQClient(region, host string) *ZMQClient {
 				client.sub <- msg
 			}
 			return client
-		case <-time.After(10 * time.Millisecond):
+		case <-time.After(500 * time.Millisecond):
 			continue
 		}
 	}
@@ -134,9 +134,14 @@ func (client *ZMQClient) Receive() []string {
 		return nil
 	}
 
+	var (
+		pingMessage = (client.region + "]")
+		data        string
+	)
+
 	for {
-		data := <-client.sub
-		if data == (client.region + "]") {
+		data = <-client.sub
+		if data == pingMessage {
 			continue
 		}
 		return strings.Split(data, " ")[1:]
