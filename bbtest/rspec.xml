@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="rspec" tests="2" skipped="0" failures="0" errors="0" time="2.458313" timestamp="2018-03-27T06:07:16+00:00" hostname="0efdd51d0d94">
+<properties>
+<property name="seed" value="6940"/>
+</properties>
+<testcase classname="features.relay" name="Relay message setup Given lake is running" file="./features/relay.feature" time="1.390901"></testcase>
+<testcase classname="features.relay" name="Relay message relay message When lake recieves &quot;A b&quot; -&gt; Then lake responds with &quot;A b&quot; -&gt; And no other messages were recieved" file="./features/relay.feature" time="0.134483"></testcase>
+</testsuite>

@@ -232,6 +232,9 @@ jobs:
 
             VERSION=${VERSION} docker-compose run --rm bbtest
 
+      - store_test_results:
+          path: /home/circleci/project/bbtest
+
       - store_artifacts:
           path: /home/circleci/project/reports
           destination: reports
