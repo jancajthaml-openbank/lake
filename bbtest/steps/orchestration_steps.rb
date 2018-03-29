@@ -79,6 +79,8 @@ step "lake is running" do ||
   eventually(timeout: 10) {
     send ":host is healthy", "lake"
   }
+
+  lake_handshake()
 end
 
 step ":host is healthy" do |host|

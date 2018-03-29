@@ -22,14 +22,21 @@ module ZMQHelper
     self.pull_channel = pull_channel
     self.pub_channel = pub_channel
 
+    self.ready = false
+
     self.pull_daemon = Thread.new do
       loop do
         break if self.poisonPill or self.pull_channel.nil?
         data = ""
         self.pull_channel.recv_string(data, ZMQ::DONTWAIT)
         next if data.empty?
+        if data == "!" and !self.ready
+          self.ready = true
+          next
+        end
+        next if data == "!"
         self.mutex.synchronize do
-          self.recv_backlog.add(data)
+          self.recv_backlog << data
         end
       end
     end
@@ -65,6 +72,10 @@ module ZMQHelper
     ZMQHelper.remove(data)
   end
 
+  def lake_handshake
+    ZMQHelper.lake_handshake()
+  end
+
   class << self
     attr_accessor :ctx,
                   :pull_channel,
@@ -72,10 +83,11 @@ module ZMQHelper
                   :pull_daemon,
                   :mutex,
                   :poisonPill,
-                  :recv_backlog
+                  :recv_backlog,
+                  :ready
   end
 
-  self.recv_backlog = [].to_set
+  self.recv_backlog = []
 
   self.mutex = Mutex.new
   self.poisonPill = false
@@ -93,9 +105,16 @@ module ZMQHelper
     self.pub_channel.send_string(data)
   end
 
+  def self.lake_handshake()
+    until self.ready
+      self.pub_channel.send_string("!")
+      sleep(0.1)
+    end
+  end
+
   def self.remove data
     self.mutex.synchronize do
-      self.recv_backlog = self.recv_backlog.delete(data)
+      self.recv_backlog.reject! { |v| v == data }
     end
   end
 
