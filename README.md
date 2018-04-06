@@ -13,10 +13,3 @@ ZMQ data lake for openbank project
 ## License
 
 Licensed under Apache 2.0 see LICENSE.md for details
-
-## Continuous Development
-
-*Rebuilding development images*
-
-When file `.purge` is not empty `openbankdev/lake_base` and `openbankdev/lake_bbtest`
-will be rebuilt and uploaded to docker hub.
