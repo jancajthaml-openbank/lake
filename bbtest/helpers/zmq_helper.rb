@@ -39,23 +39,23 @@ module ZMQHelper
           self.recv_backlog << data
         end
       end
+      self.pull_channel.setsockopt(ZMQ::UNSUBSCRIBE, '')
+      self.pub_channel.close() unless self.pub_channel.nil?
+      self.pull_channel.close() unless self.pull_channel.nil?
+      self.ctx.terminate() unless self.ctx.nil?
+      self.ctx = nil
+      self.pull_channel = nil
+      self.pub_channel = nil
     end
   end
 
   def self.stop
     self.poisonPill = true
     begin
-      self.pull_channel.setsockopt(ZMQ::UNSUBSCRIBE, '')
       self.pull_daemon.join() unless self.pull_daemon.nil?
-      self.pub_channel.close() unless self.pub_channel.nil?
-      self.pull_channel.close() unless self.pull_channel.nil?
-      self.ctx.terminate() unless self.ctx.nil?
     rescue
     ensure
       self.pull_daemon = nil
-      self.ctx = nil
-      self.pull_channel = nil
-      self.pub_channel = nil
     end
     self.poisonPill = false
   end
