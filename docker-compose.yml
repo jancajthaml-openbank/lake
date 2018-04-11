@@ -61,7 +61,7 @@ services:
   fetch:
     extends: go
     entrypoint: ["dep"]
-    command: ["ensure", "-add", "github.com/gin-gonic/gin"]
+    command: ["ensure", "-add", "github.com/jancajthaml-openbank/lake-client"]
 
   # -------------------------------------------------------------------------- #
 
