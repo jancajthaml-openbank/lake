@@ -21,7 +21,6 @@ services:
       - GOPATH=/go
       - COMPOSE_PROJECT_NAME
     entrypoint: ["go"]
-    privileged: true
 
   # -------------------------------------------------------------------------- #
 
@@ -34,6 +33,10 @@ services:
     ports:
       - "5562"
       - "5561"
+      - "9999"
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
 
   # -------------------------------------------------------------------------- #
 
@@ -77,6 +80,13 @@ services:
 
   # -------------------------------------------------------------------------- #
 
+  debian:
+    extends: go
+    entrypoint: ["make", "--directory", "/go/src/github.com/jancajthaml-openbank/lake"]
+    command: ["build"]
+
+  # -------------------------------------------------------------------------- #
+
   test:
     extends: go
     environment:
@@ -95,9 +105,8 @@ services:
       - COMPOSE_PROJECT_NAME
       - VERSION
     volumes:
-      - ./logs:/logs
-      - ./bbtest:/opt/bbtest
       - ./reports:/reports
+      - ./bbtest:/opt/bbtest
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/containers:/var/lib/docker/containers
 

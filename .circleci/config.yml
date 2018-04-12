@@ -135,15 +135,22 @@ jobs:
 
             go clean
 
-            go build -a -o ${DIST}/lake \
+            go build -a -o ${DIST}/entrypoint \
               --ldflags "-X main.version=$version -X main.build=$build"
 
-      - run: if [ ! -f ${DIST}/lake ] ; then exit 1 ; fi
+      - run: if [ ! -f ${DIST}/entrypoint ] ; then exit 1 ; fi
+
+      - run:
+          name: Package debian
+          command: |
+            make prep
+            debuild -- binary
+            make teardown
 
       - persist_to_workspace:
-          root: /go/src/github.com/jancajthaml-openbank/lake/bin
+          root: /go/src/github.com/jancajthaml-openbank/lake/pkg
           paths:
-            - lake
+            - lake_*_amd64.deb
 
   # -------------------------------------------------------------------------- #
 
@@ -157,15 +164,15 @@ jobs:
     steps:
 
       - attach_workspace:
-          at: /go/src/github.com/jancajthaml-openbank/lake/bin
+          at: /go/src/github.com/jancajthaml-openbank/lake/pkg
 
       - checkout
 
       - setup_remote_docker
 
-      - run: mkdir -p /app/bin
+      - run: mkdir -p /app/pkg
 
-      - run: cp /go/src/github.com/jancajthaml-openbank/lake/bin/lake /app/bin/lake
+      - run: cp -r /go/src/github.com/jancajthaml-openbank/lake/pkg /app/pkg
 
       - run: docker build -t openbank/lake .
 

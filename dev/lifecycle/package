@@ -69,7 +69,7 @@ if [ ! -f ${dist}/lake-linux-${version} ] ; then
   exit
 fi
 
-cp ${dist}/lake-linux-${version} ${dist}/lake
+cp ${dist}/lake-linux-${version} ${dist}/entrypoint
 
 echo "[info] done"
 

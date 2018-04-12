@@ -6,10 +6,8 @@ class LakeAPI
   attr_reader :base_url
 
   def initialize()
-    @base_url = "http://lake:8080"
+    @base_url = "http://lake:9999"
   end
-
-  ######################################################### account methods ####
 
   def health_check()
     get("#{base_url}/health")
