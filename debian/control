@@ -1,0 +1,11 @@
+Source: lake
+Section: openbank
+Priority: extra
+Maintainer: root <jan.cajthaml@gmail.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.3
+
+Package: lake
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, libzmq5 (= 4.2.1-4)
+Description: Openbank relay lake

@@ -51,8 +51,7 @@ RSpec.configure do |config|
       label = %x(docker inspect --format='{{.Name}}' #{container})
       label = ($? == 0 ? label.strip : container)
 
-      %x(docker kill --signal="TERM" #{container} >/dev/null 2>&1 || :)
-      %x(docker logs #{container} >/reports/#{label}.log 2>&1)
+      %x(docker exec #{container} journalctl -u lake.service -b | cat >/reports/#{label}.log 2>&1)
       %x(docker rm -f #{container} &>/dev/null || :)
     end
 

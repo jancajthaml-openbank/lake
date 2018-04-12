@@ -4,7 +4,6 @@ step "no :container :label is running" do |container, label|
   expect($?).to be_success
 
   ids = containers.split("\n").map(&:strip).reject(&:empty?)
-
   return if ids.empty?
 
   ids.each { |id|
@@ -15,7 +14,7 @@ step "no :container :label is running" do |container, label|
       label = %x(docker inspect --format='{{.Name}}' #{id})
       label = ($? == 0 ? label.strip : id)
 
-      %x(docker logs #{id} >/reports#{label}.log 2>&1)
+      %x(docker exec #{container} journalctl -u lake.service -b | cat >/reports/#{label}.log 2>&1)
       %x(docker rm -f #{id} &>/dev/null || :)
     }
   }
@@ -53,7 +52,8 @@ step ":container :version is started with" do |container, version, label, params
     "--log-driver=json-file",
     "-h #{label}",
     "--net-alias=#{label}",
-    "--name=#{label}"
+    "--name=#{label}",
+    "--privileged"
   ] << params << [
     "#{container}:#{version}",
     "2>&1"
@@ -69,11 +69,10 @@ end
 
 step "lake is running" do ||
   send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
-    "-e LAKE_LOG_LEVEL=DEBUG",
-    "-e LAKE_HTTP_PORT=8080",
+    "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
     "-p 5561",
     "-p 5562",
-    "-p 8080"
+    "-p 9999"
   ]
 
   eventually(timeout: 10) {

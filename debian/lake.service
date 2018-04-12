@@ -1,0 +1,14 @@
+[Unit]
+Description=openbank lake message relay
+After=inetd.service
+
+[Service]
+Type=simple
+EnvironmentFile=/openbank/services/lake/params.conf
+ExecStart=/openbank/services/lake/start.sh
+ExecStop=/openbank/services/lake/stop.sh
+Restart=on-failure
+RestartSec=0
+
+[Install]
+WantedBy=multi-user.target

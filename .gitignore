@@ -1,4 +1,7 @@
 bin
+pkg
 vendor
 Gopkg.lock
+reports
+TODO.md
 reports

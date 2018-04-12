@@ -84,6 +84,7 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
         pkg-config=0.29-4+b1 \
         libzmq3-dev=4.2.1-4 \
         cmake=3.7.2-1 \
+        make=4.1-9.1 \
         gcc=4:6.3.0-4 \
         g++=4:6.3.0-4 \
         zlib1g-dev=1:1.2.8.dfsg-5 \
@@ -91,8 +92,19 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
         libmpfr-dev=3.1.5-1 \
         libgmp-dev=2:6.1.2+dfsg-1 \
         patch=2.7.5-1+b2 \
+        ca-certificates=20161130+nmu1 \
+        git=1:2.11.0-3+deb9u2 \
+        build-essential=12.3 \
+        debhelper=10.2.5 \
+        devscripts=2.17.6+deb9u1 \
+        fakeroot=1.21-3.1 \
+        curl=7.52.1-5+deb9u5 \
     && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN curl -L https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce.tgz | \
+    tar -xzvf - --strip-components=1 -C /usr/bin docker/docker && \
+    chmod a+x /usr/bin/docker
 
 COPY --from=go /go /go
 COPY --from=go /usr/lib/go /usr/lib/go
