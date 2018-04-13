@@ -32,6 +32,7 @@ func init() {
 	gin.SetMode(gin.ReleaseMode)
 }
 
+// Run starts service with graceful shutdown given TERM signal
 func Run(params RunParams) {
 	router := gin.New()
 
