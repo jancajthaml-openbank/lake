@@ -1,5 +1,4 @@
 ## Unreleased
 
-- First release
-- ZMQ distributed queue
-- Debian packaging
+* Debian packaging
+* ZMQ distributed queue

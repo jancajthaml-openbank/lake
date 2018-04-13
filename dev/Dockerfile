@@ -31,7 +31,7 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
 FROM base AS go
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    GOLANG_VERSION="1.10" \
+    GOLANG_VERSION="1.10.1" \
     LD_LIBRARY_PATH=/usr/lib \
     GOPATH=/go \
     GOARCH=amd64 \

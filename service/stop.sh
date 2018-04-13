@@ -11,8 +11,12 @@ else
 fi
 
 for pid in $(echo "${killables}" | awk '{print $2}') ; do
-  echo killing $pid "..."
-  kill $pid
-  echo $pid killed
+  for signal in TERM TERM TERM KILL ; do
+    echo "killing ${pid} with ${signal} ..."
+    if ! pkill "-${signal}" -f -- "lake" ; then
+      echo "${pid} killed"
+      break
+    fi
+    sleep 1
+  done
 done
-
