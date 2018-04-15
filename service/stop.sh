@@ -2,12 +2,12 @@
 
 killables=$(ps aux | grep lake)
 
-if [ ! "${killables}" = "" ] ; then
+if [ ! "${killables}" == "" ] ; then
   echo "You are going to kill some process:"
   echo "${killables}"
 else
   echo "No process with the pattern $1 found."
-  return
+  exit 0
 fi
 
 for pid in $(echo "${killables}" | awk '{print $2}') ; do
