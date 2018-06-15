@@ -23,7 +23,7 @@ RUN apt-get -y update && apt-get -y upgrade && apt-get clean && \
     apt-get -y install --allow-downgrades --no-install-recommends \
     \
       lsb-release=9.20161125 \
-      curl=7.52.1-5+deb9u5 \
+      curl=7.52.1-5+deb9u6 \
       git=1:2.11.0-3+deb9u2 \
       cron=3.0pl1-128+deb9u1 \
       at=3.1.20-3 \
