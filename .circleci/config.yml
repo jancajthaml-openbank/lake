@@ -246,8 +246,4 @@ jobs:
           path: /home/circleci/project/reports
           destination: reports
 
-      - run: (docker rm -f $(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
-
-      - run: (docker rm -f $(docker ps -aqf "name=bbtest") || :) &> /dev/null
-
 # ---------------------------------------------------------------------------- #
