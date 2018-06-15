@@ -42,7 +42,7 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
     \
         pkg-config=0.29-4+b1 \
         unzip=6.0-21 \
-        curl=7.52.1-5+deb9u5 \
+        curl=7.52.1-5+deb9u6 \
         tar=1.29b-1.1 \
     && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -98,7 +98,7 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
         debhelper=10.2.5 \
         devscripts=2.17.6+deb9u1 \
         fakeroot=1.21-3.1 \
-        curl=7.52.1-5+deb9u5 \
+        curl=7.52.1-5+deb9u6 \
     && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
