@@ -1,6 +1,6 @@
 Feature: Relay message
 
-  Scenario: sent message is relayed
+  Scenario: respect order of messages
     Given lake is running
     When lake recieves "A b"
     And lake recieves "C d"
