@@ -31,51 +31,45 @@ var (
 	build   string
 )
 
-func setupLogOutput(params commands.RunParams) {
-	if len(params.Log) == 0 {
-		return
-	}
-
-	file, err := os.Create(params.Log)
-	if err != nil {
-		log.Warnf("Unable to create %s: %v", params.Log, err)
-		return
-	}
-	defer file.Close()
-
-	log.SetOutput(bufio.NewWriter(file))
-}
-
-func setupLogLevel(params commands.RunParams) {
-	level, err := log.ParseLevel(params.LogLevel)
-	if err != nil {
-		log.Warnf("Invalid log level %v, using level WARN", params.LogLevel)
-		return
-	}
-	log.Infof("Log level set to %v", strings.ToUpper(params.LogLevel))
-	log.SetLevel(level)
-}
-
 func init() {
 	viper.SetEnvPrefix("LAKE")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
 	viper.SetDefault("log.level", "DEBUG")
+	viper.SetDefault("port.pull", 5562)
+	viper.SetDefault("port.pub", 5561)
+
+	log.SetFormatter(new(commands.LogFormat))
 }
 
 func main() {
 	log.Infof(">>> Setup <<<")
 
 	params := commands.RunParams{
-		PullPort: 5562,
-		PubPort:  5561,
+		PullPort: viper.GetInt("port.pull"),
+		PubPort:  viper.GetInt("port.pub"),
 		Log:      viper.GetString("log"),
 		LogLevel: viper.GetString("log.level"),
 	}
 
-	setupLogOutput(params)
-	setupLogLevel(params)
+	if len(params.Log) == 0 {
+		log.SetOutput(os.Stdout)
+	} else if file, err := os.OpenFile(params.Log, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644); err == nil {
+		defer file.Close()
+		log.SetOutput(bufio.NewWriter(file))
+	} else {
+		log.SetOutput(os.Stdout)
+		log.Warnf("Unable to create %s: %v", params.Log, err)
+	}
+
+	if level, err := log.ParseLevel(params.LogLevel); err == nil {
+		log.Infof("Log level set to %v", strings.ToUpper(params.LogLevel))
+		log.SetLevel(level)
+	} else {
+		log.Warnf("Invalid log level %v, using level WARN", params.LogLevel)
+		log.SetLevel(log.WarnLevel)
+	}
 
 	commands.Run(params)
 }

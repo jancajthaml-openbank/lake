@@ -5,17 +5,17 @@ set -e
 
 case "$1" in
     configure)
-        if [ -f "/openbank/services/lake/params.conf" ] ; then
+        if [ -f "/etc/lake/params.conf" ] ; then
             echo "Loading params.conf"
-            . /openbank/services/lake/params.conf
+            . /etc/lake/params.conf
         else
-            echo "/openbank/services/lake/params.conf file not found"
+            (>&2 echo "/etc/lake/params.conf file not found")
             exit 1
         fi
     ;;
 
     *)
-        echo "postinst called with unknown argument \ `$1`" >&2
+        (>&2 echo "postinst called with unknown argument \ `$1`")
         exit 1
     ;;
 esac
