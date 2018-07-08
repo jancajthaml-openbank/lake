@@ -31,7 +31,7 @@ prep: clean
 .PHONY: package
 package:
 	VERSION=$(VERSION) \
-	docker-compose run --rm package
+	docker-compose run --rm package -t linux
 	docker-compose run --rm debian
 	docker-compose build service
 

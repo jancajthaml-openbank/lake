@@ -1,10 +1,12 @@
 #!/bin/bash
 
-killables=$(ps aux | grep lake)
+killables=$(ps -ef | awk '$8=="/openbank/services/lake/entrypoint" {print $2}')
 
-if [ ! "${killables}" = "" ] ; then
+if [[ -n "${killables// }" ]] ; then
   echo "Already running"
-  return
+  exit 0
+else
+  echo "Starting"
 fi
 
 . /openbank/services/lake/params.conf

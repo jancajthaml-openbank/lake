@@ -1,19 +1,16 @@
 #!/bin/bash
 
-killables=$(ps aux | grep lake)
+killables=$(ps -ef | awk '$8=="/openbank/services/lake/entrypoint" {print $2}')
 
-if [ ! "${killables}" = "" ] ; then
-  echo "You are going to kill some process:"
-  echo "${killables}"
-else
-  echo "No process with the pattern $1 found."
-  return
+if [[ -z "${killables// }" ]] ; then
+  echo "Not running"
+  exit 0
 fi
 
-for pid in $(echo "${killables}" | awk '{print $2}') ; do
+for pid in $(awk '{print $2}' <<< "${killables}") ; do
   for signal in TERM TERM TERM KILL ; do
     echo "killing ${pid} with ${signal} ..."
-    if ! pkill "-${signal}" -f -- "lake" ; then
+    if ! kill -s ${signal} ${pid} ; then
       echo "${pid} killed"
       break
     fi

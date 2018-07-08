@@ -1,36 +1,41 @@
 #!/bin/bash
 
-set -eo pipefail
-
+set -Eeuo pipefail
 trap exit INT TERM
 
-################################################################################
+sem_open() {
+  mkfifo pipe-$$
+  exec 3<>pipe-$$
+  rm pipe-$$
+  local parallelism=${1}
+  for ((;parallelism>0;parallelism--)) ; do
+    printf %s 000 >&3
+  done
+}
+
+sem_put() {
+  local x
+  read -u 3 -n 3 x && ((0==x)) || {
+    exit $x
+  }
+  (
+    "$@"
+    printf '%.3d' $? >&3
+  )&
+}
 
 scan() {
   if [ -d ${1} ] ; then
-    out=$(\
-      (gofmt -s -w ./${1} || :) &
-      (golint ./${1}/... || :) &
-      (misspell ./${1} || :) &
-      (go vet ./${1}/... || :) &
-      (gocyclo -over 15 ./${1} || :) &
-      wait\
-    )
-    issues=$(sed '/^\s*#/d;/^\s*$/d' <<< "${out}" | wc -l)
-    if [ "${issues}" -eq "0" ] ; then
-      echo -e "[info] ${1}\t[ no issues ]"
-    elif [ "${issues}" -eq "1" ] ; then
-      echo -e "[warn] ${1}\t[ 1 issue ]"
-      echo "${out}"
-    else
-      echo -e "[warn] ${1}\t[ ${issues} issues ]"
-      echo "${out}"
-    fi
+    sem_put gofmt -s -w ./${1}
+    sem_put golint ./${1}/...
+    sem_put misspell ./${1}
+    sem_put go vet ./${1}/...
+    sem_put gocyclo -over 15 ./${1}
   fi
 }
 
-################################################################################
+sem_open $(getconf _NPROCESSORS_ONLN)
 
-scan commands &
-scan utils &
+scan commands
+scan utils
 wait
