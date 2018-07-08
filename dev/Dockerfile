@@ -60,8 +60,6 @@ RUN curl -L https://github.com/Masterminds/glide/releases/download/v0.13.1/glide
     unzip -p /tmp/glide-pkg.zip linux-amd64/glide > /usr/bin/glide && \
     chmod +x /usr/bin/glide
 
-RUN echo YYY
-
 RUN go get -u \
         \
         github.com/golang/lint/golint \
