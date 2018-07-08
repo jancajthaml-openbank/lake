@@ -18,8 +18,6 @@ RSpec.configure do |config|
 
     ZMQHelper.start()
 
-    $http_client = HTTPClient.new()
-
     get_containers = lambda do |image|
       containers = %x(docker ps -aqf "ancestor=#{image}" 2>/dev/null)
       return ($? == 0 ? containers.split("\n") : [])

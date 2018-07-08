@@ -61,7 +61,6 @@ func init() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
-	viper.SetDefault("http.port", 8080)
 	viper.SetDefault("log.level", "DEBUG")
 }
 
@@ -73,7 +72,6 @@ func main() {
 		PubPort:  5561,
 		Log:      viper.GetString("log"),
 		LogLevel: viper.GetString("log.level"),
-		HTTPPort: viper.GetInt("http.port"),
 	}
 
 	setupLogOutput(params)

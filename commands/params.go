@@ -24,6 +24,4 @@ type RunParams struct {
 	Log string
 	// LogLevel ignorecase log level
 	LogLevel string
-	// HTTPPort represents where http api is exposed
-	HTTPPort int
 }

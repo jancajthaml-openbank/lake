@@ -71,23 +71,8 @@ step "lake is running" do ||
   send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
     "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
     "-p 5561",
-    "-p 5562",
-    "-p 9999"
+    "-p 5562"
   ]
 
-  eventually(timeout: 10) {
-    send ":host is healthy", "lake"
-  }
-
   lake_handshake()
-end
-
-step ":host is healthy" do |host|
-  case host
-  when "lake"
-    resp = $http_client.lake.health_check()
-    expect(resp.status).to eq(200)
-  else
-    raise "unknown host #{host}"
-  end
 end
