@@ -3,6 +3,9 @@
 
 export DH_VERBOSE=1
 
+%:
+	dh $@ --with=config-package
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
@@ -40,6 +43,10 @@ binary-arch: build install
 	dh_installdeb
 	dh_md5sums
 	dh_builddeb --destdir=./pkg
+
+override_dh_installdeb:
+	dh_installdeb
+	rm debian/*/DEBIAN/conffiles
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install configure

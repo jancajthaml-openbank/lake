@@ -9,9 +9,7 @@ all: bootstrap test package bbtest
 
 install:
 	@install -m 755 -o root -g root -d $(TARGET)/services/lake
-	@install -m 755 -o root -g root service/start.sh $(TARGET)/services/lake
 	@install -m 755 -o root -g root service/stop.sh $(TARGET)/services/lake
-	@install -m 644 -o root -g root service/params.conf $(TARGET)/services/lake
 	@install -m 755 -o root -g root bin/entrypoint $(TARGET)/services/lake
 
 teardown:

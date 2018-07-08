@@ -49,6 +49,8 @@ RUN apt-get -y update && apt-get -y upgrade && apt-get clean && \
 
 COPY pkg /tmp
 
+COPY service/params.conf /etc/lake/params.conf
+
 RUN find /tmp -type f -name 'lake_*_amd64.deb' -exec dpkg --install \{\} \; -exec rm -f \{\} \; && \
     systemctl unmask lake && \
     systemctl enable lake

@@ -3,17 +3,21 @@
 killables=$(ps -ef | awk '$8=="/openbank/services/lake/entrypoint" {print $2}')
 
 if [[ -z "${killables// }" ]] ; then
-  echo "Not running"
+  echo "not running"
   exit 0
 fi
 
-for pid in $(awk '{print $2}' <<< "${killables}") ; do
-  for signal in TERM TERM TERM KILL ; do
-    echo "killing ${pid} with ${signal} ..."
-    if ! kill -s ${signal} ${pid} ; then
-      echo "${pid} killed"
-      break
-    fi
+for signal in TERM TERM TERM TERM ; do
+  if ! pkill -${signal} ${killables} ; then
+    break
+  fi
+  sleep .5
+done
+
+killables=$(ps -ef | awk '$8=="/openbank/services/lake/entrypoint" {print $2}')
+
+if [[ -z "${killables// }" ]] ; then
+  while pkill -KILL ${killables} ; do
     sleep 1
   done
-done
+fi

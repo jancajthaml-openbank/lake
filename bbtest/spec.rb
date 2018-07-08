@@ -10,6 +10,7 @@ RSpec.configure do |config|
 
   Dir.glob("./helpers/*_helper.rb") { |f| load f }
   config.include EventuallyHelper, :type => :feature
+  config.include DeadlineHelper, :type => :feature
   config.include ZMQHelper, :type => :feature
   Dir.glob("./steps/*_steps.rb") { |f| load f, true }
 
@@ -49,7 +50,8 @@ RSpec.configure do |config|
       label = %x(docker inspect --format='{{.Name}}' #{container})
       label = ($? == 0 ? label.strip : container)
 
-      %x(docker exec #{container} journalctl -u lake.service -b | cat >/reports/#{label}.log 2>&1)
+      %x(docker exec #{container} systemctl stop lake.service 2>&1)
+      %x(docker exec #{container} journalctl -o short-precise -u lake.service --no-pager >/reports/#{label}.log 2>&1)
       %x(docker rm -f #{container} &>/dev/null || :)
     end
 

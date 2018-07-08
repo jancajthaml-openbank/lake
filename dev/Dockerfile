@@ -96,6 +96,7 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
         git=1:2.11.0-3+deb9u2 \
         build-essential=12.3 \
         debhelper=10.2.5 \
+        config-package-dev=5.1.2 \
         devscripts=2.17.6+deb9u1 \
         fakeroot=1.21-3.1 \
         curl=7.52.1-5+deb9u6 \

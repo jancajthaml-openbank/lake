@@ -1,3 +1,5 @@
+require 'tempfile'
+
 step "no :container :label is running" do |container, label|
 
   containers = %x(docker ps -a -f name=#{label} | awk '{ print $1,$2 }' | grep #{container} | awk '{print $1 }' 2>/dev/null)
@@ -7,22 +9,26 @@ step "no :container :label is running" do |container, label|
   return if ids.empty?
 
   ids.each { |id|
-    eventually(timeout: 3) {
+    eventually(timeout: 2) {
       puts "wanting to kill #{id}"
       send ":container running state is :state", id, false
 
       label = %x(docker inspect --format='{{.Name}}' #{id})
       label = ($? == 0 ? label.strip : id)
 
-      %x(docker exec #{container} journalctl -u lake.service -b | cat >/reports/#{label}.log 2>&1)
+      %x(docker exec #{container} journalctl -o short-precise -u lake.service --no-pager >/reports/#{label}.log 2>&1)
       %x(docker rm -f #{id} &>/dev/null || :)
     }
   }
 end
 
 step ":container running state is :state" do |container, state|
-  eventually(timeout: 5) {
+  eventually(timeout: 3) {
+    %x(docker exec #{container} systemctl stop lake.service 2>&1) unless state
+    expect($?).to be_success
+
     %x(docker #{state ? "start" : "stop"} #{container} >/dev/null 2>&1)
+
     container_state = %x(docker inspect -f {{.State.Running}} #{container} 2>/dev/null)
     expect($?).to be_success
     expect(container_state.strip).to eq(state ? "true" : "false")
@@ -62,17 +68,48 @@ step ":container :version is started with" do |container, version, label, params
   id = %x(#{args.join(" ")})
   expect($?).to be_success, id
 
-  eventually(timeout: 10) {
+  eventually(timeout: 3) {
     send ":container running state is :state", id, true
   }
 end
 
 step "lake is running" do ||
-  send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
-    "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
-    "-p 5561",
-    "-p 5562"
-  ]
+  with_deadline(timeout: 5) {
+    send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
+      "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
+      "-p 5561",
+      "-p 5562"
+    ]
 
-  lake_handshake()
+    lake_handshake()
+  }
+end
+
+step "lake is running with following configuration" do |configuration|
+  #send "lake is running"
+  with_deadline(timeout: 5) {
+    send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
+      "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
+      "-p 5561",
+      "-p 5562"
+    ]
+  }
+
+  params = configuration.split("\n").map(&:strip).reject(&:empty?).join("\n")
+
+  containers = %x(docker ps -a -f status=running -f name=lake | awk '{ print $1,$2 }' | sed 1,1d)
+  expect($?).to be_success
+  containers = containers.split("\n").map(&:strip).reject(&:empty?)
+
+  expect(containers).not_to be_empty
+
+  id = containers[0].split(" ")[0]
+
+  %x(docker exec #{id} bash -c "echo -e '#{params.inspect.delete('\"')}' > /etc/lake/params.conf" 2>&1)
+  %x(docker exec #{id} systemctl restart lake.service 2>&1)
+
+  with_deadline(timeout: 5) {
+    lake_handshake()
+  }
+
 end
