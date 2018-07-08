@@ -86,7 +86,6 @@ step "lake is running" do ||
 end
 
 step "lake is running with following configuration" do |configuration|
-  #send "lake is running"
   with_deadline(timeout: 5) {
     send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
       "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
@@ -95,7 +94,7 @@ step "lake is running with following configuration" do |configuration|
     ]
   }
 
-  params = configuration.split("\n").map(&:strip).reject(&:empty?).join("\n")
+  params = configuration.split("\n").map(&:strip).reject(&:empty?).join("\n").inspect.delete('\"')
 
   containers = %x(docker ps -a -f status=running -f name=lake | awk '{ print $1,$2 }' | sed 1,1d)
   expect($?).to be_success
@@ -105,11 +104,10 @@ step "lake is running with following configuration" do |configuration|
 
   id = containers[0].split(" ")[0]
 
-  %x(docker exec #{id} bash -c "echo -e '#{params.inspect.delete('\"')}' > /etc/lake/params.conf" 2>&1)
+  %x(docker exec #{id} bash -c "echo -e '#{params}' > /etc/lake/params.conf" 2>&1)
   %x(docker exec #{id} systemctl restart lake.service 2>&1)
 
   with_deadline(timeout: 5) {
     lake_handshake()
   }
-
 end
