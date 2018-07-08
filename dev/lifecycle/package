@@ -1,76 +1,101 @@
 #!/bin/bash
 
-set -eo pipefail
-
+set -Eeuo pipefail
 trap exit INT TERM
 
-################################################################################
-
 dist=bin
-arch=amd64
-platforms=(linux)
-build=$(git rev-parse HEAD 2> /dev/null || :)
+platforms=(darwin)
 
-export LD_LIBRARY_PATH=/usr/lib
+sem_open() {
+  mkfifo pipe-$$
+  exec 3<>pipe-$$
+  rm pipe-$$
+  local parallelism=${1}
+  for ((;parallelism>0;parallelism--)) ; do
+    printf %s 000 >&3
+  done
+}
 
-################################################################################
+sem_put() {
+  local x
+  read -u 3 -n 3 x && ((0==x)) || {
+    exit $x
+  }
+  (
+    "$@"
+    printf '%.3d' $? >&3
+  )&
+}
 
-echo "[info] cleaning"
-
-if [ -d ${dist} ] && [ "$(ls -A ${dist})" ] ; then
-  rm -rf ${dist}/*
-fi
-
-if [ -n "${VERSION}" ] ; then
-  version="${VERSION}"
-elif [ -n "${GIT_TAG_NAME}" ] && [[ "${GIT_TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]] ; then
-  version="${GIT_TAG_NAME}"
-else
-  version="snapshot-${build}"
-fi
-
-################################################################################
-
-package_linux() {
-  CGO_ENABLED=1 \
-  GOOS=linux \
-  GOARCH=${arch} \
-  go build -a -o ${dist}/${1}-linux-${version} \
-  --ldflags "-X main.version=$version -X main.build=${build}"
+get_version() {
+  version=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | rev | cut -d/ -f1 | rev)
+  if [ $? -ne 0 ] || [[ "${version}" == "master" ]] ; then
+    version=latest
+  fi
+  echo "${version}"
 }
 
 package_service() {
-  echo "[info] building ${2} binary ${1}"
-
-  case ${2} in
-    linux)
-      package_linux ${1}
-      ;;
-    esac
-
-  if [ $? -eq 0 ] ; then
-    chmod +x ${dist}/${1}-${2}-${version}
-  else
-    exit 1
+  local output=${1}/${2}-${3}
+  if [ -f ${output} ] ; then
+    rm -f ${output}
   fi
+
+  echo "[info] packaging for ${2}"
+
+  GOOS=${2} \
+  GOARCH=amd64 \
+  CGO_ENABLED=1 \
+  \
+  go build -a -o ${output} \
+  \
+  --ldflags "-X main.version=${3}" || {
+    (>&2 echo "unable to build ${2} distribution")
+    exit 1
+  }
+
+  chmod +x ${output}
 }
 
-################################################################################
+while [[ $# -gt 0 ]] ; do
+key="$1"
 
-echo "[info] building ${version}"
+case $key in
+    -t|--target)
+    IFS=',' read -ra platforms <<< "$2"
+    shift
+    shift
+    ;;
+    -o|--output)
+    dist="$2"
+    shift
+    shift
+    ;;
+    *)
+    shift
+    ;;
+esac
+done
 
+sem_open $(getconf _NPROCESSORS_ONLN)
+
+echo "[info] cleaning"
+go clean
+
+version=$(get_version)
+echo "[info] packaging ${version}"
 for platform in "${platforms[@]}" ; do
-  package_service lake ${platform} &
+  sem_put package_service ${dist} ${platform} ${version}
 done
 wait
 
-if [ ! -f ${dist}/lake-linux-${version} ] ; then
-  echo "[error] ${dist}/lake-linux-${version} not found"
-  exit
+ls -1 ${dist} | sed "s/.*/       + ${dist}\/&/"
+
+if [ ! -f ${dist}/linux-${version} ] ; then
+  echo "[error] ${dist}/linux-${version} not found"
+  exit 1
+else
+  cp ${dist}/linux-${version} ${dist}/entrypoint
 fi
 
-cp ${dist}/lake-linux-${version} ${dist}/entrypoint
-
 echo "[info] done"
-
-################################################################################

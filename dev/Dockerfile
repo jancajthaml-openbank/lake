@@ -60,6 +60,8 @@ RUN curl -L https://github.com/Masterminds/glide/releases/download/v0.13.1/glide
     unzip -p /tmp/glide-pkg.zip linux-amd64/glide > /usr/bin/glide && \
     chmod +x /usr/bin/glide
 
+RUN echo YYY
+
 RUN go get -u \
         \
         github.com/golang/lint/golint \
@@ -114,5 +116,8 @@ COPY --from=go /usr/bin/dep /usr/bin/dep
 COPY --from=go /usr/bin/gofmt /usr/bin/gofmt
 COPY --from=go /usr/bin/godoc /usr/bin/godoc
 COPY --from=go /usr/bin/glide /usr/bin/glide
+COPY --from=go /go/bin/gocyclo /usr/bin/gocyclo
+COPY --from=go /go/bin/golint /usr/bin/golint
+COPY --from=go /go/bin/misspell /usr/bin/misspell
 
 # ---------------------------------------------------------------------------- #
