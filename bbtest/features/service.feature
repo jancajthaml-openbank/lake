@@ -1,8 +1,8 @@
 Feature: Verify service
 
-  Scenario: container have installed services
+  Scenario: properly installed debian package
     Given lake is running
-    Then lake contains following services
+    Then systemctl contains following
     """
       lake.service
     """
