@@ -3,15 +3,13 @@ step "journalctl of :unit contains following" do |unit, expected|
 
   expected_lines = expected.split("\n").map(&:strip).reject(&:empty?)
 
-  containers = %x(docker ps -a -f status=running -f name=lake | awk '{ print $1,$2 }' | sed 1,1d)
+  containers = %x(docker ps -a --filter name=lake --filter status=running --format "{{.ID}} {{.Image}}")
   expect($?).to be_success
   containers = containers.split("\n").map(&:strip).reject(&:empty?)
 
   expect(containers).not_to be_empty
 
   id = containers[0].split(" ")[0]
-
-  # fixme be wary of duplicates in logs
 
   with_deadline(timeout: 5) {
     eventually(timeout: 2) {
