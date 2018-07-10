@@ -1,4 +1,4 @@
-package commands
+package relay
 
 import (
 	"fmt"
@@ -13,6 +13,8 @@ import (
 
 	zmq "github.com/pebbe/zmq4"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/jancajthaml-openbank/lake/utils"
 )
 
 func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
@@ -109,7 +111,7 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string, port
 }
 
 func TestRelayInOrder(t *testing.T) {
-	params := RunParams{
+	params := utils.RunParams{
 		PullPort: 5562,
 		PubPort:  5561,
 	}

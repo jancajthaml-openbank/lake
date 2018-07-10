@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package commands
+package relay
 
 import (
 	"context"
@@ -22,12 +22,14 @@ import (
 
 	zmq "github.com/pebbe/zmq4"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/jancajthaml-openbank/lake/utils"
 )
 
-const backoff = 5 * time.Millisecond
+const backoff = 500 * time.Microsecond
 
 // StartQueue start autorecovery ZMQ connection
-func StartQueue(params RunParams) {
+func StartQueue(params utils.RunParams) {
 	log.Info("Starting ZMQ Relay")
 
 	for {
@@ -38,7 +40,7 @@ func StartQueue(params RunParams) {
 }
 
 // RelayMessages buffers and relays messages in order
-func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunParams) (err error) {
+func RelayMessages(ctx context.Context, cancel context.CancelFunc, params utils.RunParams) (err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -47,8 +49,11 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 		chunk    string
 		receiver *zmq.Socket
 		sender   *zmq.Socket
+		pullPort = fmt.Sprintf("tcp://*:%d", params.PullPort)
+		pubPort  = fmt.Sprintf("tcp://*:%d", params.PubPort)
 	)
 
+pullConnection:
 	for {
 		receiver, err = zmq.NewSocket(zmq.PULL)
 		if err == nil {
@@ -56,14 +61,18 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 		}
 		if err.Error() == "resource temporarily unavailable" {
 			log.Warn("Resources unavailable in connect")
-			time.Sleep(backoff)
-		} else {
-			log.Warn("Unable to bind ZMQ socket: ", err)
-			return
+			select {
+			case <-time.After(backoff):
+				goto pullConnection
+			}
 		}
+
+		log.Warn("Unable to bind ZMQ socket: ", err)
+		return
 	}
 	defer receiver.Close()
 
+pubConnection:
 	for {
 		sender, err = zmq.NewSocket(zmq.PUB)
 		if err == nil {
@@ -71,30 +80,41 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 		}
 		if err.Error() == "resource temporarily unavailable" {
 			log.Warn("Resources unavailable in connect")
-			time.Sleep(backoff)
-		} else {
-			log.Warn("Unable to bind ZMQ socket: ", err)
-			return
+			select {
+			case <-time.After(backoff):
+				goto pubConnection
+			}
 		}
+
+		log.Warn("Unable to bind ZMQ socket: ", err)
+		return
 	}
 	defer sender.Close()
 
+pullBind:
 	for {
-		err = receiver.Bind(fmt.Sprintf("tcp://*:%d", params.PullPort))
+		err = receiver.Bind(pullPort)
 		if err == nil {
 			break
 		}
 		log.Warn("ZMQ receiver unable to bind: ", err)
-		time.Sleep(backoff)
+		select {
+		case <-time.After(backoff):
+			goto pullBind
+		}
 	}
 
+pubBind:
 	for {
-		err = sender.Bind(fmt.Sprintf("tcp://*:%d", params.PubPort))
+		err = sender.Bind(pubPort)
 		if err == nil {
 			break
 		}
 		log.Warn("ZMQ sender unable to bind: ", err)
-		time.Sleep(backoff)
+		select {
+		case <-time.After(backoff):
+			goto pubBind
+		}
 	}
 
 	for {
@@ -110,7 +130,7 @@ func RelayMessages(ctx context.Context, cancel context.CancelFunc, params RunPar
 		case zmq.ErrorSocketClosed:
 			fallthrough
 		case zmq.ErrorContextClosed:
-			log.Info("ZMQ connection closed: ", err)
+			log.Warn("ZMQ connection closed: ", err)
 			return
 		default:
 			continue

@@ -12,31 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package commands
+package utils
 
-import (
-	"os"
-	"os/signal"
-	"syscall"
+import "time"
 
-	log "github.com/sirupsen/logrus"
-)
-
-// Run starts service with graceful shutdown given TERM signal
-func Run(params RunParams) {
-	log.Infof(">>> Starting <<<")
-
-	// FIXME need a kill channel here for gracefull shutdown
-	go StartQueue(params)
-
-	exitSignal := make(chan os.Signal)
-	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
-
-	log.Infof(">>> Started <<<")
-
-	<-exitSignal
-
-	log.Infof(">>> Terminating <<<")
-	// FIXME gracefully empty queues and relay all messages before shutdown
-	log.Infof(">>> Terminated <<<")
+// RunParams is a structure of application parameters
+type RunParams struct {
+	// PullPort represents ZMQ PULL binding
+	PullPort int
+	// PubPort represents ZMQ PUB binding
+	PubPort int
+	// Log represents log output
+	Log string
+	// LogLevel ignorecase log level
+	LogLevel string
+	// MetricsRefreshRate how frequently should be metrics updated
+	MetricsRefreshRate time.Duration
+	// MetricsOutput filename of metrics persisted
+	MetricsOutput string
 }

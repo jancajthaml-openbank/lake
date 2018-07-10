@@ -47,7 +47,7 @@ RUN apt-get -y update && apt-get -y upgrade && apt-get clean && \
     apt-get clean && \
     sed -i '/imklog/{s/^/#/}' /etc/rsyslog.conf
 
-COPY pkg /tmp
+COPY bin/deb /tmp
 
 COPY service/params.conf /etc/lake/params.conf
 
