@@ -13,7 +13,7 @@ func TestMetricsPersist(t *testing.T) {
 
 	t.Log("TimeMessageRelay properly times run of message relay")
 	{
-		delay := 1e6
+		delay := 1e7
 		require.Equal(t, int64(0), entity.messageRelayLatency.Count())
 		entity.TimeMessageRelay(func() {
 			select {
