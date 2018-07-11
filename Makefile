@@ -5,7 +5,7 @@ TIMESTAMP=`date -R`
 TARGET=./debian/tmp/openbank
 
 .PHONY: all
-all: bootstrap test package bbtest
+all: bootstrap sync test package bbtest
 
 install:
 	@install -m 755 -o root -g root -d $(TARGET)/services/lake
