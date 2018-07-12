@@ -83,7 +83,7 @@ func main() {
 	log.Infof(">>> Starting <<<")
 
 	// FIXME need a kill channel here for gracefull shutdown
-	go relay.StartQueue(params)
+	go relay.StartQueue(params, m)
 
 	log.Infof(">>> Started <<<")
 

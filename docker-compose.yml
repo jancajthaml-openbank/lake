@@ -106,7 +106,8 @@ services:
       - COMPOSE_PROJECT_NAME
       - VERSION
     volumes:
-      - ./reports:/reports
+      - ./reports/logs:/reports
+      - ./reports/metrics:/opt/lake/metrics
       - ./bbtest:/opt/bbtest
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/containers:/var/lib/docker/containers

@@ -23,24 +23,25 @@ import (
 	zmq "github.com/pebbe/zmq4"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/jancajthaml-openbank/lake/metrics"
 	"github.com/jancajthaml-openbank/lake/utils"
 )
 
 const backoff = 500 * time.Microsecond
 
 // StartQueue start autorecovery ZMQ connection
-func StartQueue(params utils.RunParams) {
+func StartQueue(params utils.RunParams, m *metrics.Metrics) {
 	log.Info("Starting ZMQ Relay")
 
 	for {
 		ctx, cancel := context.WithCancel(context.Background())
-		go RelayMessages(ctx, cancel, params)
+		go RelayMessages(ctx, cancel, params, m)
 		<-ctx.Done()
 	}
 }
 
 // RelayMessages buffers and relays messages in order
-func RelayMessages(ctx context.Context, cancel context.CancelFunc, params utils.RunParams) (err error) {
+func RelayMessages(ctx context.Context, cancel context.CancelFunc, params utils.RunParams, m *metrics.Metrics) (err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -125,11 +126,11 @@ pubBind:
 		chunk, err = receiver.Recv(zmq.DONTWAIT)
 		switch err {
 		case nil:
+			m.MessageIngress(int64(1))
 			sender.Send(chunk, 0)
+			m.MessageEgress(int64(1))
 			log.Debug(chunk)
-		case zmq.ErrorSocketClosed:
-			fallthrough
-		case zmq.ErrorContextClosed:
+		case zmq.ErrorSocketClosed, zmq.ErrorContextClosed:
 			log.Warn("ZMQ connection closed: ", err)
 			return
 		default:

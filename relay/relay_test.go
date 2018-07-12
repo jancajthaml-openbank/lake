@@ -14,6 +14,7 @@ import (
 	zmq "github.com/pebbe/zmq4"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/jancajthaml-openbank/lake/metrics"
 	"github.com/jancajthaml-openbank/lake/utils"
 )
 
@@ -116,6 +117,8 @@ func TestRelayInOrder(t *testing.T) {
 		PubPort:  5561,
 	}
 
+	m := metrics.NewMetrics()
+
 	t.Log("Relays message")
 	{
 		accumulatedData := make([]string, 0)
@@ -134,7 +137,7 @@ func TestRelayInOrder(t *testing.T) {
 		var wg sync.WaitGroup
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
-		go RelayMessages(ctx, cancel, params)
+		go RelayMessages(ctx, cancel, params, m)
 		go push(ctx, cancel, pushChannel, params.PullPort)
 		go sub(ctx, cancel, subChannel, params.PubPort)
 

@@ -13,7 +13,3 @@
 [[constraint]]
   branch = "master"
   name = "github.com/rcrowley/go-metrics"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/jancajthaml-openbank/lake-client"

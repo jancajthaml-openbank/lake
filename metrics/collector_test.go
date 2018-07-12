@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -11,24 +10,31 @@ import (
 func TestMetricsPersist(t *testing.T) {
 	entity := NewMetrics()
 
-	t.Log("TimeMessageRelay properly times run of message relay")
+	t.Log("MessageEgress properly updates egress messages")
 	{
-		delay := 1e7
-		require.Equal(t, int64(0), entity.messageRelayLatency.Count())
-		entity.TimeMessageRelay(func() {
-			select {
-			case <-time.After(time.Duration(delay)):
-				return
-			}
-		})
-		assert.Equal(t, int64(1), entity.messageRelayLatency.Count())
-		assert.InDelta(t, entity.messageRelayLatency.Percentile(0.95), delay, delay/2)
+		require.Equal(t, int64(0), entity.messageEgress.Count())
+
+		for i := 1; i <= 10000; i++ {
+			entity.MessageEgress(int64(1))
+		}
+
+		assert.Equal(t, int64(10000), entity.messageEgress.Count())
+
+		entity.messageEgress.Clear()
+		assert.Equal(t, int64(0), entity.messageEgress.Count())
 	}
 
-	t.Log("MessageRelayed properly marks number messages relayed")
+	t.Log("MessageIngress properly updates ingress messages")
 	{
-		require.Equal(t, int64(0), entity.messagesRelayed.Count())
-		entity.MessageRelayed(2)
-		assert.Equal(t, int64(2), entity.messagesRelayed.Count())
+		require.Equal(t, int64(0), entity.messageIngress.Count())
+
+		for i := 1; i <= 10000; i++ {
+			entity.MessageIngress(int64(1))
+		}
+
+		assert.Equal(t, int64(10000), entity.messageIngress.Count())
+
+		entity.messageIngress.Clear()
+		assert.Equal(t, int64(0), entity.messageIngress.Count())
 	}
 }

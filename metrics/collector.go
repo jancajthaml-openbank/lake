@@ -28,21 +28,21 @@ import (
 
 // Metrics holds metrics snapshot status
 type MetricsSnapshot struct {
-	MessageRelayLatency float64 `json:"messageRelayLatency"`
-	MessagesRelayed     int64   `json:"messagesRelayed"`
+	MessageEgress  int64 `json:"messageEgress"`
+	MessageIngress int64 `json:"messageIngress"`
 }
 
 // Metrics holds metrics counters
 type Metrics struct {
-	messageRelayLatency gom.Timer
-	messagesRelayed     gom.Meter
+	messageEgress  gom.Counter
+	messageIngress gom.Counter
 }
 
 // NewMetrics returns blank metrics holder
 func NewMetrics() *Metrics {
 	return &Metrics{
-		messageRelayLatency: gom.NewTimer(),
-		messagesRelayed:     gom.NewMeter(),
+		messageEgress:  gom.NewCounter(),
+		messageIngress: gom.NewCounter(),
 	}
 }
 
@@ -53,17 +53,17 @@ func NewMetricsSnapshot(entity *Metrics) MetricsSnapshot {
 	}
 
 	return MetricsSnapshot{
-		MessageRelayLatency: entity.messageRelayLatency.Percentile(0.95),
-		MessagesRelayed:     entity.messagesRelayed.Count(),
+		MessageEgress:  entity.messageEgress.Count(),
+		MessageIngress: entity.messageIngress.Count(),
 	}
 }
 
-func (entity *Metrics) TimeMessageRelay(f func()) {
-	entity.messageRelayLatency.Time(f)
+func (gom *Metrics) MessageEgress(num int64) {
+	gom.messageEgress.Inc(num)
 }
 
-func (gom *Metrics) MessageRelayed(num int64) {
-	gom.messagesRelayed.Mark(num)
+func (gom *Metrics) MessageIngress(num int64) {
+	gom.messageIngress.Inc(num)
 }
 
 func (entity *Metrics) persist(filename string) {
