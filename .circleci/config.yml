@@ -170,7 +170,7 @@ jobs:
 
       - setup_remote_docker
 
-      - run: if [ ! -f find /app/bin/deb -type f -name 'lake_*_amd64.deb' -print -quit ] ; then exit 1 ; fi
+      - run: if [ -z find /app/bin/deb -type f -name 'lake_*_amd64.deb' -print -quit ] ; then exit 1 ; fi
 
       - run: docker build -t openbank/lake .
 
