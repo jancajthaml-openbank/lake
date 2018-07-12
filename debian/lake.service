@@ -12,8 +12,7 @@ LimitNOFILE=1048576
 LimitNPROC=infinity
 LimitCORE=infinity
 Restart=on-failure
-RestartSec=2
-StartLimitIntervalSec=0
+RestartSec=1
 TimeoutStartSec=0
 KillMode=process
 
