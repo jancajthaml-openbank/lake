@@ -163,16 +163,14 @@ jobs:
 
     steps:
 
-      - attach_workspace:
-          at: /go/src/github.com/jancajthaml-openbank/lake/bin/deb
-
       - checkout
+
+      - attach_workspace:
+          at: /app/bin/deb
 
       - setup_remote_docker
 
-      - run: mkdir -p /app/bin/deb
-
-      - run: cp -r /go/src/github.com/jancajthaml-openbank/lake/bin/dep /app/bin/deb
+      - run: if [ ! -f find /app/bin/deb -type f -name 'lake_*_amd64.deb' -print -quit ] ; then exit 1 ; fi
 
       - run: docker build -t openbank/lake .
 
