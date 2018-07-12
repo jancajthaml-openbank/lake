@@ -15,8 +15,11 @@
 package main
 
 import (
-	"bufio"
 	"os"
+	"os/signal"
+	"syscall"
+
+	"bufio"
 	"strings"
 	"sync"
 
@@ -77,6 +80,9 @@ func main() {
 		log.SetLevel(log.WarnLevel)
 	}
 
+	exitSignal := make(chan os.Signal, 1)
+	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
+
 	// FIXME separate into its own go routine to be stopable
 	m := metrics.NewMetrics()
 
@@ -95,7 +101,7 @@ func main() {
 
 	log.Infof(">>> Started <<<")
 
-	<-terminationChan
+	<-exitSignal
 
 	// FIXME gracefully empty queues and relay all messages before shutdown
 	log.Infof(">>> Terminating <<<")

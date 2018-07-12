@@ -22,26 +22,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get -y update && apt-get -y upgrade && apt-get clean && \
     apt-get -y install --allow-downgrades --no-install-recommends \
     \
-      lsb-release=9.20161125 \
-      curl=7.52.1-5+deb9u6 \
-      git=1:2.11.0-3+deb9u2 \
-      cron=3.0pl1-128+deb9u1 \
-      at=3.1.20-3 \
-      logrotate=3.11.0-0.1 \
       rsyslog=8.24.0-1 \
-      unattended-upgrades=0.93.1+nmu1 \
-      ssmtp=2.64-8+b2  \
-      lsof=4.89+dfsg-0.1 \
-      procps=2:3.3.12-3 \
-      initscripts=2.88dsf-59.9 \
       libsystemd0=232-25+deb9u2 \
-      libudev1=232-25+deb9u2 \
       systemd=232-25+deb9u2 \
-      systemd-sysv=232-25+deb9u2 \
-      sysvinit-utils=2.88dsf-59.9 \
-      udev=232-25+deb9u2 \
-      util-linux=2.29.2-1+deb9u1 \
-    \
       libzmq5=4.2.1-4 \
     && \
     apt-get clean && \
