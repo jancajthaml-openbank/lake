@@ -13,6 +13,10 @@ Feature: Verify service
     Given lake is running with following configuration
     """
       LAKE_LOG_LEVEL=DEBUG
+      LAKE_PORT_PULL=5562
+      LAKE_PORT_PUB=5561
+      LAKE_METRICS_REFRESHRATE=1s
+      LAKE_METRICS_OUTPUT=/opt/lake/metrics/metrics.json
     """
     Then journalctl of "lake.service" contains following
     """
@@ -22,6 +26,10 @@ Feature: Verify service
     Given lake is running with following configuration
     """
       LAKE_LOG_LEVEL=ERROR
+      LAKE_PORT_PULL=5562
+      LAKE_PORT_PUB=5561
+      LAKE_METRICS_REFRESHRATE=1s
+      LAKE_METRICS_OUTPUT=/opt/lake/metrics/metrics.json
     """
     Then journalctl of "lake.service" contains following
     """
@@ -31,6 +39,10 @@ Feature: Verify service
     Given lake is running with following configuration
     """
       LAKE_LOG_LEVEL=INFO
+      LAKE_PORT_PULL=5562
+      LAKE_PORT_PUB=5561
+      LAKE_METRICS_REFRESHRATE=1s
+      LAKE_METRICS_OUTPUT=/opt/lake/metrics/metrics.json
     """
     Then journalctl of "lake.service" contains following
     """

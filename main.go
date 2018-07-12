@@ -15,15 +15,21 @@
 package main
 
 import (
-	"bufio"
 	"os"
+	"os/signal"
+	"syscall"
+
+	"bufio"
 	"strings"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/viper"
 
-	"github.com/jancajthaml-openbank/lake/commands"
+	"github.com/jancajthaml-openbank/lake/metrics"
+	"github.com/jancajthaml-openbank/lake/relay"
+	"github.com/jancajthaml-openbank/lake/utils"
 )
 
 var (
@@ -39,18 +45,21 @@ func init() {
 	viper.SetDefault("log.level", "DEBUG")
 	viper.SetDefault("port.pull", 5562)
 	viper.SetDefault("port.pub", 5561)
+	viper.SetDefault("metrics.refreshrate", "1s")
 
-	log.SetFormatter(new(commands.LogFormat))
+	log.SetFormatter(new(utils.LogFormat))
 }
 
 func main() {
 	log.Infof(">>> Setup <<<")
 
-	params := commands.RunParams{
-		PullPort: viper.GetInt("port.pull"),
-		PubPort:  viper.GetInt("port.pub"),
-		Log:      viper.GetString("log"),
-		LogLevel: viper.GetString("log.level"),
+	params := utils.RunParams{
+		PullPort:           viper.GetInt("port.pull"),
+		PubPort:            viper.GetInt("port.pub"),
+		Log:                viper.GetString("log"),
+		LogLevel:           viper.GetString("log.level"),
+		MetricsRefreshRate: viper.GetDuration("metrics.refreshrate"),
+		MetricsOutput:      viper.GetString("metrics.output"),
 	}
 
 	if len(params.Log) == 0 {
@@ -71,5 +80,33 @@ func main() {
 		log.SetLevel(log.WarnLevel)
 	}
 
-	commands.Run(params)
+	exitSignal := make(chan os.Signal, 1)
+	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
+
+	// FIXME separate into its own go routine to be stopable
+	m := metrics.NewMetrics()
+
+	log.Infof(">>> Starting <<<")
+
+	// FIXME need a kill channel here for gracefull shutdown
+	go relay.StartQueue(params, m)
+
+	log.Infof(">>> Started <<<")
+
+	var wg sync.WaitGroup
+
+	terminationChan := make(chan struct{})
+	wg.Add(1)
+	go metrics.PersistPeriodically(&wg, terminationChan, params, m)
+
+	log.Infof(">>> Started <<<")
+
+	<-exitSignal
+
+	// FIXME gracefully empty queues and relay all messages before shutdown
+	log.Infof(">>> Terminating <<<")
+	close(terminationChan)
+	wg.Wait()
+
+	log.Infof(">>> Terminated <<<")
 }

@@ -16,4 +16,5 @@ module DeadlineHelper
   def with_deadline(*args, &blk)
     DeadlineHelper.with_deadline(*args, &blk)
   end
+
 end

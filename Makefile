@@ -1,11 +1,11 @@
 VERSION=$$(git rev-parse --abbrev-ref HEAD 2> /dev/null | rev | cut -d/ -f1 | rev)
 PACKAGE=lake
-DESTDIR=./pkg
+DESTDIR=./bin/deb
 TIMESTAMP=`date -R`
 TARGET=./debian/tmp/openbank
 
 .PHONY: all
-all: bootstrap test package bbtest
+all: bootstrap sync test package bbtest
 
 install:
 	@install -m 755 -o root -g root -d $(TARGET)/services/lake

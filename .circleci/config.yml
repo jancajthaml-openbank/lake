@@ -148,7 +148,7 @@ jobs:
             make teardown
 
       - persist_to_workspace:
-          root: /go/src/github.com/jancajthaml-openbank/lake/pkg
+          root: /go/src/github.com/jancajthaml-openbank/lake/bin/deb
           paths:
             - lake_*_amd64.deb
 
@@ -163,16 +163,14 @@ jobs:
 
     steps:
 
-      - attach_workspace:
-          at: /go/src/github.com/jancajthaml-openbank/lake/pkg
-
       - checkout
+
+      - attach_workspace:
+          at: /app/bin/deb
 
       - setup_remote_docker
 
-      - run: mkdir -p /app/pkg
-
-      - run: cp -r /go/src/github.com/jancajthaml-openbank/lake/pkg /app/pkg
+      - run: if [ -z find /app/bin/deb -type f -name 'lake_*_amd64.deb' -print -quit ] ; then exit 1 ; fi
 
       - run: docker build -t openbank/lake .
 

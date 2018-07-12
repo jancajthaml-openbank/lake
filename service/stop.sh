@@ -11,7 +11,7 @@ for signal in TERM TERM TERM TERM ; do
   if ! pkill -${signal} ${killables} ; then
     break
   fi
-  sleep .5
+  sleep 1
 done
 
 killables=$(ps -ef | awk '$8=="/openbank/services/lake/entrypoint" {print $2}')

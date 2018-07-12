@@ -42,7 +42,7 @@ binary-arch: build install
 	dh_gencontrol
 	dh_installdeb
 	dh_md5sums
-	dh_builddeb --destdir=./pkg
+	dh_builddeb --destdir=./bin/deb
 
 override_dh_installdeb:
 	dh_installdeb

@@ -10,3 +10,6 @@
   name = "github.com/spf13/viper"
   version = "1.0.0"
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/rcrowley/go-metrics"
