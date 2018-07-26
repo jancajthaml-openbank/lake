@@ -1,0 +1,88 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+trap exit INT TERM
+
+VERSION=""
+
+while [[ $# -gt 0 ]] ; do
+key="$1"
+
+case $key in
+    -v|--version)
+    VERSION="$2"
+    shift
+    shift
+    ;;
+    *)
+    shift
+    ;;
+esac
+done
+
+if [ -z "${VERSION// }" ] ; then
+  echo "version not provided"
+  exit 1
+fi
+
+append_to_changelog() {
+  local desc="$*"
+
+  DATE=$(git log -1 --format=%cD ${tag})
+  DEBFULLNAME=$(git log -1 --format=%an ${tag})
+  DEBEMAIL=$(git log -1 --format=%ae ${tag})
+
+  if [ ${FIRST} -eq 0 ] ; then echo >> ${CHANGELOG} ; fi
+  FIRST=0
+
+  echo "lake (${VER}) ${DIST}; urgency=low" >> ${CHANGELOG}
+  echo >> ${CHANGELOG}
+  if [ -n "${desc// }" ] ; then
+    echo "${desc}" >> ${CHANGELOG}
+    echo >> ${CHANGELOG}
+  fi
+  echo " -- ${DEBFULLNAME} <${DEBEMAIL}>  ${DATE}" >> ${CHANGELOG}
+}
+
+generate_changelog() {
+  VER="${VERSION}"
+  tag=HEAD
+  ADDS=$(sed -e 's/~.*//' <<< ${VER} | cut -s -d- -f2)
+  if [ -f ${CHANGELOG} ] ; then
+    rm -f ${CHANGELOG}
+  fi
+  if [ -n "${ADDS}" ] ; then
+    append_to_changelog "  * includes ${ADDS} commits after $(echo ${VER}| cut -d- -f1) release"
+  fi
+
+  for tag in ${tags[@]}; do
+    VER=${tag#v}
+    append_to_changelog "$(git tag -l -n20 ${tag} | tail -n+2 | sed -e 's/^ */  /')"
+  done
+
+  if [ ! -f ${CHANGELOG} ] ; then
+    append_to_changelog
+  fi
+}
+
+################################################################################
+
+DEB_SOURCES="$(pwd)/packaging"
+BINARY_TARGET="${DEB_SOURCES}/bin/linux-amd64"
+CHANGELOG=${DEB_SOURCES}/debian/DEBIAN/changelog
+CONTROL=${DEB_SOURCES}/debian/DEBIAN/control
+DIST=unstable
+FIRST=1
+
+if [ ! -f ${BINARY_TARGET} ] ; then
+	(>&2 echo "did not found binary to package at ${BINARY_TARGET}")
+	exit 1
+fi
+
+cp ${BINARY_TARGET} ${DEB_SOURCES}/debian/openbank/services/lake/linux-amd64
+generate_changelog
+sed -i 's/Version.*/Version: '${VERSION#v}'/' ${CONTROL}
+
+cd ${DEB_SOURCES}
+
+dpkg-deb --build debian bin

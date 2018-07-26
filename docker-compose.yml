@@ -79,12 +79,15 @@ services:
 
   # -------------------------------------------------------------------------- #
 
+  release:
+    extends: go
+    entrypoint: ["/opt/lifecycle/release"]
+
+  # -------------------------------------------------------------------------- #
+
   debian:
     extends: go
-    environment:
-      - DEB_GAIN_ROOT_CMD='sudo -nE --'
-    entrypoint: ["make", "--directory", "/go/src/github.com/jancajthaml-openbank/lake"]
-    command: ["build"]
+    entrypoint: ["/opt/lifecycle/debian"]
 
   # -------------------------------------------------------------------------- #
 

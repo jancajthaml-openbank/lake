@@ -1,0 +1,110 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+trap exit INT TERM
+
+VERSION=""
+ACCESS_TOKEN=""
+
+while [[ $# -gt 0 ]] ; do
+key="$1"
+
+case $key in
+    -v|--version)
+    VERSION="$2"
+    shift
+    shift
+    ;;
+    -t|--token)
+    ACCESS_TOKEN="$2"
+    shift
+    shift
+    ;;
+    *)
+    shift
+    ;;
+esac
+done
+
+if [ -z "${VERSION// }" ] ; then
+  echo "version not provided"
+  exit 1
+fi
+
+if [ -z "${ACCESS_TOKEN// }" ] ; then
+  echo "github access token not provided"
+  exit 1
+fi
+
+REPO=jancajthaml-openbank/lake
+
+RELEASE_INFO="https://api.github.com/repos/${REPO}/releases/tags/${VERSION}"
+response=$(curl \
+    --silent \
+    -H "Authorization: token $ACCESS_TOKEN" \
+    ${RELEASE_INFO} \
+)
+
+RELEASE_ID=$(jq -r .id <<< "$response")
+RELEASE_URI="https://api.github.com/repos/${REPO}/releases"
+
+if [ "${RELEASE_ID}" != "null" ] ; then
+  echo "release ${VERSION} already exists"
+  exit 1
+else
+  echo "creating release ${VERSION}"
+fi
+
+PAYLOAD=$(cat <<-END
+{
+  "tag_name": "${VERSION}",
+  "target_commitish": "master",
+  "name": "${VERSION}",
+  "body": "final ${VERSION} public release",
+  "draft": false,
+  "prerelease": false
+}
+END
+)
+
+response=$(
+  curl \
+    --fail \
+    --request POST \
+    -H "Authorization: token $ACCESS_TOKEN" \
+    --silent \
+    --data "$(echo $PAYLOAD)" \
+    ${RELEASE_URI}
+)
+
+UPLOAD_URL=$(jq -r .upload_url <<< $response | sed -e "s/{?name,label}//")
+
+assets=(
+  "packaging/bin/lake_1.0.0_amd64.deb"
+  "packaging/bin/linux-amd64"
+)
+
+for asset in "${assets[@]}" ; do
+  if [ ! -f $asset ] ; then
+    echo "asset $asset not found"
+    exit 1
+  fi
+
+  label=$(basename $asset)
+
+  echo "uploading $label"
+
+  curl \
+    --fail \
+    --request POST \
+    -# \
+    --output /dev/null \
+    --data-binary "@${asset}" \
+    -H "Authorization: token $ACCESS_TOKEN" \
+    -H "Content-Type: application/binary" \
+    "${UPLOAD_URL}?name=${label}"
+done
+
+echo "released ${VERSION}"
+
+#https://github.com/jancajthaml-openbank/lake/releases/download/v1.2.3/lake_1.0.0_amd64.deb

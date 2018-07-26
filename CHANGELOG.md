@@ -2,7 +2,7 @@
 
 * Metrics
 * Configurable ports and log level
-* Debian packaging
+* Packaging for debian stretch
 
 # v0.1.0
 

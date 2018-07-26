@@ -107,7 +107,7 @@ jobs:
     docker:
       - image: openbankdev/lake_base
         environment:
-          - DIST: /go/src/github.com/jancajthaml-openbank/lake/bin
+          - DIST: /go/src/github.com/jancajthaml-openbank/lake/packaging/debian/openbank/services/lake
 
     working_directory: /go/src/github.com/jancajthaml-openbank/lake
 
@@ -120,37 +120,38 @@ jobs:
       - run: if [ -d ${DIST} ] && [ "$(ls -A ${DIST})" ] ; then rm -rf ${DIST}/* ; fi
 
       - run:
-          name: Package binary
+          name: Package
           command: |
-            mkdir -p /tmp
-            build=$(git rev-parse HEAD 2> /dev/null || :)
+            if [ -n "${GIT_TAG_NAME// }" ] && [[ "${GIT_TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]] ; then
+              ./dev/lifecycle/package -v ${GIT_TAG_NAME} -t linux
+              ./dev/lifecycle/debian -v ${GIT_TAG_NAME}
 
-            if [ -n "${VERSION}" ] ; then
-              version="${VERSION}"
-            elif [ -n "${GIT_TAG_NAME}" ] && [[ "${GIT_TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]] ; then
-              version="${GIT_TAG_NAME}"
+              echo "${GIT_TAG_NAME}" > \
+                /go/src/github.com/jancajthaml-openbank/lake/packaging/bin/VERSION
             else
-              version="snapshot-${build}"
+
+              META=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
+
+              tags=($(git tag --sort=-v:refname))
+              if [ ${#tags[@]} -eq 0 ] ; then
+                VERSION=v0.0.0
+              else
+                VERSION=${tags[0]}
+              fi
+
+              ./dev/lifecycle/package -v ${VERSION}+${META} -t linux
+              ./dev/lifecycle/debian -v ${VERSION}+${META}
+
+              echo "${VERSION}+${META}" > \
+                /go/src/github.com/jancajthaml-openbank/lake/packaging/bin/VERSION
             fi
 
-            go clean
-
-            go build -a -o ${DIST}/entrypoint \
-              --ldflags "-X main.version=$version -X main.build=$build"
-
-      - run: if [ ! -f ${DIST}/entrypoint ] ; then exit 1 ; fi
-
-      - run:
-          name: Package debian
-          command: |
-            make prep
-            debuild -- binary
-            make teardown
-
       - persist_to_workspace:
-          root: /go/src/github.com/jancajthaml-openbank/lake/bin/deb
+          root: /go/src/github.com/jancajthaml-openbank/lake/packaging/bin
           paths:
             - lake_*_amd64.deb
+            - linux-amd64
+            - VERSION
 
   # -------------------------------------------------------------------------- #
 
@@ -166,33 +167,42 @@ jobs:
       - checkout
 
       - attach_workspace:
-          at: /app/bin/deb
+          at: /app/packaging/bin
 
       - setup_remote_docker
 
-      - run: if [ -z find /app/bin/deb -type f -name 'lake_*_amd64.deb' -print -quit ] ; then exit 1 ; fi
+      - run: if [ -z "$(find /app/packaging/bin -type f -name 'lake_*_amd64.deb' -print)" ] ; then exit 1 ; fi
+
+      - run: if [ ! -f /app/packaging/bin/linux-amd64 ] ; then exit 1 ; fi
 
       - run: docker build -t openbank/lake .
 
       - run: docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
 
       - deploy:
-          name: Push images to DockerHUB
+          name: Release artifacts
           command: |
             upload_to_docker_hub() {
+              echo "tagging and pushing ${1}:${2}"
               docker tag ${1} "${1}:${2}"
               docker push "${1}:${2}"
             }
 
+            VERSION=$(cat /app/packaging/bin/VERSION)
+
             if git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
-              git fetch --tags --force
-              VERSION=$(git tag | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" | sort -t. -k 1,1n -k 2,2n -k 3,3n | tail -1 | sed 's/\v//g')
+              echo "major release ${VERSION}"
               upload_to_docker_hub openbank/lake latest
               upload_to_docker_hub openbank/lake ${VERSION}
+              docker-compose run --rm release -v ${VERSION} -t ${GITHUB_RELEASE_TOKEN}
             else
-              VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
-              upload_to_docker_hub openbank/lake ${VERSION}
+              upload_to_docker_hub openbank/lake ${VERSION#*+}
             fi
+
+      - persist_to_workspace:
+          root: /app/packaging/bin
+          paths:
+            - VERSION
 
   # -------------------------------------------------------------------------- #
 
@@ -208,32 +218,23 @@ jobs:
 
       - checkout
 
-      - run:
-          name: Prepare blackbox tests
-          command: |
-            if git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
-              VERSION=$(git tag | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" | sort -t. -k 1,1n -k 2,2n -k 3,3n | tail -1 | sed 's/\v//g')
-            else
-              VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
-            fi
+      - attach_workspace:
+          at: /home/circleci/project/packaging/bin
 
+      - run:
+          name: Run blackbox tests
+          command: |
             pull() {
               echo "pulling ${1}:${2}"
               docker pull ${1}:${2}
             }
 
+            VERSION=$(cat /home/circleci/project/packaging/bin/VERSION)
+            VERSION=${VERSION#*+}
+
             pull openbank/lake ${VERSION} & \
             pull openbankdev/lake_bbtest latest & \
             wait
-
-      - run:
-          name: Run blackbox tests
-          command: |
-            if git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
-              VERSION=$(git tag | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" | sort -t. -k 1,1n -k 2,2n -k 3,3n | tail -1 | sed 's/\v//g')
-            else
-              VERSION=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
-            fi
 
             VERSION=${VERSION} docker-compose run --rm bbtest
 
