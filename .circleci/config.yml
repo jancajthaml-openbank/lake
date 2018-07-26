@@ -122,29 +122,23 @@ jobs:
       - run:
           name: Package
           command: |
-            if [ -n "${GIT_TAG_NAME// }" ] && [[ "${GIT_TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]] ; then
-              ./dev/lifecycle/package -v ${GIT_TAG_NAME} -t linux
-              ./dev/lifecycle/debian -v ${GIT_TAG_NAME}
-
-              echo "${GIT_TAG_NAME}" > \
-                /go/src/github.com/jancajthaml-openbank/lake/packaging/bin/VERSION
+            tags=($(git tag --sort=-v:refname))
+            if [ ${#tags[@]} -eq 0 ] ; then
+              VERSION=v0.0.0
             else
-
-              META=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
-
-              tags=($(git tag --sort=-v:refname))
-              if [ ${#tags[@]} -eq 0 ] ; then
-                VERSION=v0.0.0
-              else
-                VERSION=${tags[0]}
-              fi
-
-              ./dev/lifecycle/package -v ${VERSION}+${META} -t linux
-              ./dev/lifecycle/debian -v ${VERSION}+${META}
-
-              echo "${VERSION}+${META}" > \
-                /go/src/github.com/jancajthaml-openbank/lake/packaging/bin/VERSION
+              VERSION=${tags[0]}
             fi
+
+            if ! git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
+              META=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
+              VERSION=${VERSION}+${META}
+            fi
+
+            ./dev/lifecycle/package -v ${VERSION} -t linux
+            ./dev/lifecycle/debian -v ${VERSION}
+
+            echo "${VERSION}" > \
+              /go/src/github.com/jancajthaml-openbank/lake/packaging/bin/VERSION
 
       - persist_to_workspace:
           root: /go/src/github.com/jancajthaml-openbank/lake/packaging/bin
@@ -189,6 +183,7 @@ jobs:
             }
 
             VERSION=$(cat /app/packaging/bin/VERSION)
+            VERSION=${VERSION#*+}
 
             if git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
               echo "major release ${VERSION}"
@@ -196,7 +191,8 @@ jobs:
               upload_to_docker_hub openbank/lake ${VERSION}
               docker-compose run --rm release -v ${VERSION} -t ${GITHUB_RELEASE_TOKEN}
             else
-              upload_to_docker_hub openbank/lake ${VERSION#*+}
+              echo "snapshot ${VERSION}"
+              upload_to_docker_hub openbank/lake ${VERSION}
             fi
 
       - persist_to_workspace:
