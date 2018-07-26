@@ -14,8 +14,8 @@ import (
 	zmq "github.com/pebbe/zmq4"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/jancajthaml-openbank/lake/metrics"
-	"github.com/jancajthaml-openbank/lake/utils"
+	"github.com/jancajthaml-openbank/lake/pkg/metrics"
+	"github.com/jancajthaml-openbank/lake/pkg/utils"
 )
 
 func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {

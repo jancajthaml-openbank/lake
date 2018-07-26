@@ -103,7 +103,7 @@ step "lake is running with following configuration" do |configuration|
 
   id = containers[0].split(" ")[0]
 
-  %x(docker exec #{id} bash -c "echo -e '#{params}' > /etc/lake/params.conf" 2>&1)
+  %x(docker exec #{id} bash -c "echo -e '#{params}' > /etc/init/lake.conf" 2>&1)
   %x(docker exec #{id} systemctl restart lake.service 2>&1)
 
   with_deadline(timeout: 5) {

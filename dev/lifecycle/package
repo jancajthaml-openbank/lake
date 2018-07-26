@@ -3,37 +3,9 @@
 set -Eeuo pipefail
 trap exit INT TERM
 
-dist=bin
+dist="packaging/bin"
 platforms=(darwin)
-
-sem_open() {
-  mkfifo pipe-$$
-  exec 3<>pipe-$$
-  rm pipe-$$
-  local parallelism=${1}
-  for ((;parallelism>0;parallelism--)) ; do
-    printf %s 000 >&3
-  done
-}
-
-sem_put() {
-  local x
-  read -u 3 -n 3 x && ((0==x)) || {
-    exit $x
-  }
-  (
-    "$@"
-    printf '%.3d' $? >&3
-  )&
-}
-
-get_version() {
-  version=$(git rev-parse --abbrev-ref HEAD 2> /dev/null | rev | cut -d/ -f1 | rev)
-  if [ $? -ne 0 ] || [[ "${version}" == "master" ]] ; then
-    version=latest
-  fi
-  echo "${version}"
-}
+VERSION=""
 
 package_service() {
   local output=${1}/${2}-${3}
@@ -66,6 +38,11 @@ case $key in
     shift
     shift
     ;;
+    -v|--version)
+    VERSION="$2"
+    shift
+    shift
+    ;;
     -o|--output)
     dist="$2"
     shift
@@ -77,25 +54,24 @@ case $key in
 esac
 done
 
-sem_open $(getconf _NPROCESSORS_ONLN)
+if [ -z "${VERSION// }" ] ; then
+  echo "version not provided"
+  exit 1
+fi
 
 echo "[info] cleaning"
 go clean
 
-version=$(get_version)
-echo "[info] packaging ${version}"
+echo "[info] packaging ${VERSION}"
 for platform in "${platforms[@]}" ; do
-  sem_put package_service ${dist} ${platform} ${version}
+  package_service ${dist} ${platform} ${VERSION}
 done
-wait
 
-ls -1 ${dist} | sed "s/.*/       + ${dist}\/&/"
-
-if [ ! -f ${dist}/linux-${version} ] ; then
-  echo "[error] ${dist}/linux-${version} not found"
+if [ ! -f ${dist}/linux-${VERSION} ] ; then
+  (>&2 echo "[error] ${dist}/linux-${VERSION} not found")
   exit 1
 else
-  cp ${dist}/linux-${version} ${dist}/entrypoint
+  cp ${dist}/linux-${VERSION} ${dist}/linux-amd64
 fi
 
 echo "[info] done"

@@ -1,0 +1,5 @@
+lake (0.0.0+better-structure) unstable; urgency=low
+
+  * includes structure commits after 0.0.0+better release
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Wed, 25 Jul 2018 19:03:50 +0200

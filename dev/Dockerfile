@@ -14,17 +14,16 @@
 
 # ---------------------------------------------------------------------------- #
 
-FROM library/debian:stretch AS base
+FROM debian:stretch AS base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LD_LIBRARY_PATH=/usr/lib
 
 RUN apt-get update && apt-get -y install --no-install-recommends \
     \
-        ca-certificates=20161130+nmu1 \
-        git=1:2.11.0-3+deb9u2 \
-    && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+        ca-certificates>=20161130 \
+        git>=1:2.11.0-3 \
+        curl>=7.52.1-5
 
 # ---------------------------------------------------------------------------- #
 
@@ -38,14 +37,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GOOS=linux \
     GOROOT=/usr/lib/go
 
-RUN apt-get update && apt-get -y install --no-install-recommends \
+RUN apt-get -y install --no-install-recommends \
     \
-        pkg-config=0.29-4+b1 \
-        unzip=6.0-21 \
-        curl=7.52.1-5+deb9u6 \
-        tar=1.29b-1.1 \
-    && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+        tar=1.29b-1.1
 
 RUN curl -L "https://golang.org/dl/go${GOLANG_VERSION}.${GOOS}-${GOARCH}.tar.gz" -o /tmp/go-pkg.tar.gz && \
     tar -C "${LD_LIBRARY_PATH}" -xzf /tmp/go-pkg.tar.gz && \
@@ -56,15 +50,25 @@ RUN curl -L "https://golang.org/dl/go${GOLANG_VERSION}.${GOOS}-${GOARCH}.tar.gz"
 RUN curl -L https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 -o /usr/bin/dep && \
     chmod +x /usr/bin/dep
 
-RUN curl -L https://github.com/Masterminds/glide/releases/download/v0.13.1/glide-v0.13.1-linux-amd64.zip -o /tmp/glide-pkg.zip && \
-    unzip -p /tmp/glide-pkg.zip linux-amd64/glide > /usr/bin/glide && \
-    chmod +x /usr/bin/glide
+RUN curl -L https://github.com/Masterminds/glide/releases/download/v0.13.1/glide-v0.13.1-linux-amd64.tar.gz -o /tmp/glide-pkg.tar.gz && \
+    tar -C "${LD_LIBRARY_PATH}" -xzf /tmp/glide-pkg.tar.gz && \
+    mv "${LD_LIBRARY_PATH}"/linux-amd64/glide /usr/bin/glide
 
 RUN go get -u \
         \
         github.com/golang/lint/golint \
         github.com/fzipp/gocyclo \
         github.com/client9/misspell/cmd/misspell
+
+# ---------------------------------------------------------------------------- #
+
+FROM base AS jq
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    JQ_VERSION="1.5"
+
+RUN curl -L "https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64" -o /usr/bin/jq && \
+    chmod +x /usr/bin/jq
 
 # ---------------------------------------------------------------------------- #
 
@@ -79,9 +83,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GOOS=linux \
     GOROOT=/usr/lib/go
 
-RUN apt-get update && apt-get -y install --no-install-recommends \
+RUN apt-get -y install --no-install-recommends \
     \
-        pkg-config=0.29-4+b1 \
         libzmq3-dev=4.2.1-4 \
         cmake=3.7.2-1 \
         make=4.1-9.1 \
@@ -91,15 +94,13 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
         libmpc-dev=1.0.3-1+b2 \
         libmpfr-dev=3.1.5-1 \
         libgmp-dev=2:6.1.2+dfsg-1 \
-        patch=2.7.5-1+b2 \
-        ca-certificates=20161130+nmu1 \
-        git=1:2.11.0-3+deb9u2 \
+        patch>=2.7.5-1 \
         build-essential=12.3 \
         debhelper=10.2.5 \
         config-package-dev=5.1.2 \
-        devscripts=2.17.6+deb9u1 \
+        devscripts>=2.17.6 \
         fakeroot=1.21-3.1 \
-        curl=7.52.1-5+deb9u6 \
+        pkg-config>=0.29-4 \
     && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -107,9 +108,10 @@ RUN curl -L https://download.docker.com/linux/static/stable/x86_64/docker-17.09.
     tar -xzvf - --strip-components=1 -C /usr/bin docker/docker && \
     chmod a+x /usr/bin/docker
 
+COPY --from=jq /usr/bin/jq /usr/bin/jq
+
 COPY --from=go /go /go
 COPY --from=go /usr/lib/go /usr/lib/go
-
 COPY --from=go /usr/bin/go /usr/bin/go
 COPY --from=go /usr/bin/dep /usr/bin/dep
 COPY --from=go /usr/bin/gofmt /usr/bin/gofmt

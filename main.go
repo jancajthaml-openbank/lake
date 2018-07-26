@@ -27,9 +27,9 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/jancajthaml-openbank/lake/metrics"
-	"github.com/jancajthaml-openbank/lake/relay"
-	"github.com/jancajthaml-openbank/lake/utils"
+	"github.com/jancajthaml-openbank/lake/pkg/metrics"
+	"github.com/jancajthaml-openbank/lake/pkg/relay"
+	"github.com/jancajthaml-openbank/lake/pkg/utils"
 )
 
 var (

@@ -1,42 +1,21 @@
-VERSION=$$(git rev-parse --abbrev-ref HEAD 2> /dev/null | rev | cut -d/ -f1 | rev)
-PACKAGE=lake
-DESTDIR=./bin/deb
-TIMESTAMP=`date -R`
-TARGET=./debian/tmp/openbank
+ifndef GITHUB_RELEASE_TOKEN
+$(warning GITHUB_RELEASE_TOKEN is not set)
+endif
+
+META := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
+VERSION := $(shell git fetch --tags --force && tags=($$(git tag --sort=-v:refname)) && ([ $${\#tags[@]} -eq 0 ] && echo v0.0.0 || echo $${tags[0]}))
+
+.ONESHELL:
 
 .PHONY: all
 all: bootstrap sync test package bbtest
 
-install:
-	@install -m 755 -o root -g root -d $(TARGET)/services/lake
-	@install -m 755 -o root -g root service/stop.sh $(TARGET)/services/lake
-	@install -m 755 -o root -g root bin/entrypoint $(TARGET)/services/lake
-
-teardown:
-	@rm -rf debian/tmp/
-	@rm -rf debian/lake
-	@rm -rf debian/files
-	@rm -rf debian/$(PACKAGE).substvars
-	@rm -rf debian/$(PACKAGE).debhelper.log
-	@rm -f *-stamp
-
-clean: teardown
-	@rm -rf $(DESTDIR)
-
-prep: clean
-	@mkdir -p $(DESTDIR)
-
 .PHONY: package
 package:
-	VERSION=$(VERSION) \
-	docker-compose run --rm package -t linux
-	docker-compose run --rm debian
+	@(rm -rf packaging/bin/* &> /dev/null || :)
+	docker-compose run --rm package -t linux -v $(VERSION)+$(META)
+	docker-compose run --rm debian -v $(VERSION)+$(META)
 	docker-compose build service
-
-build:
-	$(MAKE) prep
-	debuild -- binary
-	$(MAKE) teardown
 
 .PHONY: bootstrap
 bootstrap:
@@ -45,18 +24,6 @@ bootstrap:
 .PHONY: fetch
 fetch:
 	@docker-compose run fetch
-
-.PHONY: build-lint
-build-lint:
-	@docker-compose build lint
-
-.PHONY: build-sync
-build-sync:
-	@docker-compose build sync
-
-.PHONY: build-package
-build-package:
-	@docker-compose build package
 
 .PHONY: lint
 lint:
@@ -69,6 +36,10 @@ sync:
 .PHONY: test
 test:
 	@docker-compose run --rm test
+
+.PHONY: release
+release:
+	@docker-compose run --rm release -v $(VERSION)+$(META) -t ${GITHUB_RELEASE_TOKEN}
 
 .PHONY: bbtest
 bbtest:
@@ -83,11 +54,3 @@ bbtest:
 .PHONY: run
 run:
 	@docker-compose run --rm --service-ports service run
-
-.PHONY: version
-version:
-	@docker-compose run --rm service version
-
-.PHONY: perf
-perf: build-perf
-	@./dev/lifecycle/performance
