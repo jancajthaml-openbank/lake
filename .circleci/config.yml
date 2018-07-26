@@ -129,7 +129,7 @@ jobs:
               VERSION=${tags[0]}
             fi
 
-            if ! git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
+            if [ -n "$(git log -1 --pretty=%B | grep '[v?][0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)" ] ; then
               META=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
               VERSION=${VERSION}+${META}
             fi
@@ -185,7 +185,7 @@ jobs:
             VERSION=$(cat /app/packaging/bin/VERSION)
             VERSION=${VERSION#*+}
 
-            if git log -1 --pretty=%B | grep "[v?][0-9]\+\.[0-9]\+\.[0-9]\+" ; then
+            if [ -n "$(git log -1 --pretty=%B | grep '[v?][0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)" ] ; then
               echo "major release ${VERSION}"
               upload_to_docker_hub openbank/lake latest
               upload_to_docker_hub openbank/lake ${VERSION}
