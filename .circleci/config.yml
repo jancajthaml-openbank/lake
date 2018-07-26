@@ -182,6 +182,11 @@ jobs:
               docker push "${1}:${2}"
             }
 
+            release_assets() {
+              echo "releasing ${1}"
+              ./dev/lifecycle/release -v ${1} -t ${GITHUB_RELEASE_TOKEN}
+            }
+
             VERSION=$(cat /app/packaging/bin/VERSION)
             VERSION=${VERSION#*+}
 
@@ -189,7 +194,7 @@ jobs:
               echo "major release ${VERSION}"
               upload_to_docker_hub openbank/lake latest
               upload_to_docker_hub openbank/lake ${VERSION}
-              docker-compose run --rm release -v ${VERSION} -t ${GITHUB_RELEASE_TOKEN}
+              release_assets ${VERSION}
             else
               echo "snapshot ${VERSION}"
               upload_to_docker_hub openbank/lake ${VERSION}
