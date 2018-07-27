@@ -35,9 +35,7 @@ RUN gem install \
         byebug:10.0.1 \
         ffi-rzmq:2.0.4
 
-RUN curl -L https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce.tgz | \
-    tar -xzvf - --strip-components=1 -C /usr/bin docker/docker && \
-    chmod a+x /usr/bin/docker
+COPY --from=library/docker:18.06 /usr/local/bin/docker /usr/bin/docker
 
 WORKDIR /opt/bbtest
 
