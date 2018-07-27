@@ -8,16 +8,15 @@ sem_open() {
   exec 3<>pipe-$$
   rm pipe-$$
   local parallelism=${1}
-  for ((;parallelism>0;parallelism--)) ; do
+  while [ $parallelism -gt 0 ] ; do
+    parallelism=$((parallelism-1))
     printf %s 000 >&3
   done
 }
 
 sem_put() {
   local x
-  read -u 3 -n 3 x && ((0==x)) || {
-    exit $x
-  }
+  read -u 3 -n 3 x && [ $x -eq 0 ] || exit $x
   (
     "$@"
     printf '%.3d' $? >&3
@@ -36,6 +35,5 @@ scan() {
 
 sem_open $(getconf _NPROCESSORS_ONLN)
 
-scan commands
-scan utils
+scan pkg
 wait

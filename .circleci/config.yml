@@ -8,19 +8,43 @@ workflows:
 
   commit:
     jobs:
-      - setup
+      - setup:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.+)?/
       - test:
           requires:
             - setup
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.+)?/
       - build:
           requires:
             - setup
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.+)?/
       - package:
           requires:
             - build
+            - test
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.+)?/
       - bbtest:
           requires:
             - package
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.+)?/
+      - release:
+          requires:
+            - bbtest
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.+)?/
+            branches:
+              ignore: /.*/
 
   rolling:
     triggers:
@@ -28,8 +52,7 @@ workflows:
           cron: "0 * * * *"
           filters:
             branches:
-              only:
-                - master
+              only: master
     jobs:
       - bbtest
 
@@ -40,7 +63,6 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   setup:
-
     docker:
       - image: docker:17.09.0-ce-git
         environment:
@@ -48,29 +70,15 @@ jobs:
           - GOARCH: amd64
           - GOOS: linux
           - GOBIN: /usr/lib/go/bin/go
-
-    working_directory: /home/circleci/project
-
+    working_directory: /go/src/github.com/jancajthaml-openbank/lake
     steps:
-
       - checkout
-
       - setup_remote_docker
-
-      - run:
-          name: Build images
-          command: |
-            docker build -t openbankdev/lake_bbtest ./bbtest &
-            docker build -t openbankdev/lake_base ./dev &
-            wait
-
-      - run:
-          name: Login to DockerHUB
-          command: |
-            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-
+      - run: docker build -t openbankdev/lake_bbtest ./bbtest
+      - run: docker build -t openbankdev/lake_base ./dev
+      - run: docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
       - deploy:
-          name: Push to docker hub
+          name: Push dev docker images to DockerHUB
           command: |
             upload_to_docker_hub() {
               docker tag ${1} "${1}:latest"
@@ -80,143 +88,118 @@ jobs:
             upload_to_docker_hub openbankdev/lake_bbtest &
             upload_to_docker_hub openbankdev/lake_base &
             wait
+      - save_cache:
+          key: lake-base-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
+          paths:
+            - /go/src/github.com/jancajthaml-openbank/lake
 
   # -------------------------------------------------------------------------- #
 
   test:
-
     docker:
       - image: openbankdev/lake_base
-        environment:
-          - DIST: /go/src/github.com/jancajthaml-openbank/lake/bin
-
     working_directory: /go/src/github.com/jancajthaml-openbank/lake
-
     steps:
-
-      - checkout
-
+      - restore_cache:
+          keys:
+            - lake-base-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
       - run: dep ensure
-
       - run: go test -v ./... -benchmem -bench=. -timeout=20s
 
   # -------------------------------------------------------------------------- #
 
   build:
-
     docker:
       - image: openbankdev/lake_base
-        environment:
-          - DIST: /go/src/github.com/jancajthaml-openbank/lake/packaging/debian/openbank/services/lake
-
     working_directory: /go/src/github.com/jancajthaml-openbank/lake
-
     steps:
-
-      - checkout
-
+      - restore_cache:
+          keys:
+            - lake-base-{{ .Environment.CIRCLE_SHA1 }}
       - run: dep ensure
-
-      - run: if [ -d ${DIST} ] && [ "$(ls -A ${DIST})" ] ; then rm -rf ${DIST}/* ; fi
-
       - run:
-          name: Package
+          name: Package binary
           command: |
-            tags=($(git tag --sort=-v:refname))
-            if [ ${#tags[@]} -eq 0 ] ; then
-              VERSION=v0.0.0
-            else
-              VERSION=${tags[0]}
-            fi
-
-            if [ -n "$(git log -1 --pretty=%B | grep '[v?][0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)" ] ; then
+            if [ -z ${CIRCLE_TAG} ] ; then
+              tags=($(git tag --sort=-v:refname))
+              if [ ${#tags[@]} -eq 0 ] ; then
+                VERSION=v0.0.0
+              else
+                VERSION=${tags[0]}
+              fi
               META=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
               VERSION=${VERSION}+${META}
+            else
+              VERSION=${CIRCLE_TAG}
             fi
 
             ./dev/lifecycle/package -v ${VERSION} -t linux
+      - run:
+          name: Package debian
+          command: |
+            if [ -z ${CIRCLE_TAG} ] ; then
+              tags=($(git tag --sort=-v:refname))
+              if [ ${#tags[@]} -eq 0 ] ; then
+                VERSION=v0.0.0
+              else
+                VERSION=${tags[0]}
+              fi
+              META=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
+              VERSION=${VERSION}+${META}
+            else
+              VERSION=${CIRCLE_TAG}
+            fi
+
             ./dev/lifecycle/debian -v ${VERSION}
-
-            echo "${VERSION}" > \
-              /go/src/github.com/jancajthaml-openbank/lake/packaging/bin/VERSION
-
-      - persist_to_workspace:
-          root: /go/src/github.com/jancajthaml-openbank/lake/packaging/bin
+      - save_cache:
+          key: lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
           paths:
-            - lake_*_amd64.deb
-            - linux-amd64
-            - VERSION
+            - /go/src/github.com/jancajthaml-openbank/lake
 
   # -------------------------------------------------------------------------- #
 
   package:
-
     docker:
-      - image: docker:17.09.0-ce-git
-
-    working_directory: /app
-
+      - image: openbankdev/lake_base
+    working_directory: /go/src/github.com/jancajthaml-openbank/lake
     steps:
-
-      - checkout
-
-      - attach_workspace:
-          at: /app/packaging/bin
-
       - setup_remote_docker
-
-      - run: if [ -z "$(find /app/packaging/bin -type f -name 'lake_*_amd64.deb' -print)" ] ; then exit 1 ; fi
-
-      - run: if [ ! -f /app/packaging/bin/linux-amd64 ] ; then exit 1 ; fi
-
+      - restore_cache:
+          keys:
+            - lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
+      - run: if [ -z "$(find ./packaging/bin -type f -name 'lake_*_amd64.deb' -print)" ] ; then exit 1 ; fi
+      - run: if [ ! -f ./packaging/bin/linux-amd64 ] ; then exit 1 ; fi
       - run: docker build -t openbank/lake .
-
       - run: docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-
       - deploy:
-          name: Release artifacts
+          name: Push snapshot docker images to DockerHUB
           command: |
-            upload_to_docker_hub() {
-              echo "tagging and pushing ${1}:${2}"
-              docker tag ${1} "${1}:${2}"
-              docker push "${1}:${2}"
-            }
 
-            VERSION=$(cat /app/packaging/bin/VERSION)
-            VERSION=${VERSION#*+}
-
-            if [ -n "$(git log -1 --pretty=%B | grep '[v?][0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)" ] ; then
-              echo "major release ${VERSION}"
-              upload_to_docker_hub openbank/lake latest
-              upload_to_docker_hub openbank/lake ${VERSION}
-              docker-compose run --rm release -v ${VERSION} -t ${GITHUB_RELEASE_TOKEN}
-            else
+            if [ -z ${CIRCLE_TAG} ] ; then
+              VERSION=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
               echo "snapshot ${VERSION}"
-              upload_to_docker_hub openbank/lake ${VERSION}
-            fi
 
-      - persist_to_workspace:
-          root: /app/packaging/bin
-          paths:
-            - VERSION
+              docker tag openbank/lake openbank/lake:${VERSION}
+              docker push openbank/lake:${VERSION}
+
+            else
+              VERSION=${CIRCLE_TAG}
+              echo "release ${VERSION}"
+
+              docker tag openbank/lake openbank/lake:${VERSION}
+              docker push openbank/lake:${VERSION}
+
+              docker tag openbank/lake openbank/lake:latest
+              docker push openbank/lake:latest
+            fi
 
   # -------------------------------------------------------------------------- #
 
   bbtest:
     machine: true
-
-    environment:
-      - PERSISTENCE_PATH: /home/circleci/project/dev/data
-
     working_directory: /home/circleci/project
-
     steps:
-
       - checkout
-
-      - attach_workspace:
-          at: /home/circleci/project/packaging/bin
-
       - run:
           name: Run blackbox tests
           command: |
@@ -225,20 +208,43 @@ jobs:
               docker pull ${1}:${2}
             }
 
-            VERSION=$(cat /home/circleci/project/packaging/bin/VERSION)
-            VERSION=${VERSION#*+}
+            if [ -z ${CIRCLE_TAG} ] ; then
+              VERSION=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
+            else
+              VERSION=${CIRCLE_TAG}
+            fi
 
             pull openbank/lake ${VERSION} & \
             pull openbankdev/lake_bbtest latest & \
             wait
 
             VERSION=${VERSION} docker-compose run --rm bbtest
-
       - store_test_results:
           path: /home/circleci/project/bbtest
-
       - store_artifacts:
           path: /home/circleci/project/reports
           destination: reports
+
+  # -------------------------------------------------------------------------- #
+
+  release:
+
+    docker:
+      - image: openbankdev/lake_base
+
+    working_directory: /go/src/github.com/jancajthaml-openbank/lake
+
+    steps:
+      - setup_remote_docker
+      - restore_cache:
+          keys:
+            - lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
+      - run: ls -al packaging/bin
+      - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_amd64.deb ] ; then exit 1 ; fi
+      - run: if [ ! -f ./packaging/bin/linux-amd64 ] ; then exit 1 ; fi
+      - deploy:
+          name: Release artifacts to github
+          command: |
+            ./dev/lifecycle/release -v ${CIRCLE_TAG} -t ${GITHUB_RELEASE_TOKEN}
 
 # ---------------------------------------------------------------------------- #

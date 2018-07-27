@@ -1,5 +1,9 @@
-lake (0.0.0+better-structure) unstable; urgency=low
+lake (v1.0.0+major-release-2) unstable; urgency=low
 
-  * includes structure commits after 0.0.0+better release
+  * includes release commits after v1.0.0+major release
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Wed, 25 Jul 2018 19:03:50 +0200
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 26 Jul 2018 13:43:49 +0200
+
+lake (1.0.0) unstable; urgency=low
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 26 Jul 2018 11:50:28 +0200

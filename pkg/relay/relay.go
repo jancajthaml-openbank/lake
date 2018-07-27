@@ -35,13 +35,12 @@ func StartQueue(params utils.RunParams, m *metrics.Metrics) {
 
 	for {
 		ctx, cancel := context.WithCancel(context.Background())
-		go RelayMessages(ctx, cancel, params, m)
+		go work(ctx, cancel, params, m)
 		<-ctx.Done()
 	}
 }
 
-// RelayMessages buffers and relays messages in order
-func RelayMessages(ctx context.Context, cancel context.CancelFunc, params utils.RunParams, m *metrics.Metrics) (err error) {
+func work(ctx context.Context, cancel context.CancelFunc, params utils.RunParams, m *metrics.Metrics) (err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()

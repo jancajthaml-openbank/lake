@@ -100,13 +100,7 @@ RUN apt-get -y install --no-install-recommends \
         config-package-dev=5.1.2 \
         devscripts>=2.17.6 \
         fakeroot=1.21-3.1 \
-        pkg-config>=0.29-4 \
-    && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN curl -L https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce.tgz | \
-    tar -xzvf - --strip-components=1 -C /usr/bin docker/docker && \
-    chmod a+x /usr/bin/docker
+        pkg-config>=0.29-4
 
 COPY --from=jq /usr/bin/jq /usr/bin/jq
 
@@ -120,5 +114,7 @@ COPY --from=go /usr/bin/glide /usr/bin/glide
 COPY --from=go /go/bin/gocyclo /usr/bin/gocyclo
 COPY --from=go /go/bin/golint /usr/bin/golint
 COPY --from=go /go/bin/misspell /usr/bin/misspell
+
+COPY --from=library/docker:18.06 /usr/local/bin/docker /usr/bin/docker
 
 # ---------------------------------------------------------------------------- #

@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
-set -Eeuo pipefail
+set -eu
 trap exit INT TERM
 
 dist="packaging/bin"
-platforms=(darwin)
+platforms="darwin"
 VERSION=""
 
 package_service() {
@@ -29,12 +29,12 @@ package_service() {
   chmod +x ${output}
 }
 
-while [[ $# -gt 0 ]] ; do
+while [ $# -gt 0 ] ; do
 key="$1"
 
 case $key in
     -t|--target)
-    IFS=',' read -ra platforms <<< "$2"
+    platforms="$2"
     shift
     shift
     ;;
@@ -54,7 +54,7 @@ case $key in
 esac
 done
 
-if [ -z "${VERSION// }" ] ; then
+if [ ! "${VERSION}" ] ; then
   echo "version not provided"
   exit 1
 fi
@@ -63,7 +63,8 @@ echo "[info] cleaning"
 go clean
 
 echo "[info] packaging ${VERSION}"
-for platform in "${platforms[@]}" ; do
+
+for platform in $(echo $platforms | sed "s/,/ /g") ; do
   package_service ${dist} ${platform} ${VERSION}
 done
 

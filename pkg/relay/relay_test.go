@@ -137,7 +137,7 @@ func TestRelayInOrder(t *testing.T) {
 		var wg sync.WaitGroup
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
-		go RelayMessages(ctx, cancel, params, m)
+		go work(ctx, cancel, params, m)
 		go push(ctx, cancel, pushChannel, params.PullPort)
 		go sub(ctx, cancel, subChannel, params.PubPort)
 
