@@ -15,4 +15,3 @@ Feature: Relay message
       C d
       A b
     """
-

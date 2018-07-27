@@ -26,8 +26,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Metrics holds metrics snapshot status
-type MetricsSnapshot struct {
+// Snapshot holds metrics snapshot status
+type Snapshot struct {
 	MessageEgress  int64 `json:"messageEgress"`
 	MessageIngress int64 `json:"messageIngress"`
 }
@@ -46,29 +46,31 @@ func NewMetrics() *Metrics {
 	}
 }
 
-// MetricsSnapshot returns metrics snapshot
-func NewMetricsSnapshot(entity *Metrics) MetricsSnapshot {
+// NewSnapshot returns metrics snapshot
+func NewSnapshot(entity *Metrics) Snapshot {
 	if entity == nil {
-		return MetricsSnapshot{}
+		return Snapshot{}
 	}
 
-	return MetricsSnapshot{
+	return Snapshot{
 		MessageEgress:  entity.messageEgress.Count(),
 		MessageIngress: entity.messageIngress.Count(),
 	}
 }
 
+// MessageEgress increment number of outcomming messages
 func (gom *Metrics) MessageEgress(num int64) {
 	gom.messageEgress.Inc(num)
 }
 
+// MessageIngress increment number of incomming messages
 func (gom *Metrics) MessageIngress(num int64) {
 	gom.messageIngress.Inc(num)
 }
 
-func (entity *Metrics) persist(filename string) {
+func (gom *Metrics) persist(filename string) {
 	tempFile := filename + "_temp"
-	data, err := json.Marshal(NewMetricsSnapshot(entity))
+	data, err := json.Marshal(NewSnapshot(gom))
 	if err != nil {
 		log.Warnf("unable to create serialize metrics with error: %v", err)
 		return

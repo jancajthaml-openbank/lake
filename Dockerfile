@@ -12,16 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM debian:stretch
+FROM debian:stretch AS base
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8
+
+RUN apt-get update -y && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends apt-utils
+
+# ---------------------------------------------------------------------------- #
+
+FROM base
 
 MAINTAINER Jan Cajthaml <jan.cajthaml@gmail.com>
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    LD_LIBRARY_PATH=/usr/lib
-
-RUN apt-get -y update && \
-    apt-get -y upgrade && \
-    apt-get -y install --allow-downgrades --no-install-recommends \
+RUN apt-get -y install --allow-downgrades --no-install-recommends \
     \
       rsyslog=8.24.0-1 \
       libsystemd0>=232-25 \
