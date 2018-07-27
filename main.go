@@ -32,11 +32,6 @@ import (
 	"github.com/jancajthaml-openbank/lake/pkg/utils"
 )
 
-var (
-	version string
-	build   string
-)
-
 func init() {
 	viper.SetEnvPrefix("LAKE")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

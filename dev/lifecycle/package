@@ -1,28 +1,28 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
 trap exit INT TERM
 
 dist="packaging/bin"
-platforms="darwin"
-VERSION=""
+platforms=("darwin")
+archs=("amd64 386 arm")
 
 package_service() {
-  local output=${1}/${2}-${3}
+  local arch=${3}
+  local plafrom=${2}
+  local output=${1}/${platform}-${arch}
   if [ -f ${output} ] ; then
     rm -f ${output}
   fi
 
-  echo "[info] packaging for ${2}"
+  echo "[info] packaging for ${platform}-${arch}"
 
-  GOOS=${2} \
-  GOARCH=amd64 \
+  GOOS=${platform} \
+  GOARCH=${arch} \
   CGO_ENABLED=1 \
   \
-  go build -a -o ${output} \
-  \
-  --ldflags "-X main.version=${3}" || {
-    (>&2 echo "unable to build ${2} distribution")
+  go build -a -o ${output} || {
+    (>&2 echo "unable to build ${platform} ${arch} distribution")
     exit 1
   }
 
@@ -33,46 +33,51 @@ while [ $# -gt 0 ] ; do
 key="$1"
 
 case $key in
-    -t|--target)
-    platforms="$2"
-    shift
-    shift
-    ;;
+
+    --target)
+      platforms=($(sed "s/,/ /g" <<< "$2"))
+      shift
+      shift
+      ;;
+
+    --arch)
+      archs=($(sed "s/,/ /g" <<< "$2"))
+      shift
+      shift
+      ;;
+
     -v|--version)
-    VERSION="$2"
-    shift
-    shift
-    ;;
+      VERSION="$2"
+      shift
+      shift
+      ;;
+
     -o|--output)
-    dist="$2"
-    shift
-    shift
-    ;;
+      dist="$2"
+      shift
+      shift
+      ;;
+
     *)
-    shift
-    ;;
+      shift
+      ;;
+
 esac
 done
 
-if [ ! "${VERSION}" ] ; then
-  echo "version not provided"
-  exit 1
-fi
 
 echo "[info] cleaning"
 go clean
 
-echo "[info] packaging ${VERSION}"
-
-for platform in $(echo $platforms | sed "s/,/ /g") ; do
-  package_service ${dist} ${platform} ${VERSION}
+for platform in ${platforms[@]} ; do
+  for arch in ${archs[@]} ; do
+    package_service ${dist} ${platform} ${arch}
+  done
 done
 
-if [ ! -f ${dist}/linux-${VERSION} ] ; then
-  (>&2 echo "[error] ${dist}/linux-${VERSION} not found")
+if [ ! -f ${dist}/linux-amd64 ] ; then
+  (>&2 echo "[error] ${dist}/linux-amd64 not found")
   exit 1
-else
-  cp ${dist}/linux-${VERSION} ${dist}/linux-amd64
 fi
 
 echo "[info] done"
