@@ -117,23 +117,7 @@ jobs:
           keys:
             - lake-base-{{ .Environment.CIRCLE_SHA1 }}
       - run: dep ensure
-      - run:
-          name: Package binary
-          command: |
-            if [ -z ${CIRCLE_TAG} ] ; then
-              tags=($(git tag --sort=-v:refname))
-              if [ ${#tags[@]} -eq 0 ] ; then
-                VERSION=v0.0.0
-              else
-                VERSION=${tags[0]}
-              fi
-              META=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
-              VERSION=${VERSION}+${META}
-            else
-              VERSION=${CIRCLE_TAG}
-            fi
-
-            ./dev/lifecycle/package -v ${VERSION} -t linux
+      - run: ./dev/lifecycle/package --target linux --arch amd64
       - run:
           name: Package debian
           command: |
