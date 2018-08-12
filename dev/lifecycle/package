@@ -4,25 +4,24 @@ set -eu
 trap exit INT TERM
 
 dist="packaging/bin"
-platforms=("darwin")
-archs=("amd64 386 arm")
+targets=("linux/amd64")
 
 package_service() {
-  local arch=${3}
-  local plafrom=${2}
+  local arch=${2#*/}
+  local platform=${2%%/*}
   local output=${1}/${platform}-${arch}
   if [ -f ${output} ] ; then
     rm -f ${output}
   fi
 
-  echo "[info] packaging for ${platform}-${arch}"
+  echo "[info] packaging for ${platform}/${arch}"
 
   GOOS=${platform} \
   GOARCH=${arch} \
   CGO_ENABLED=1 \
   \
   go build -a -o ${output} || {
-    (>&2 echo "unable to build ${platform} ${arch} distribution")
+    (>&2 echo "unable to build for ${platform}/${arch}")
     exit 1
   }
 
@@ -35,32 +34,20 @@ key="$1"
 case $key in
 
     --target)
-      platforms=($(sed "s/,/ /g" <<< "$2"))
+      targets=($(sed "s/,/ /g" <<< "$2"))
       shift
       shift
-      ;;
-
-    --arch)
-      archs=($(sed "s/,/ /g" <<< "$2"))
-      shift
-      shift
-      ;;
-
-    -v|--version)
-      VERSION="$2"
-      shift
-      shift
-      ;;
+    ;;
 
     -o|--output)
       dist="$2"
       shift
       shift
-      ;;
+    ;;
 
     *)
       shift
-      ;;
+    ;;
 
 esac
 done
@@ -69,10 +56,8 @@ done
 echo "[info] cleaning"
 go clean
 
-for platform in ${platforms[@]} ; do
-  for arch in ${archs[@]} ; do
-    package_service ${dist} ${platform} ${arch}
-  done
+for target in ${targets[@]} ; do
+  package_service ${dist} ${target}
 done
 
 if [ ! -f ${dist}/linux-amd64 ] ; then

@@ -35,7 +35,7 @@ var (
 
 // Format processed each log entry and produces formatted log line
 func (f *LogFormat) Format(entry *log.Entry) ([]byte, error) {
-	if len(entry.Message) == 0 {
+	if entry.Message == "" {
 		return nil, nil
 	}
 
@@ -61,7 +61,7 @@ func (f *LogFormat) Format(entry *log.Entry) ([]byte, error) {
 		b.Write(panicPrefix)
 	}
 
-	b.Write([]byte(entry.Message))
+	b.WriteString(entry.Message)
 	b.WriteByte('\n')
 
 	return b.Bytes(), nil

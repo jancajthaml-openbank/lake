@@ -46,7 +46,7 @@ func init() {
 }
 
 func main() {
-	log.Infof(">>> Setup <<<")
+	log.Print(">>> Setup <<<")
 
 	params := utils.RunParams{
 		PullPort:           viper.GetInt("port.pull"),
@@ -68,7 +68,7 @@ func main() {
 	}
 
 	if level, err := log.ParseLevel(params.LogLevel); err == nil {
-		log.Infof("Log level set to %v", strings.ToUpper(params.LogLevel))
+		log.Print("Log level set to " + strings.ToUpper(params.LogLevel))
 		log.SetLevel(level)
 	} else {
 		log.Warnf("Invalid log level %v, using level WARN", params.LogLevel)
@@ -81,12 +81,10 @@ func main() {
 	// FIXME separate into its own go routine to be stopable
 	m := metrics.NewMetrics()
 
-	log.Infof(">>> Starting <<<")
+	log.Print(">>> Starting <<<")
 
 	// FIXME need a kill channel here for gracefull shutdown
 	go relay.StartQueue(params, m)
-
-	log.Infof(">>> Started <<<")
 
 	var wg sync.WaitGroup
 
@@ -94,14 +92,14 @@ func main() {
 	wg.Add(1)
 	go metrics.PersistPeriodically(&wg, terminationChan, params, m)
 
-	log.Infof(">>> Started <<<")
+	log.Print(">>> Started <<<")
 
 	<-exitSignal
 
 	// FIXME gracefully empty queues and relay all messages before shutdown
-	log.Infof(">>> Terminating <<<")
+	log.Print(">>> Terminating <<<")
 	close(terminationChan)
 	wg.Wait()
 
-	log.Infof(">>> Terminated <<<")
+	log.Print(">>> Terminated <<<")
 }

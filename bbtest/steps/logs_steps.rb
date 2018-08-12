@@ -21,10 +21,12 @@ step "journalctl of :unit contains following" do |unit, expected|
       idx = actual_lines_merged.length - 1
 
       loop do
-        break if idx < 0 or actual_lines_merged[idx].include? "Started openbank lake message relay."
+        break if idx < 0 or actual_lines_merged[idx].include? ": Started"
         actual_lines << actual_lines_merged[idx]
         idx -= 1
       end
+
+      actual_lines = actual_lines.reverse
 
       expected_lines.each { |line|
         found = false
