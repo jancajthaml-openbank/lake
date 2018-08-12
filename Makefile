@@ -13,7 +13,7 @@ all: bootstrap sync test package bbtest
 .PHONY: package
 package:
 	@(rm -rf packaging/bin/* &> /dev/null || :)
-	docker-compose run --rm package --target linux --arch amd64
+	docker-compose run --rm package --target linux/amd64
 	docker-compose run --rm debian -v $(VERSION)+$(META)
 	docker-compose build service
 
