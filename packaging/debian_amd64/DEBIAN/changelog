@@ -1,0 +1,9 @@
+lake (v1.0.0+unification-and-reduction-of-flakes) unstable; urgency=low
+
+  * includes and commits after v1.0.0+unification release
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Tue, 14 Aug 2018 14:13:37 +0200
+
+lake (1.0.0) unstable; urgency=low
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Fri, 27 Jul 2018 14:14:40 +0200

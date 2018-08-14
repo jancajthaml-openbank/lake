@@ -19,6 +19,9 @@ FROM debian:stretch AS base
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8
 
+RUN dpkg --add-architecture armhf
+RUN dpkg --add-architecture amd64
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         apt-utils \
@@ -98,18 +101,22 @@ RUN apt-get -y install --no-install-recommends \
     \
         cmake=3.7.2-1 \
         make=4.1-9.1 \
-        gcc=4:6.3.0-4 \
-        g++=4:6.3.0-4 \
-        libzmq3-dev=4.2.1-4 \
-        zlib1g-dev=1:1.2.8.dfsg-5 \
-        libmpc-dev=1.0.3-1+b2 \
-        libmpfr-dev=3.1.5-1 \
-        libgmp-dev=2:6.1.2+dfsg-1 \
         patch>=2.7.5-1 \
         debhelper=10.2.5 \
         config-package-dev=5.1.2 \
         fakeroot=1.21-3.1 \
-        pkg-config>=0.29-4 && \
+        pkg-config>=0.29-4 \
+        gcc \
+        gcc-arm-linux-gnueabi \
+        gcc-arm-linux-gnueabihf \
+        libc6 \
+        libc6-armhf-cross \
+        libc6-dev \
+        libc6-dev-armhf-cross \
+    \
+        libzmq3-dev:amd64=4.2.1-4 \
+        libzmq3-dev:armhf=4.2.1-4 \
+    && \
     \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

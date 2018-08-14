@@ -117,7 +117,7 @@ jobs:
           keys:
             - lake-base-{{ .Environment.CIRCLE_SHA1 }}
       - run: dep ensure
-      - run: ./dev/lifecycle/package --target linux --arch amd64
+      - run: ./dev/lifecycle/package --target linux/amd64,linux/arm
       - run:
           name: Package debian
           command: |
@@ -134,7 +134,8 @@ jobs:
               VERSION=${CIRCLE_TAG}
             fi
 
-            ./dev/lifecycle/debian -v ${VERSION}
+            ./dev/lifecycle/debian -v ${VERSION} --arch amd64
+            ./dev/lifecycle/debian -v ${VERSION} --arch arm
       - save_cache:
           key: lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
           paths:
@@ -153,12 +154,13 @@ jobs:
             - lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
       - run: if [ -z "$(find ./packaging/bin -type f -name 'lake_*_amd64.deb' -print)" ] ; then exit 1 ; fi
       - run: if [ ! -f ./packaging/bin/linux-amd64 ] ; then exit 1 ; fi
+      - run: if [ -z "$(find ./packaging/bin -type f -name 'lake_*_arm.deb' -print)" ] ; then exit 1 ; fi
+      - run: if [ ! -f ./packaging/bin/linux-arm ] ; then exit 1 ; fi
       - run: docker build -t openbank/lake .
       - run: docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
       - deploy:
           name: Push snapshot docker images to DockerHUB
           command: |
-
             if [ -z ${CIRCLE_TAG} ] ; then
               VERSION=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
               echo "snapshot ${VERSION}"
@@ -223,9 +225,10 @@ jobs:
       - restore_cache:
           keys:
             - lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
-      - run: ls -al packaging/bin
       - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_amd64.deb ] ; then exit 1 ; fi
       - run: if [ ! -f ./packaging/bin/linux-amd64 ] ; then exit 1 ; fi
+      - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_arm.deb ] ; then exit 1 ; fi
+      - run: if [ ! -f ./packaging/bin/linux-arm ] ; then exit 1 ; fi
       - deploy:
           name: Release artifacts to github
           command: |

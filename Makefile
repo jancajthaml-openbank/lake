@@ -3,7 +3,7 @@ $(warning GITHUB_RELEASE_TOKEN is not set)
 endif
 
 META := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
-VERSION := $(shell git fetch --tags --force && tags=($$(git tag --sort=-v:refname)) && ([ $${\#tags[@]} -eq 0 ] && echo v0.0.0 || echo $${tags[0]}))
+VERSION := $(shell git fetch --tags --force 2> /dev/null; tags=($$(git tag --sort=-v:refname)) && ([ $${\#tags[@]} -eq 0 ] && echo v0.0.0 || echo $${tags[0]}))
 
 .ONESHELL:
 
@@ -13,8 +13,9 @@ all: bootstrap sync test package bbtest
 .PHONY: package
 package:
 	@(rm -rf packaging/bin/* &> /dev/null || :)
-	docker-compose run --rm package --target linux --arch amd64
-	docker-compose run --rm debian -v $(VERSION)+$(META)
+	docker-compose run --rm package --target linux/amd64,linux/arm
+	docker-compose run --rm debian -v $(VERSION)+$(META) --arch amd64
+	docker-compose run --rm debian -v $(VERSION)+$(META) --arch arm
 	docker-compose build service
 
 .PHONY: bootstrap
