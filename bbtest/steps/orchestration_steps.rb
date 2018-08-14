@@ -73,7 +73,7 @@ step ":container :version is started with" do |container, version, label, params
 end
 
 step "lake is running" do ||
-  with_deadline(timeout: 5) {
+  eventually(timeout: 5) {
     send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
       "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
       "-p 5561",
@@ -85,7 +85,7 @@ step "lake is running" do ||
 end
 
 step "lake is running with following configuration" do |configuration|
-  with_deadline(timeout: 5) {
+  eventually(timeout: 5) {
     send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
       "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
       "-p 5561",
@@ -106,7 +106,7 @@ step "lake is running with following configuration" do |configuration|
   %x(docker exec #{id} bash -c "echo -e '#{params}' > /etc/init/lake.conf" 2>&1)
   %x(docker exec #{id} systemctl restart lake.service 2>&1)
 
-  with_deadline(timeout: 5) {
+  eventually(timeout: 5) {
     lake_handshake()
   }
 end

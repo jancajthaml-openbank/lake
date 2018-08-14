@@ -4,11 +4,9 @@ step "lake recieves :data" do |data|
 end
 
 step "lake responds with :data" do |data|
-  with_deadline(timeout: 10) {
-    eventually(timeout: 3) {
-      expect(remote_mailbox()).to include(data)
-      ack_message(data)
-    }
+  eventually(timeout: 10) {
+    expect(remote_mailbox()).to include(data)
+    ack_message(data)
   }
 end
 

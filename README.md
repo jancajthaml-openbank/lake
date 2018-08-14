@@ -9,3 +9,7 @@ Message relay for openbank services
 ## License
 
 Licensed under Apache 2.0 see LICENSE.md for details
+
+## Author
+
+Jan Cajthaml (a.k.a johnny)

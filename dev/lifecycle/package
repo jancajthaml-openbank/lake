@@ -16,14 +16,33 @@ package_service() {
 
   echo "[info] packaging for ${platform}/${arch}"
 
-  GOOS=${platform} \
-  GOARCH=${arch} \
-  CGO_ENABLED=1 \
-  \
-  go build -a -o ${output} || {
-    (>&2 echo "unable to build for ${platform}/${arch}")
-    exit 1
-  }
+  case ${arch} in
+
+    arm)
+      GOOS=${platform} \
+      GOARM=7 \
+      CC=arm-linux-gnueabihf-gcc \
+      GOARCH=arm \
+      CGO_ENABLED=1 \
+      \
+      go build -a -o ${output} || {
+        (>&2 echo "unable to build for ${platform}/arm")
+        exit 1
+      }
+    ;;
+
+    *)
+      GOOS=${platform} \
+      GOARCH=${arch} \
+      CGO_ENABLED=1 \
+      \
+      go build -a -o ${output} || {
+        (>&2 echo "unable to build for ${platform}/${arch}")
+        exit 1
+      }
+    ;;
+
+  esac
 
   chmod +x ${output}
 }
@@ -52,17 +71,11 @@ case $key in
 esac
 done
 
-
 echo "[info] cleaning"
 go clean
 
 for target in ${targets[@]} ; do
   package_service ${dist} ${target}
 done
-
-if [ ! -f ${dist}/linux-amd64 ] ; then
-  (>&2 echo "[error] ${dist}/linux-amd64 not found")
-  exit 1
-fi
 
 echo "[info] done"

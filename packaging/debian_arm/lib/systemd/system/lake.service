@@ -1,0 +1,20 @@
+[Unit]
+Description=openbank lake message relay
+After=inetd.service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/init/lake.conf
+ExecStart=/openbank/services/lake/linux-arm
+ExecStop=/openbank/services/lake/gracefull-stop
+StandardInput=null
+LimitNOFILE=1048576
+LimitNPROC=infinity
+LimitCORE=infinity
+Restart=on-failure
+RestartSec=2
+TimeoutStartSec=0
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

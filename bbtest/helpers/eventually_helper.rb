@@ -1,14 +1,23 @@
+require 'timeout'
+
 module EventuallyHelper
 
   def self.eventually(timeout: 10, &_blk)
     return unless block_given?
-    wait_until = Time.now + timeout
+    last_err = nil
     begin
-      yield
-    rescue Exception => e
-      raise e if Time.now >= wait_until
-      sleep 0.10
-      retry
+      Timeout.timeout(timeout) do
+        begin
+          yield
+        rescue Exception => e
+          last_err = e
+          sleep(0.1)
+          retry
+        end
+      end
+    rescue Timeout::Error
+      raise last_err if last_err
+      raise "function timeout after #{timeout} seconds"
     end
   end
 

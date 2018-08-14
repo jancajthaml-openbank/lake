@@ -4,24 +4,39 @@ set -eu
 trap exit INT TERM
 
 VERSION=""
+TARGET_ARCHITECTURE=""
 
 while [ $# -gt 0 ] ; do
 key="$1"
 
 case $key in
+
+    --arch)
+      TARGET_ARCHITECTURE="$2"
+      shift
+      shift
+    ;;
+
     -v|--version)
-    VERSION="$2"
-    shift
-    shift
+      VERSION="$2"
+      shift
+      shift
     ;;
+
     *)
-    shift
+      shift
     ;;
+
 esac
 done
 
 if [ ! "${VERSION}" ] ; then
-  echo "version not provided"
+  (>&2 echo "version not provided")
+  exit 1
+fi
+
+if [ ! "${TARGET_ARCHITECTURE}" ] ; then
+  (>&2 echo "target architecture not provided (use e.g. --arch amd64)")
   exit 1
 fi
 
@@ -65,22 +80,30 @@ generate_changelog() {
 
 ################################################################################
 
-DEB_SOURCES="$(pwd)/packaging"
-BINARY_TARGET="${DEB_SOURCES}/bin/linux-amd64"
-CHANGELOG=${DEB_SOURCES}/debian/DEBIAN/changelog
-CONTROL=${DEB_SOURCES}/debian/DEBIAN/control
+PKGS="$(pwd)/packaging"
+DEB_SOURCES="${PKGS}/debian_${TARGET_ARCHITECTURE}"
+BIN_SOURCES="${PKGS}/bin"
+
+if [ ! -d "${DEB_SOURCES}" ] ; then
+  (>&2 echo "packaging for ${TARGET_ARCHITECTURE} is not supported")
+  exit 1
+fi
+
+CHANGELOG=${DEB_SOURCES}/DEBIAN/changelog
+CONTROL=${DEB_SOURCES}/DEBIAN/control
 DIST=unstable
 FIRST=1
 
-if [ ! -f ${BINARY_TARGET} ] ; then
-	(>&2 echo "did not found binary to package at ${BINARY_TARGET}")
-	exit 1
+if [ ! -f "${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE}" ] ; then
+  (>&2 echo "did not found binary to package at ${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE}")
+  exit 1
 fi
 
-cp ${BINARY_TARGET} ${DEB_SOURCES}/debian/openbank/services/lake/linux-amd64
+cp \
+  ${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE} \
+  ${DEB_SOURCES}/openbank/services/lake/linux-${TARGET_ARCHITECTURE}
+
 generate_changelog
 sed -i 's/Version.*/Version: '${VERSION#v}'/' ${CONTROL}
 
-cd ${DEB_SOURCES}
-
-dpkg-deb --build debian bin
+dpkg-deb --build "${DEB_SOURCES}" "${BIN_SOURCES}"
