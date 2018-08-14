@@ -36,6 +36,5 @@ step "journalctl of :unit contains following" do |unit, expected|
       }
       raise "#{line} was not found in logs:\n#{actual_lines.join("\n")}" unless found
     }
-    raise "#{line} was not found in logs:\n#{actual_lines.join("\n")}" unless found
   }
 end
