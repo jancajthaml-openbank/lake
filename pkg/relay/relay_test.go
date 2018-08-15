@@ -165,3 +165,30 @@ func TestRelayInOrder(t *testing.T) {
 		wg.Wait()
 	}
 }
+
+func TestStartStop(t *testing.T) {
+	params := utils.RunParams{
+		PullPort: 5562,
+		PubPort:  5561,
+	}
+
+	m := metrics.NewMetrics()
+
+	t.Log("by expiration ( Start->Stop ) * N")
+	{
+		for i := 1; i <= 10; i++ {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(i)*10*time.Millisecond)
+			work(ctx, cancel, params, m)
+		}
+	}
+
+	t.Log("by error ( Start->Stop ) * N")
+	{
+		mCtx, mCancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(mCtx)
+
+		go work(ctx, cancel, params, m)
+		mCancel()
+		<-ctx.Done()
+	}
+}

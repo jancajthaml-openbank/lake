@@ -1,6 +1,6 @@
 #!/bin/bash
 
-killables=$(ps -ef | awk '$8=="/openbank/services/lake/linux-arm" {print $2}')
+killables=$(ps -ef | awk '$8=="/openbank/services/lake/lake" {print $2}')
 
 if [[ -z "${killables// }" ]] ; then
   echo "not running"
@@ -14,7 +14,7 @@ for signal in TERM TERM TERM TERM ; do
   sleep 1
 done
 
-killables=$(ps -ef | awk '$8=="/openbank/services/lake/linux-arm" {print $2}')
+killables=$(ps -ef | awk '$8=="/openbank/services/lake/lake" {print $2}')
 
 if [[ -z "${killables// }" ]] ; then
   while pkill -KILL ${killables} ; do

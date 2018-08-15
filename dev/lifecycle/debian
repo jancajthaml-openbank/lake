@@ -101,7 +101,7 @@ fi
 
 cp \
   ${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE} \
-  ${DEB_SOURCES}/openbank/services/lake/linux-${TARGET_ARCHITECTURE}
+  ${DEB_SOURCES}/openbank/services/lake/lake
 
 generate_changelog
 sed -i 's/Version.*/Version: '${VERSION#v}'/' ${CONTROL}
