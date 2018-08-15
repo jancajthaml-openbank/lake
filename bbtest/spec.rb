@@ -62,7 +62,6 @@ RSpec.configure do |config|
     end
 
     kill = lambda do |container|
-      return unless $? == 0
       %x(docker rm -f #{container} &>/dev/null || :)
     end
 

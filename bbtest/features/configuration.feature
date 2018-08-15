@@ -1,4 +1,4 @@
-Feature: Verify service
+Feature: Service can be configured
 
   Scenario: properly installed debian package
 

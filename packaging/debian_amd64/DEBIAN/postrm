@@ -4,12 +4,13 @@ set -e
 
 case "$1" in
 
-    purge)
+  purge)
 		systemctl stop lake.service
 		systemctl disable lake.service
 		(rm /lib/systemd/system/lake.service || :)
 		(rm /lib/systemd/system/lake.service || :)
 		(rm /etc/init/lake.conf || :)
+    (rm /opt/lake/metrics/metrics.json || :)
 		systemctl daemon-reload
 		systemctl reset-failed
 	;;
@@ -18,13 +19,13 @@ case "$1" in
 		systemctl mask lake.service
 	;;
 
-    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
-    ;;
+  upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+  ;;
 
-    *)
-        (>&2 echo "postrm called with unknown argument \`$1'")
-        exit 1
-    ;;
+  *)
+    (>&2 echo "postrm called with unknown argument \`$1'")
+    exit 1
+  ;;
 
 esac
 

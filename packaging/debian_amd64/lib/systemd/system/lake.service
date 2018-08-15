@@ -5,8 +5,9 @@ After=inetd.service
 [Service]
 Type=simple
 EnvironmentFile=/etc/init/lake.conf
-ExecStart=/openbank/services/lake/linux-amd64
-ExecStop=/openbank/services/lake/gracefull-stop
+StartLimitBurst=0
+ExecStart=/openbank/services/lake/lake
+ExecStop=/openbank/services/lake/lake-stop
 StandardInput=null
 LimitNOFILE=1048576
 LimitNPROC=infinity

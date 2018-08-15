@@ -1,8 +1,15 @@
-lake (v1.0.0+unification-and-reduction-of-flakes) unstable; urgency=low
+lake (v1.0.1+demo-findings) unstable; urgency=low
 
-  * includes and commits after v1.0.0+unification release
+  * includes findings commits after v1.0.1+demo release
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Tue, 14 Aug 2018 14:13:37 +0200
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Wed, 15 Aug 2018 12:01:02 +0200
+
+lake (1.0.1) unstable; urgency=low
+
+  
+  * unification and reduction of bbtest flakes, arm arch compilation target
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Tue, 14 Aug 2018 20:08:38 +0200
 
 lake (1.0.0) unstable; urgency=low
 

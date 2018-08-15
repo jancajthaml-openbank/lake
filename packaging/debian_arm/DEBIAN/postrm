@@ -10,6 +10,7 @@ case "$1" in
     (rm /lib/systemd/system/lake.service || :)
     (rm /lib/systemd/system/lake.service || :)
     (rm /etc/init/lake.conf || :)
+    (rm /opt/lake/metrics/metrics.json || :)
     systemctl daemon-reload
     systemctl reset-failed
   ;;

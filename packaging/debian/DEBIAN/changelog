@@ -1,9 +1,0 @@
-lake (v1.0.0+increase-bbtest-fidelity) unstable; urgency=low
-
-  * includes bbtest commits after v1.0.0+increase release
-
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Fri, 27 Jul 2018 14:35:37 +0200
-
-lake (1.0.0) unstable; urgency=low
-
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Fri, 27 Jul 2018 14:14:40 +0200

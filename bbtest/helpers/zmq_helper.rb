@@ -1,5 +1,6 @@
 require 'ffi-rzmq'
 require 'thread'
+require 'timeout'
 
 module ZMQHelper
 
@@ -28,7 +29,15 @@ module ZMQHelper
       loop do
         break if self.poisonPill or self.pull_channel.nil?
         data = ""
-        self.pull_channel.recv_string(data, ZMQ::DONTWAIT)
+        begin
+          Timeout.timeout(1) do
+            self.pull_channel.recv_string(data, 0)
+          end
+        rescue Timeout::Error => _
+          break if self.poisonPill or self.pull_channel.nil?
+          next
+        end
+
         next if data.empty?
         if data == "!" and !self.ready
           self.ready = true
@@ -39,6 +48,7 @@ module ZMQHelper
           self.recv_backlog << data
         end
       end
+
       self.pull_channel.setsockopt(ZMQ::UNSUBSCRIBE, '')
       self.pub_channel.close() unless self.pub_channel.nil?
       self.pull_channel.close() unless self.pull_channel.nil?
@@ -55,6 +65,7 @@ module ZMQHelper
       self.pull_daemon.join() unless self.pull_daemon.nil?
     rescue
     ensure
+      self.ctx = nil
       self.pull_daemon = nil
     end
     self.poisonPill = false

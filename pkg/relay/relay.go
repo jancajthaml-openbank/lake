@@ -27,7 +27,10 @@ import (
 	"github.com/jancajthaml-openbank/lake/pkg/utils"
 )
 
+const ERRRACE = "address already in use "
+const ERRBUSSY = "resource temporarily unavailable"
 const backoff = 500 * time.Microsecond
+const checkRate = 100 * time.Millisecond
 
 // StartQueue start autorecovery ZMQ connection
 func StartQueue(params utils.RunParams, m *metrics.Metrics) {
@@ -36,6 +39,7 @@ func StartQueue(params utils.RunParams, m *metrics.Metrics) {
 	for {
 		ctx, cancel := context.WithCancel(context.Background())
 		go work(ctx, cancel, params, m)
+		log.Warn("ZMQ crash, restarting")
 		<-ctx.Done()
 	}
 }
@@ -43,7 +47,6 @@ func StartQueue(params utils.RunParams, m *metrics.Metrics) {
 func work(ctx context.Context, cancel context.CancelFunc, params utils.RunParams, m *metrics.Metrics) (err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
-	defer cancel()
 
 	var (
 		chunk    string
@@ -51,89 +54,99 @@ func work(ctx context.Context, cancel context.CancelFunc, params utils.RunParams
 		sender   *zmq.Socket
 		pullPort = fmt.Sprintf("tcp://*:%d", params.PullPort)
 		pubPort  = fmt.Sprintf("tcp://*:%d", params.PubPort)
+		stopper  = make(chan interface{})
 	)
 
-pullConnection:
-	for {
-		receiver, err = zmq.NewSocket(zmq.PULL)
-		if err == nil {
-			break
+	defer func() {
+		cancel()
+		<-stopper
+		return
+	}()
+
+	localCtx, err := zmq.NewContext()
+	if err != nil {
+		log.Warn("Unable to create ZMQ context:", err)
+		return
+	}
+
+	ticker := time.NewTicker(checkRate)
+	defer ticker.Stop()
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				if ctx.Err() != nil {
+					goto teardown
+				}
+			case <-ctx.Done():
+				goto teardown
+			}
 		}
-		if err.Error() == "resource temporarily unavailable" {
+
+	teardown:
+		localCtx.Term()
+		stopper <- nil
+		return
+	}()
+
+pullConnection:
+	receiver, err = localCtx.NewSocket(zmq.PULL)
+
+	switch err {
+	case nil:
+	case zmq.ErrorSocketClosed, zmq.ErrorContextClosed:
+		return
+	default:
+		log.Warn("Unable create ZMQ PULL connection: ", err)
+
+		if err.Error() == ERRBUSSY {
 			log.Warn("Resources unavailable in connect")
 			select {
 			case <-time.After(backoff):
 				goto pullConnection
 			}
 		}
-
-		log.Warn("Unable to bind ZMQ socket: ", err)
-		return
 	}
-	defer receiver.Close()
 
 pubConnection:
-	for {
-		sender, err = zmq.NewSocket(zmq.PUB)
-		if err == nil {
-			break
-		}
-		if err.Error() == "resource temporarily unavailable" {
+	sender, err = localCtx.NewSocket(zmq.PUB)
+
+	switch err {
+	case nil:
+	case zmq.ErrorSocketClosed, zmq.ErrorContextClosed:
+		return
+	default:
+		log.Warn("Unable create ZMQ PUB connection: ", err)
+
+		if err.Error() == ERRBUSSY {
 			log.Warn("Resources unavailable in connect")
 			select {
 			case <-time.After(backoff):
 				goto pubConnection
 			}
 		}
+	}
 
-		log.Warn("Unable to bind ZMQ socket: ", err)
+	if receiver.Bind(pullPort) != nil {
 		return
 	}
-	defer sender.Close()
 
-pullBind:
-	for {
-		err = receiver.Bind(pullPort)
-		if err == nil {
-			break
-		}
-		log.Warn("ZMQ receiver unable to bind: ", err)
-		select {
-		case <-time.After(backoff):
-			goto pullBind
-		}
+	if sender.Bind(pubPort) != nil {
+		return
 	}
 
-pubBind:
-	for {
-		err = sender.Bind(pubPort)
-		if err == nil {
-			break
-		}
-		log.Warn("ZMQ sender unable to bind: ", err)
-		select {
-		case <-time.After(backoff):
-			goto pubBind
-		}
-	}
+	log.Info("ZMQ relay in main loop")
 
-	for {
-		err = ctx.Err()
-		if err != nil {
-			return
-		}
-		chunk, err = receiver.Recv(zmq.DONTWAIT)
-		switch err {
-		case nil:
-			m.MessageIngress(int64(1))
-			sender.Send(chunk, 0)
-			m.MessageEgress(int64(1))
-			log.Debug(chunk)
-		case zmq.ErrorSocketClosed, zmq.ErrorContextClosed:
-			log.Warn("ZMQ connection closed: ", err)
-			return
-		default:
-			continue
-		}
+mainLoop:
+	chunk, err = receiver.Recv(0)
+	switch err {
+	case nil:
+		m.MessageIngress(int64(1))
+		sender.Send(chunk, zmq.DONTWAIT)
+		m.MessageEgress(int64(1))
+		goto mainLoop
+	case zmq.ErrorSocketClosed, zmq.ErrorContextClosed:
+		return
 	}
+	goto mainLoop
 }

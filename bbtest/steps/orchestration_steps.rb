@@ -9,7 +9,6 @@ step "no :container :label is running" do |container, label|
 
   ids.each { |id|
     eventually(timeout: 2) {
-      puts "wanting to kill #{id}"
       send ":container running state is :state", id, false
 
       label = %x(docker inspect --format='{{.Name}}' #{id})
@@ -73,19 +72,21 @@ step ":container :version is started with" do |container, version, label, params
 end
 
 step "lake is running" do ||
-  eventually(timeout: 5) {
+  eventually(timeout: 10) {
     send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
       "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
       "-p 5561",
       "-p 5562"
     ]
+  }
 
+  eventually(timeout: 5) {
     lake_handshake()
   }
 end
 
 step "lake is running with following configuration" do |configuration|
-  eventually(timeout: 5) {
+  eventually(timeout: 10) {
     send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
       "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
       "-p 5561",
@@ -95,13 +96,13 @@ step "lake is running with following configuration" do |configuration|
 
   params = configuration.split("\n").map(&:strip).reject(&:empty?).join("\n").inspect.delete('\"')
 
-  containers = %x(docker ps -a --filter name=lake --filter status=running --format "{{.ID}} {{.Image}}")
+  containers = %x(docker ps -a --filter name=lake --filter status=running --format "{{.ID}}")
   expect($?).to be_success
   containers = containers.split("\n").map(&:strip).reject(&:empty?)
 
   expect(containers).not_to be_empty
 
-  id = containers[0].split(" ")[0]
+  id = containers[0]
 
   %x(docker exec #{id} bash -c "echo -e '#{params}' > /etc/init/lake.conf" 2>&1)
   %x(docker exec #{id} systemctl restart lake.service 2>&1)
