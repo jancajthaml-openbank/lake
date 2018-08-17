@@ -1,8 +1,21 @@
-lake (v1.0.0+unification-and-reduction-of-flakes) unstable; urgency=low
+lake (v1.0.2+optimise-debian-packaging) unstable; urgency=low
 
-  * includes and commits after v1.0.0+unification release
+  * includes debian commits after v1.0.2+optimise release
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Tue, 14 Aug 2018 14:13:37 +0200
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Fri, 17 Aug 2018 14:19:44 +0200
+
+lake (1.0.2) unstable; urgency=low
+
+  
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Wed, 15 Aug 2018 14:27:43 +0200
+
+lake (1.0.1) unstable; urgency=low
+
+  
+  * unification and reduction of bbtest flakes, arm arch compilation target
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Tue, 14 Aug 2018 20:08:38 +0200
 
 lake (1.0.0) unstable; urgency=low
 

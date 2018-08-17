@@ -15,7 +15,10 @@ package:
 	@(rm -rf packaging/bin/* &> /dev/null || :)
 	docker-compose run --rm package --target linux/amd64
 	docker-compose run --rm debian -v $(VERSION)+$(META) --arch amd64
-	docker-compose build service
+	docker-compose run --rm package --target linux/arm
+	docker-compose run --rm debian -v $(VERSION)+$(META) --arch arm
+	docker-compose build candidate
+	docker-compose build artifacts
 
 .PHONY: bootstrap
 bootstrap:
@@ -60,5 +63,5 @@ run:
 			-p 5561:5561 \
 			--privileged=true \
 			--security-opt seccomp:unconfined \
-		openbank/lake:latest \
+		openbankdev/lake_candidate:latest \
 	) bash

@@ -2,7 +2,7 @@ lake (v1.0.2+optimise-debian-packaging) unstable; urgency=low
 
   * includes debian commits after v1.0.2+optimise release
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Wed, 15 Aug 2018 14:27:43 +0200
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Fri, 17 Aug 2018 14:19:44 +0200
 
 lake (1.0.2) unstable; urgency=low
 

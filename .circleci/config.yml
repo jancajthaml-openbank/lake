@@ -117,7 +117,8 @@ jobs:
           keys:
             - lake-base-{{ .Environment.CIRCLE_SHA1 }}
       - run: dep ensure
-      - run: ./dev/lifecycle/package --target linux/amd64,linux/arm
+      - run: ./dev/lifecycle/package --target linux/amd64
+      - run: ./dev/lifecycle/package --target linux/arm
       - run:
           name: Package debian
           command: |
@@ -152,32 +153,34 @@ jobs:
       - restore_cache:
           keys:
             - lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
-      - run: if [ -z "$(find ./packaging/bin -type f -name 'lake_*_amd64.deb' -print)" ] ; then exit 1 ; fi
-      - run: if [ ! -f ./packaging/bin/linux-amd64 ] ; then exit 1 ; fi
-      - run: if [ -z "$(find ./packaging/bin -type f -name 'lake_*_arm.deb' -print)" ] ; then exit 1 ; fi
-      - run: if [ ! -f ./packaging/bin/linux-arm ] ; then exit 1 ; fi
-      - run: docker build -t openbank/lake .
+      - run: docker build -t openbank/lake ./packaging
+      - run: docker build -t openbankdev/lake_candidate .
       - run: docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
       - deploy:
           name: Push snapshot docker images to DockerHUB
           command: |
-            if [ -z ${CIRCLE_TAG} ] ; then
-              VERSION=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
-              echo "snapshot ${VERSION}"
+            upload() {
+              if [ -z ${CIRCLE_TAG} ] ; then
+                VERSION=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
+                echo "snapshot ${VERSION}"
 
-              docker tag openbank/lake openbank/lake:${VERSION}
-              docker push openbank/lake:${VERSION}
+                docker tag ${1} ${1}:${VERSION}
+                docker push ${1}:${VERSION}
+              else
+                VERSION=${CIRCLE_TAG}
+                echo "release ${VERSION}"
 
-            else
-              VERSION=${CIRCLE_TAG}
-              echo "release ${VERSION}"
+                docker tag ${1} ${1}:${VERSION}
+                docker push ${1}:${VERSION}
 
-              docker tag openbank/lake openbank/lake:${VERSION}
-              docker push openbank/lake:${VERSION}
+                docker tag ${1} ${1}:latest
+                docker push ${1}:latest
+              fi
+            }
 
-              docker tag openbank/lake openbank/lake:latest
-              docker push openbank/lake:latest
-            fi
+            upload openbank/lake &
+            upload openbankdev/lake_candidate &
+            wait
 
   # -------------------------------------------------------------------------- #
 
@@ -200,7 +203,7 @@ jobs:
               VERSION=${CIRCLE_TAG}
             fi
 
-            pull openbank/lake ${VERSION} & \
+            pull openbankdev/lake_candidate ${VERSION} & \
             pull openbankdev/lake_bbtest latest & \
             wait
 

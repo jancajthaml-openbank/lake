@@ -27,7 +27,7 @@ RSpec.configure do |config|
       %x(docker rm -f #{container} &>/dev/null || :)
     end
 
-    get_containers.call("openbank/lake").each { |container| teardown_container.call(container) }
+    get_containers.call("openbankdev/lake_candidate").each { |container| teardown_container.call(container) }
 
     ["/reports"].each { |folder|
       FileUtils.mkdir_p folder
@@ -67,12 +67,12 @@ RSpec.configure do |config|
 
     begin
       Timeout.timeout(5) do
-        get_containers.call("openbank/lake").each { |container|
+        get_containers.call("openbankdev/lake_candidate").each { |container|
           teardown_container.call(container)
         }
       end
     rescue Timeout::Error => _
-      get_containers.call("openbank/lake").each { |container|
+      get_containers.call("openbankdev/lake_candidate").each { |container|
         capture_journal.call(container)
         kill.call(container)
       }
