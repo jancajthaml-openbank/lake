@@ -15,7 +15,10 @@ package:
 	@(rm -rf packaging/bin/* &> /dev/null || :)
 	docker-compose run --rm package --target linux/amd64
 	docker-compose run --rm debian -v $(VERSION)+$(META) --arch amd64
-	docker-compose build service
+	docker-compose run --rm package --target linux/arm
+	docker-compose run --rm debian -v $(VERSION)+$(META) --arch arm
+	docker-compose build candidate
+	docker-compose build artifacts
 
 .PHONY: bootstrap
 bootstrap:
@@ -53,4 +56,12 @@ bbtest:
 
 .PHONY: run
 run:
-	@docker-compose run --rm --service-ports service run
+	docker exec -it $$(\
+		docker run -d -ti \
+			-v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+			-p 5562:5562 \
+			-p 5561:5561 \
+			--privileged=true \
+			--security-opt seccomp:unconfined \
+		openbankdev/lake_candidate:latest \
+	) bash

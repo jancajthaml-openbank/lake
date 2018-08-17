@@ -51,10 +51,10 @@ step ":container :version is started with" do |container, version, label, params
     "docker",
     "run",
     "-d",
+    "-h #{label}",
     "--net=#{prefix}_default",
     "--volumes-from=#{my_id}",
     "--log-driver=json-file",
-    "-h #{label}",
     "--net-alias=#{label}",
     "--name=#{label}",
     "--privileged"
@@ -73,7 +73,7 @@ end
 
 step "lake is running" do ||
   eventually(timeout: 10) {
-    send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
+    send ":container :version is started with", "openbankdev/lake_candidate", ENV.fetch("VERSION", "latest"), "lake", [
       "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
       "-p 5561",
       "-p 5562"
@@ -87,7 +87,7 @@ end
 
 step "lake is running with following configuration" do |configuration|
   eventually(timeout: 10) {
-    send ":container :version is started with", "openbank/lake", ENV.fetch("VERSION", "latest"), "lake", [
+    send ":container :version is started with", "openbankdev/lake_candidate", ENV.fetch("VERSION", "latest"), "lake", [
       "-v /sys/fs/cgroup:/sys/fs/cgroup:ro",
       "-p 5561",
       "-p 5562"

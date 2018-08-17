@@ -18,6 +18,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"net"
 
 	"bufio"
 	"strings"
@@ -30,6 +31,11 @@ import (
 	"github.com/jancajthaml-openbank/lake/pkg/metrics"
 	"github.com/jancajthaml-openbank/lake/pkg/relay"
 	"github.com/jancajthaml-openbank/lake/pkg/utils"
+)
+
+const (
+	SdNotifyReady    = "READY=1"
+	SdNotifyStopping = "STOPPING=1"
 )
 
 func init() {
@@ -45,6 +51,24 @@ func init() {
 	log.SetFormatter(new(utils.LogFormat))
 }
 
+func systemNotify(state string) {
+	socketAddr := &net.UnixAddr{
+		Name: os.Getenv("NOTIFY_SOCKET"),
+		Net:  "unixgram",
+	}
+
+	if socketAddr.Name == "" {
+		return
+	}
+
+	conn, err := net.DialUnix(socketAddr.Net, nil, socketAddr)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	conn.Write([]byte(state))
+}
+
 func main() {
 	log.Print(">>> Setup <<<")
 
@@ -57,7 +81,7 @@ func main() {
 		MetricsOutput:      viper.GetString("metrics.output"),
 	}
 
-	if len(params.Log) == 0 {
+	if params.Log == "" {
 		log.SetOutput(os.Stdout)
 	} else if file, err := os.OpenFile(params.Log, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644); err == nil {
 		defer file.Close()
@@ -94,10 +118,16 @@ func main() {
 
 	log.Print(">>> Started <<<")
 
+	systemNotify(SdNotifyReady)
+
 	<-exitSignal
 
 	// FIXME gracefully empty queues and relay all messages before shutdown
 	log.Print(">>> Terminating <<<")
+
+	systemNotify(SdNotifyStopping)
+
+	// FIXME relay.Stop() todo implement
 	close(terminationChan)
 	wg.Wait()
 

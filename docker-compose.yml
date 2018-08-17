@@ -24,11 +24,11 @@ services:
 
   # -------------------------------------------------------------------------- #
 
-  service:
+  candidate:
     build:
       dockerfile: Dockerfile
       context: .
-    image: openbank/lake
+    image: openbankdev/lake_candidate
     restart: "no"
     ports:
       - "5562"
@@ -36,6 +36,14 @@ services:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
+
+  # -------------------------------------------------------------------------- #
+
+  artifacts:
+    build:
+      dockerfile: Dockerfile
+      context: ./packaging
+    image: openbank/lake
 
   # -------------------------------------------------------------------------- #
 

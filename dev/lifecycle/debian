@@ -99,6 +99,8 @@ if [ ! -f "${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE}" ] ; then
   exit 1
 fi
 
+mkdir -p ${DEB_SOURCES}/openbank/services/lake
+
 cp \
   ${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE} \
   ${DEB_SOURCES}/openbank/services/lake/lake
