@@ -51,10 +51,10 @@ step ":container :version is started with" do |container, version, label, params
     "docker",
     "run",
     "-d",
+    "-h #{label}",
     "--net=#{prefix}_default",
     "--volumes-from=#{my_id}",
     "--log-driver=json-file",
-    "-h #{label}",
     "--net-alias=#{label}",
     "--name=#{label}",
     "--privileged"

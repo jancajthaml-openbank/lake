@@ -20,7 +20,7 @@ step "journalctl of :unit contains following" do |unit, expected|
     idx = actual_lines_merged.length - 1
 
     loop do
-      break if idx < 0 or actual_lines_merged[idx].include? ": Started"
+      break if idx < 0 or actual_lines_merged[idx].include? ": Starting"
       actual_lines << actual_lines_merged[idx]
       idx -= 1
     end

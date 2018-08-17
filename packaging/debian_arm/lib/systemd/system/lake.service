@@ -3,17 +3,16 @@ Description=openbank lake message relay
 After=inetd.service
 
 [Service]
-Type=simple
+Type=notify
 EnvironmentFile=/etc/init/lake.conf
 StartLimitBurst=0
 ExecStart=/openbank/services/lake/lake
-ExecStop=/openbank/services/lake/lake-stop
 StandardInput=null
 LimitNOFILE=1048576
 LimitNPROC=infinity
 LimitCORE=infinity
 Restart=on-failure
-RestartSec=2
+RestartSec=1
 TimeoutStartSec=0
 KillMode=process
 

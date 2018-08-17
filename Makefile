@@ -53,4 +53,12 @@ bbtest:
 
 .PHONY: run
 run:
-	@docker-compose run --rm --service-ports service run
+	docker exec -it $$(\
+		docker run -d -ti \
+			-v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+			-p 5562:5562 \
+			-p 5561:5561 \
+			--privileged=true \
+			--security-opt seccomp:unconfined \
+		openbank/lake:latest \
+	) bash

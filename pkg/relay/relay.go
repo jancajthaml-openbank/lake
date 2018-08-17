@@ -37,6 +37,8 @@ func StartQueue(params utils.RunParams, m *metrics.Metrics) {
 	log.Info("Starting ZMQ Relay")
 
 	for {
+		// FIXME add cancel function here
+
 		ctx, cancel := context.WithCancel(context.Background())
 		go work(ctx, cancel, params, m)
 		log.Warn("ZMQ crash, restarting")
