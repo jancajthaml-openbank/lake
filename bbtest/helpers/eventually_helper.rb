@@ -2,7 +2,7 @@ require 'timeout'
 
 module EventuallyHelper
 
-  def self.eventually(timeout: 10, &_blk)
+  def self.eventually(timeout: 10, backoff: nil, &_blk)
     return unless block_given?
     last_err = nil
     begin
@@ -11,7 +11,7 @@ module EventuallyHelper
           yield
         rescue Exception => e
           last_err = e
-          sleep(0.1)
+          sleep backoff if backoff
           retry
         end
       end

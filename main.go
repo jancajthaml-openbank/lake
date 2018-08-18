@@ -15,10 +15,11 @@
 package main
 
 import (
+	"net"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
-	"net"
 
 	"bufio"
 	"strings"
@@ -51,6 +52,26 @@ func init() {
 	log.SetFormatter(new(utils.LogFormat))
 }
 
+func loadParams() utils.RunParams {
+	return utils.RunParams{
+		PullPort:           viper.GetInt("port.pull"),
+		PubPort:            viper.GetInt("port.pub"),
+		Log:                viper.GetString("log"),
+		LogLevel:           viper.GetString("log.level"),
+		MetricsRefreshRate: viper.GetDuration("metrics.refreshrate"),
+		MetricsOutput:      viper.GetString("metrics.output"),
+	}
+}
+
+func validParams(params utils.RunParams) bool {
+	if params.MetricsOutput != "" && os.MkdirAll(filepath.Dir(params.MetricsOutput), os.ModePerm) != nil {
+		log.Error("invalid metrics output specified")
+		return false
+	}
+
+	return true
+}
+
 func systemNotify(state string) {
 	socketAddr := &net.UnixAddr{
 		Name: os.Getenv("NOTIFY_SOCKET"),
@@ -72,13 +93,9 @@ func systemNotify(state string) {
 func main() {
 	log.Print(">>> Setup <<<")
 
-	params := utils.RunParams{
-		PullPort:           viper.GetInt("port.pull"),
-		PubPort:            viper.GetInt("port.pub"),
-		Log:                viper.GetString("log"),
-		LogLevel:           viper.GetString("log.level"),
-		MetricsRefreshRate: viper.GetDuration("metrics.refreshrate"),
-		MetricsOutput:      viper.GetString("metrics.output"),
+	params := loadParams()
+	if !validParams(params) {
+		return
 	}
 
 	if params.Log == "" {

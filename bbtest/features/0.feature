@@ -1,8 +1,11 @@
-Feature: Service can be managed
+Feature: Bootstrap shared
 
-  Scenario: manage status via systemctl
-
+  Scenario: check
     Given lake is running
+    And   systemctl contains following
+    """
+      lake.service
+    """
 
     When stop package "lake.service"
     Given package "lake.service" is not running
@@ -13,3 +16,4 @@ Feature: Service can be managed
     When restart package "lake.service"
     Given package "lake.service" is running
 
+    Then lake is running
