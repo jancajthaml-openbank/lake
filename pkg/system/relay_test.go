@@ -231,7 +231,7 @@ func TestAbleToRelayMessagesAfterCrash(t *testing.T) {
 			}
 		}()
 
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(time.Second)
 		for _, msg := range expectedData {
 			pushChannel <- msg
 		}
