@@ -46,16 +46,6 @@ workflows:
             branches:
               ignore: /.*/
 
-  rolling:
-    triggers:
-      - schedule:
-          cron: "0 * * * *"
-          filters:
-            branches:
-              only: master
-    jobs:
-      - bbtest
-
 # ---------------------------------------------------------------------------- #
 
 jobs:
@@ -74,20 +64,17 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run: docker build -t openbankdev/lake_bbtest ./bbtest
       - run: docker build -t openbankdev/lake_base ./dev
       - run: docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
       - deploy:
           name: Push dev docker images to DockerHUB
           command: |
             upload_to_docker_hub() {
-              docker tag ${1} "${1}:latest"
-              docker push "${1}:latest"
+              docker tag ${1} "${1}:${2}"
+              docker push "${1}:${2}"
             }
 
-            upload_to_docker_hub openbankdev/lake_bbtest &
-            upload_to_docker_hub openbankdev/lake_base &
-            wait
+            upload_to_docker_hub openbankdev/lake_base latest
       - save_cache:
           key: lake-base-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
           paths:
@@ -141,7 +128,10 @@ jobs:
           key: lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
           paths:
             - /go/src/github.com/jancajthaml-openbank/lake
-
+      - persist_to_workspace:
+          root: /go/src/github.com/jancajthaml-openbank/lake/packaging
+          paths:
+            - bin
   # -------------------------------------------------------------------------- #
 
   package:
@@ -154,7 +144,6 @@ jobs:
           keys:
             - lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
       - run: docker build -t openbank/lake ./packaging
-      - run: docker build -t openbankdev/lake_candidate .
       - run: docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
       - deploy:
           name: Push snapshot docker images to DockerHUB
@@ -178,9 +167,7 @@ jobs:
               fi
             }
 
-            upload openbank/lake &
-            upload openbankdev/lake_candidate &
-            wait
+            upload openbank/lake
 
   # -------------------------------------------------------------------------- #
 
@@ -189,25 +176,23 @@ jobs:
     working_directory: /home/circleci/project
     steps:
       - checkout
+      - attach_workspace:
+          at: /home/circleci/project/packaging
+      - run: docker build -t openbankdev/lake_bbtest -f ./bbtest/Dockerfile .
       - run:
           name: Run blackbox tests
           command: |
-            pull() {
-              echo "pulling ${1}:${2}"
-              docker pull ${1}:${2}
-            }
-
-            if [ -z ${CIRCLE_TAG} ] ; then
-              VERSION=$(sed 's:.*/::' <<< ${CIRCLE_BRANCH})
-            else
-              VERSION=${CIRCLE_TAG}
-            fi
-
-            pull openbankdev/lake_candidate ${VERSION} & \
-            pull openbankdev/lake_bbtest latest & \
-            wait
-
-            VERSION=${VERSION} docker-compose run --rm bbtest
+            docker exec -it $(\
+              docker run -d -ti \
+                -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+                -v /home/circleci/project/bbtest:/opt/bbtest \
+                -v /home/circleci/project/reports:/reports \
+              openbankdev/lake_bbtest \
+            ) rspec --require /opt/bbtest/spec.rb \
+              --format documentation \
+              --format RspecJunitFormatter \
+              --out junit.xml \
+              --pattern /opt/bbtest/features/*.feature
       - store_test_results:
           path: /home/circleci/project/bbtest
       - store_artifacts:
@@ -217,12 +202,9 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   release:
-
     docker:
       - image: openbankdev/lake_base
-
     working_directory: /go/src/github.com/jancajthaml-openbank/lake
-
     steps:
       - setup_remote_docker
       - restore_cache:
@@ -232,9 +214,6 @@ jobs:
       - run: if [ ! -f ./packaging/bin/linux-amd64 ] ; then exit 1 ; fi
       - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_arm.deb ] ; then exit 1 ; fi
       - run: if [ ! -f ./packaging/bin/linux-arm ] ; then exit 1 ; fi
-      - deploy:
-          name: Release artifacts to github
-          command: |
-            ./dev/lifecycle/release -v ${CIRCLE_TAG} -t ${GITHUB_RELEASE_TOKEN}
+      - deploy: ./dev/lifecycle/release -v ${CIRCLE_TAG} -t ${GITHUB_RELEASE_TOKEN}
 
 # ---------------------------------------------------------------------------- #

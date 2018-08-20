@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.0.2+assert-metrics-directory
+Version: 1.0.3+fixes
 Architecture: arm
 Maintainer: Jan Cajthaml <jan.cajthaml@gmail.com>
 Depends: init-system-helpers (>= 1.18~), libzmq5 (= 4.2.1-4)

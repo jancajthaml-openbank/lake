@@ -21,36 +21,14 @@ services:
       - GOPATH=/go
       - COMPOSE_PROJECT_NAME
     entrypoint: ["go"]
-
-  # -------------------------------------------------------------------------- #
-
-  candidate:
-    build:
-      dockerfile: Dockerfile
-      context: .
-    image: openbankdev/lake_candidate
-    restart: "no"
-    ports:
-      - "5562"
-      - "5561"
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
-
-  # -------------------------------------------------------------------------- #
-
-  artifacts:
-    build:
-      dockerfile: Dockerfile
-      context: ./packaging
-    image: openbank/lake
 
   # -------------------------------------------------------------------------- #
 
   sync:
     extends: go
     entrypoint: ["dep"]
-    command: ["ensure"]
+    command: ["ensure", "-v"]
 
   # -------------------------------------------------------------------------- #
 
@@ -112,15 +90,13 @@ services:
       context: .
       dockerfile: bbtest/Dockerfile
     image: openbankdev/lake_bbtest
-    working_dir: /opt/bbtest
-    environment:
-      - COMPOSE_PROJECT_NAME
-      - VERSION
-    volumes:
-      - ./reports/logs:/reports
-      - ./reports/metrics:/opt/lake/metrics
-      - ./bbtest:/opt/bbtest
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /var/lib/docker/containers:/var/lib/docker/containers
+
+  # -------------------------------------------------------------------------- #
+
+  artifacts:
+    build:
+      dockerfile: Dockerfile
+      context: ./packaging
+    image: openbank/lake
 
 # ---------------------------------------------------------------------------- #

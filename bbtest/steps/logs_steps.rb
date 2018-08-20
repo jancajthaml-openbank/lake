@@ -1,18 +1,9 @@
 
 step "journalctl of :unit contains following" do |unit, expected|
-
   expected_lines = expected.split("\n").map(&:strip).reject(&:empty?)
 
-  containers = %x(docker ps -a --filter name=lake --filter status=running --format "{{.ID}} {{.Image}}")
-  expect($?).to be_success
-  containers = containers.split("\n").map(&:strip).reject(&:empty?)
-
-  expect(containers).not_to be_empty
-
-  id = containers[0].split(" ")[0]
-
-  eventually(timeout: 10) {
-    actual = %x(docker exec #{id} journalctl -o short-precise -u #{unit} --no-pager 2>&1)
+  eventually() {
+    actual = %x(journalctl -o short-precise -u #{unit} --no-pager 2>&1)
     expect($?).to be_success
 
     actual_lines_merged = actual.split("\n").map(&:strip).reject(&:empty?)
@@ -34,7 +25,7 @@ step "journalctl of :unit contains following" do |unit, expected|
         found = true
         break
       }
-      raise "#{line} was not found in logs:\n#{actual_lines.join("\n")}" unless found
+      raise "#{line} was not found in logs:\n#{actual_lines_merged.join("\n")}" unless found
     }
   }
 end

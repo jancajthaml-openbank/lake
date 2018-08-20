@@ -1,8 +1,8 @@
-lake (v1.0.2+assert-metrics-directory) unstable; urgency=low
+lake (1.0.3) unstable; urgency=low
 
-  * includes metrics commits after v1.0.2+assert release
+  
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Fri, 17 Aug 2018 23:25:24 +0200
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Sat, 18 Aug 2018 10:39:22 +0200
 
 lake (1.0.2) unstable; urgency=low
 

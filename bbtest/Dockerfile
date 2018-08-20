@@ -14,15 +14,39 @@
 
 FROM ruby:2.5.0-stretch
 
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    LAKE_VERSION=1.0.3
+
 MAINTAINER Jan Cajthaml <jan.cajthaml@gmail.com>
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    \
-        libzmq3-dev=4.2.1-4 \
-    \
-    && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get -y update && \
+    apt-get -y upgrade && \
+    apt-get clean && \
+    apt-get -y install \
+      libzmq3-dev=4.2.1-4 \
+      apt-utils \
+      lsb-release \
+      curl \
+      git \
+      cron \
+      at \
+      logrotate \
+      rsyslog \
+      unattended-upgrades \
+      ssmtp \
+      lsof \
+      procps \
+      initscripts \
+      libsystemd0 \
+      libudev1 \
+      systemd \
+      sysvinit-utils \
+      udev \
+      util-linux && \
+  apt-get clean && \
+  sed -i '/imklog/{s/^/#/}' /etc/rsyslog.conf && \
+  apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN gem install \
     \
@@ -35,9 +59,42 @@ RUN gem install \
         byebug:10.0.1 \
         ffi-rzmq:2.0.4
 
-COPY --from=library/docker:18.06 /usr/local/bin/docker /usr/bin/docker
+RUN echo "root:Docker!" | chpasswd
+
+RUN cd /lib/systemd/system/sysinit.target.wants/ && \
+    ls | grep -v systemd-tmpfiles-setup.service | xargs rm -f && \
+    rm -f /lib/systemd/system/sockets.target.wants/*udev* && \
+    systemctl mask -- \
+      tmp.mount \
+      etc-hostname.mount \
+      etc-hosts.mount \
+      etc-resolv.conf.mount \
+      -.mount \
+      swap.target \
+      getty.target \
+      getty-static.service \
+      dev-mqueue.mount \
+      cgproxy.service \
+      systemd-tmpfiles-setup-dev.service \
+      systemd-remount-fs.service \
+      systemd-ask-password-wall.path \
+      systemd-logind.service && \
+    systemctl set-default multi-user.target || :
+
+RUN sed -ri /etc/systemd/journald.conf -e 's!^#?Storage=.*!Storage=volatile!'
+
+COPY packaging/bin /tmp/packages
+
+RUN if [ ! -f /tmp/packages/lake_*_arm.deb ] ; \
+    then (>&2 echo "no package to test found"); \
+    exit 1 ; fi
+
+RUN find /tmp/packages -type f -name 'lake_*_amd64.deb' -exec \
+    apt-get -y install --no-install-recommends \
+    -f \{\} \;
 
 WORKDIR /opt/bbtest
 
-ENTRYPOINT ["rspec", "--require", "/opt/bbtest/spec.rb"]
-CMD ["--format", "documentation", "--format", "RspecJunitFormatter", "--out", "junit.xml", "--pattern", "/opt/bbtest/features/*.feature"]
+VOLUME [ "/sys/fs/cgroup", "/run", "/run/lock", "/tmp" ]
+
+ENTRYPOINT ["/lib/systemd/systemd"]

@@ -15,7 +15,6 @@
 package main
 
 import (
-	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -30,13 +29,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/jancajthaml-openbank/lake/pkg/metrics"
-	"github.com/jancajthaml-openbank/lake/pkg/relay"
+	"github.com/jancajthaml-openbank/lake/pkg/system"
 	"github.com/jancajthaml-openbank/lake/pkg/utils"
-)
-
-const (
-	SdNotifyReady    = "READY=1"
-	SdNotifyStopping = "STOPPING=1"
 )
 
 func init() {
@@ -70,24 +64,6 @@ func validParams(params utils.RunParams) bool {
 	}
 
 	return true
-}
-
-func systemNotify(state string) {
-	socketAddr := &net.UnixAddr{
-		Name: os.Getenv("NOTIFY_SOCKET"),
-		Net:  "unixgram",
-	}
-
-	if socketAddr.Name == "" {
-		return
-	}
-
-	conn, err := net.DialUnix(socketAddr.Net, nil, socketAddr)
-	if err != nil {
-		return
-	}
-	defer conn.Close()
-	conn.Write([]byte(state))
 }
 
 func main() {
@@ -124,27 +100,24 @@ func main() {
 
 	log.Print(">>> Starting <<<")
 
-	// FIXME need a kill channel here for gracefull shutdown
-	go relay.StartQueue(params, m)
+	relay := system.NewRelay(params, m)
 
 	var wg sync.WaitGroup
 
 	terminationChan := make(chan struct{})
 	wg.Add(1)
 	go metrics.PersistPeriodically(&wg, terminationChan, params, m)
+	go relay.Start()
 
 	log.Print(">>> Started <<<")
-
-	systemNotify(SdNotifyReady)
 
 	<-exitSignal
 
 	// FIXME gracefully empty queues and relay all messages before shutdown
 	log.Print(">>> Terminating <<<")
 
-	systemNotify(SdNotifyStopping)
+	relay.Stop()
 
-	// FIXME relay.Stop() todo implement
 	close(terminationChan)
 	wg.Wait()
 
