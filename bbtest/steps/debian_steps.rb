@@ -2,53 +2,46 @@
 step "systemctl contains following" do |packages|
   items = packages.split("\n").map(&:strip).reject(&:empty?)
 
-  ids = Docker.get_lakes()
-  expect(ids).not_to be_empty
-
-  ids.each { |id|
-    eventually(timeout: 3) {
-      units = %x(docker exec #{id} systemctl list-unit-files --type=service | grep .service | awk '{ print $1 }')
-      units = ($? == 0 ? units.split("\n").map(&:strip).reject(&:empty?) : [])
-      expect(units).to include(*items)
+  eventually() {
+    items.each { |item|
+      units = %x(systemctl list-units --type=service | grep #{item} | awk '{ print $1 }')
+      units = units.split("\n").map(&:strip).reject(&:empty?)
+      expect(units).not_to be_empty, "#{item} was not found"
     }
   }
 end
 
-step ":operation package :package" do |operation, package|
-  ids = Docker.get_lakes()
-  expect(ids).not_to be_empty
+step "systemctl does not contains following" do |packages|
+  items = packages.split("\n").map(&:strip).reject(&:empty?)
 
-  ids.each { |id|
-    %x(docker exec #{id} systemctl #{operation} #{package} 2>&1)
-
-    unless $? == 0
-      err = %x(docker exec #{id} systemctl status #{package} 2>&1)
-      raise "operation \"systemctl #{operation} #{package}\" returned error: #{err}"
-    end
+  items.each { |item|
+    units = %x(systemctl list-units --type=service | grep #{item} | awk '{ print $1 }')
+    units = units.split("\n").map(&:strip).reject(&:empty?)
+    expect(units).to be_empty, "#{item} was not found"
   }
 end
 
-step "package :package is running" do |package|
-  ids = Docker.get_lakes()
-  expect(ids).not_to be_empty
+step ":operation unit :unit" do |operation, unit|
+  eventually(timeout: 5) {
+    %x(systemctl #{operation} #{unit} 2>&1)
+  }
 
-  ids.each { |id|
-    eventually(timeout: 10) {
-      package_status = %x(docker exec #{id} systemctl show -p SubState #{package} 2>&1 | sed 's/SubState=//g')
-      expect(package_status.strip).to eq("running")
-    }
+  unless $? == 0
+    err = %x(systemctl status #{unit} 2>&1)
+    raise "operation \"systemctl #{operation} #{unit}\" returned error: #{err}"
+  end
+end
+
+step "unit :unit is running" do |unit|
+  eventually() {
+    out = %x(systemctl show -p SubState #{unit} 2>&1 | sed 's/SubState=//g')
+    expect(out.strip).to eq("running")
   }
 end
 
-step "package :package is not running" do |package|
-  ids = Docker.get_lakes()
-  expect(ids).not_to be_empty
-
-  ids.each { |id|
-
-    eventually(timeout: 10) {
-      package_status = %x(docker exec #{id} systemctl show -p SubState #{package} 2>&1 | sed 's/SubState=//g')
-      expect(package_status.strip).to eq("dead")
-    }
+step "unit :unit is not running" do |unit|
+  eventually() {
+    out = %x(systemctl show -p SubState #{unit} 2>&1 | sed 's/SubState=//g')
+    expect(out.strip).not_to eq("running")
   }
 end

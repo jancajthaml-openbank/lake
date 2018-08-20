@@ -1,4 +1,4 @@
-package relay
+package system
 
 import (
 	"fmt"
@@ -119,6 +119,8 @@ func TestRelayInOrder(t *testing.T) {
 
 	m := metrics.NewMetrics()
 
+	relay := NewRelay(params, m)
+
 	t.Log("Relays message")
 	{
 		accumulatedData := make([]string, 0)
@@ -137,18 +139,18 @@ func TestRelayInOrder(t *testing.T) {
 		var wg sync.WaitGroup
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
-		go work(ctx, cancel, params, m)
+		go relay.Start()
 		go push(ctx, cancel, pushChannel, params.PullPort)
 		go sub(ctx, cancel, subChannel, params.PubPort)
 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			defer relay.Stop()
 			defer cancel()
 
 			for {
 				accumulatedData = append(accumulatedData, <-subChannel)
-				time.Sleep(time.Millisecond)
 				if ctx.Err() == nil && len(expectedData) != len(accumulatedData) {
 					continue
 				}
@@ -157,7 +159,7 @@ func TestRelayInOrder(t *testing.T) {
 			}
 		}()
 
-		time.Sleep(300 * time.Millisecond)
+		time.Sleep(time.Second)
 		for _, msg := range expectedData {
 			pushChannel <- msg
 		}
@@ -174,21 +176,66 @@ func TestStartStop(t *testing.T) {
 
 	m := metrics.NewMetrics()
 
-	t.Log("by expiration ( Start->Stop ) * N")
+	relay := NewRelay(params, m)
+
+	t.Log("by API ( Start->Stop )")
 	{
-		for i := 1; i <= 10; i++ {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(i)*10*time.Millisecond)
-			work(ctx, cancel, params, m)
-		}
+		go relay.Start()
+		time.Sleep(300 * time.Millisecond)
+		relay.Stop()
+	}
+}
+
+func TestAbleToRelayMessagesAfterCrash(t *testing.T) {
+	params := utils.RunParams{
+		PullPort: 5562,
+		PubPort:  5561,
 	}
 
-	t.Log("by error ( Start->Stop ) * N")
-	{
-		mCtx, mCancel := context.WithCancel(context.Background())
-		ctx, cancel := context.WithCancel(mCtx)
+	m := metrics.NewMetrics()
 
-		go work(ctx, cancel, params, m)
-		mCancel()
-		<-ctx.Done()
+	relay := NewRelay(params, m)
+
+	t.Log("ZMQ is able to relay messages after it was stopped")
+	{
+		go relay.Start()
+		time.Sleep(300 * time.Millisecond)
+		relay.Stop()
+
+		accumulatedData := make([]string, 0)
+		expectedData := []string{"X", "Y"}
+
+		pushChannel := make(chan string, len(expectedData))
+		subChannel := make(chan string, len(expectedData))
+
+		var wg sync.WaitGroup
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+
+		go relay.Start()
+		go push(ctx, cancel, pushChannel, params.PullPort)
+		go sub(ctx, cancel, subChannel, params.PubPort)
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			defer relay.Stop()
+			defer cancel()
+
+			for {
+				accumulatedData = append(accumulatedData, <-subChannel)
+				if ctx.Err() == nil && len(expectedData) != len(accumulatedData) {
+					continue
+				}
+				assert.Equal(t, expectedData, accumulatedData)
+				return
+			}
+		}()
+
+		time.Sleep(100 * time.Millisecond)
+		for _, msg := range expectedData {
+			pushChannel <- msg
+		}
+
+		wg.Wait()
 	}
 }

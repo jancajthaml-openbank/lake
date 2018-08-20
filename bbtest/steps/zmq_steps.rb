@@ -1,15 +1,16 @@
 
 step "lake recieves :data" do |data|
-  send_remote_message(data)
+  ZMQHelper.send(data)
 end
 
 step "lake responds with :data" do |data|
-  eventually(timeout: 10) {
-    expect(remote_mailbox()).to include(data)
-    ack_message(data)
+  eventually() {
+    ok = ZMQHelper.pulled_message?(data)
+    expect(ok).to be(true), "message #{data} was not found in #{ZMQHelper.mailbox()}"
   }
+  ZMQHelper.ack(data)
 end
 
 step "no other messages were recieved" do ||
-  expect(remote_mailbox()).to be_empty
+  expect(ZMQHelper.mailbox()).to be_empty
 end

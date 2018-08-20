@@ -12,9 +12,9 @@ module ZMQHelper
       ctx = ZMQ::Context.new
       pull_channel = ctx.socket(ZMQ::SUB)
       pull_channel.setsockopt(ZMQ::SUBSCRIBE, '')
-      raise "unable to bind SUB" unless pull_channel.connect("tcp://lake:5561") >= 0
+      raise "unable to bind SUB" unless pull_channel.connect("tcp://127.0.0.1:5561") >= 0
       pub_channel = ctx.socket(ZMQ::PUSH)
-      raise "unable to bind PUSH" unless pub_channel.connect("tcp://lake:5562") >= 0
+      raise "unable to bind PUSH" unless pub_channel.connect("tcp://127.0.0.1:5562") >= 0
     rescue ContextError => _
       raise "Failed to allocate context or socket!"
     end
@@ -27,6 +27,7 @@ module ZMQHelper
 
     self.pull_daemon = Thread.new do
       loop do
+
         break if self.poisonPill or self.pull_channel.nil?
         data = ""
         begin
@@ -37,7 +38,6 @@ module ZMQHelper
           break if self.poisonPill or self.pull_channel.nil?
           next
         end
-
         next if data.empty?
         if data == "!" and !self.ready
           self.ready = true
@@ -59,28 +59,33 @@ module ZMQHelper
     end
   end
 
-  def self.stop
+   def self.stop
     self.poisonPill = true
     begin
       self.pull_daemon.join() unless self.pull_daemon.nil?
+      self.pub_channel.close() unless self.pub_channel.nil?
+      self.pull_channel.close() unless self.pull_channel.nil?
+      self.ctx.terminate() unless self.ctx.nil?
     rescue
     ensure
-      self.ctx = nil
       self.pull_daemon = nil
+      self.ctx = nil
+      self.pull_channel = nil
+      self.pub_channel = nil
     end
     self.poisonPill = false
   end
 
-  def remote_mailbox
+  def mailbox
     ZMQHelper.mailbox()
   end
 
-  def send_remote_message data
+  def send data
     ZMQHelper.send(data)
   end
 
-  def ack_message data
-    ZMQHelper.remove(data)
+  def ack data
+    ZMQHelper.ack(data)
   end
 
   def lake_handshake
@@ -103,29 +108,32 @@ module ZMQHelper
   self.mutex = Mutex.new
   self.poisonPill = false
 
-  def self.mailbox
-    res = nil
-    self.mutex.synchronize do
-      res = self.recv_backlog.dup
-    end
-    res
+  def self.mailbox()
+    return self.recv_backlog
   end
 
-  def self.send data
-    return if self.pub_channel.nil?
-    self.pub_channel.send_string(data)
+  def self.pulled_message?(expected)
+    copy = self.recv_backlog.dup
+    copy.each { |item|
+      return true if item === expected
+    }
+    return false
+  end
+
+  def self.send(data)
+    self.pub_channel.send_string(data) unless self.pub_channel.nil?
+  end
+
+  def self.ack(data)
+    self.mutex.synchronize do
+      self.recv_backlog.reject! { |v| v === data }
+    end
   end
 
   def self.lake_handshake()
     until self.ready
       self.pub_channel.send_string("!")
       sleep(0.1)
-    end
-  end
-
-  def self.remove data
-    self.mutex.synchronize do
-      self.recv_backlog.reject! { |v| v == data }
     end
   end
 

@@ -14,10 +14,9 @@ all: bootstrap sync test package bbtest
 package:
 	@(rm -rf packaging/bin/* &> /dev/null || :)
 	docker-compose run --rm package --target linux/amd64
-	docker-compose run --rm debian -v $(VERSION)+$(META) --arch amd64
 	docker-compose run --rm package --target linux/arm
+	docker-compose run --rm debian -v $(VERSION)+$(META) --arch amd64
 	docker-compose run --rm debian -v $(VERSION)+$(META) --arch arm
-	docker-compose build candidate
 	docker-compose build artifacts
 
 .PHONY: bootstrap
@@ -46,22 +45,24 @@ release:
 
 .PHONY: bbtest
 bbtest:
-	@echo "[info] stopping older runs"
-	@(docker rm -f $$(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
-	@echo "[info] running bbtest"
-	@docker-compose run --rm bbtest
-	@echo "[info] stopping runs"
-	@(docker rm -f $$(docker-compose ps -q) 2> /dev/null || :) &> /dev/null
-	@(docker rm -f $$(docker ps -aqf "name=bbtest") || :) &> /dev/null
-
-.PHONY: run
-run:
-	docker exec -it $$(\
+	@docker-compose build bbtest
+	@echo "removing older images if present"
+	@(docker rm -f $$(docker ps -a --filter="name=lake_bbtest" -q) &> /dev/null || :)
+	@echo "running bbtest image"
+	@docker exec -it $$(\
 		docker run -d -ti \
+		  --name=lake_bbtest \
 			-v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-			-p 5562:5562 \
-			-p 5561:5561 \
+			-v $$(pwd)/bbtest:/opt/bbtest \
+			-v $$(pwd)/reports:/reports \
 			--privileged=true \
 			--security-opt seccomp:unconfined \
-		openbankdev/lake_candidate:latest \
-	) bash
+		openbankdev/lake_bbtest \
+	) rspec --require /opt/bbtest/spec.rb \
+		--format documentation \
+		--format RspecJunitFormatter \
+		--out junit.xml \
+		--pattern /opt/bbtest/features/*.feature
+	@echo "removing bbtest image"
+	@(docker rm -f $$(docker ps -a --filter="name=lake_bbtest" -q) &> /dev/null || :)
+

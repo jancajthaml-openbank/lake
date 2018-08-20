@@ -10,7 +10,6 @@ RSpec.configure do |config|
 
   Dir.glob("./helpers/*_helper.rb") { |f| load f }
   config.include EventuallyHelper, :type => :feature
-  config.include ZMQHelper, :type => :feature
   Dir.glob("./steps/*_steps.rb") { |f| load f, true }
 
   config.before(:suite) do |_|
@@ -18,20 +17,9 @@ RSpec.configure do |config|
 
     ZMQHelper.start()
 
-    get_containers = lambda do |image|
-      containers = %x(docker ps -aqf "ancestor=#{image}" 2>/dev/null)
-      return ($? == 0 ? containers.split("\n") : [])
-    end
-
-    teardown_container = lambda do |container|
-      %x(docker rm -f #{container} &>/dev/null || :)
-    end
-
-    get_containers.call("openbankdev/lake_candidate").each { |container| teardown_container.call(container) }
-
     ["/reports"].each { |folder|
       FileUtils.mkdir_p folder
-      FileUtils.rm_rf Dir.glob("#{folder}/*")
+      %x(rm -rf #{folder}/*)
     }
 
     print "[ suite started  ]\n"
@@ -45,43 +33,27 @@ RSpec.configure do |config|
       return ($? == 0 ? containers.split("\n") : [])
     end
 
-    teardown_container = lambda do |container|
-      label = %x(docker inspect --format='{{.Name}}' #{container})
-      label = ($? == 0 ? label.strip : container)
+    ids = %x(systemctl list-units | awk '{ print $1 }')
 
-      %x(docker exec #{container} systemctl stop lake.service 2>&1)
-      %x(docker exec #{container} journalctl -o short-precise -u lake.service --no-pager >/reports/#{label}.log 2>&1)
-      %x(docker rm -f #{container} &>/dev/null || :)
+    if $?
+      ids = ids.split("\n").map(&:strip).reject { |x|
+        x.empty? || !(x.start_with?("vault") || x.start_with?("lake") || x.start_with?("wall"))
+      }.map { |x| x.chomp(".service") }
+    else
+      ids = []
     end
 
-    capture_journal = lambda do |container|
-      label = %x(docker inspect --format='{{.Name}}' #{container})
-      label = ($? == 0 ? label.strip : container)
-
-      %x(docker exec #{container} journalctl -o short-precise -u lake.service --no-pager >/reports/#{label}.log 2>&1)
-    end
-
-    kill = lambda do |container|
-      %x(docker rm -f #{container} &>/dev/null || :)
-    end
-
-    begin
-      Timeout.timeout(5) do
-        get_containers.call("openbankdev/lake_candidate").each { |container|
-          teardown_container.call(container)
-        }
-      end
-    rescue Timeout::Error => _
-      get_containers.call("openbankdev/lake_candidate").each { |container|
-        capture_journal.call(container)
-        kill.call(container)
-      }
-      print "[ suite ending   ] (was not able to teardown container in time)\n"
-    end
+    ids.each { |e|
+      %x(journalctl -o short-precise -u #{e} --no-pager > /reports/#{e}.log 2>&1)
+      %x(systemctl stop #{e} 2>&1)
+      %x(systemctl disable #{e} 2>&1)
+      %x(journalctl -o short-precise -u #{e} --no-pager > /reports/#{e}.log 2>&1)
+    } unless ids.empty?
 
     ZMQHelper.stop()
 
     print "[ suite ended    ]"
   end
+
 
 end
