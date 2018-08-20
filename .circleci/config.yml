@@ -214,6 +214,10 @@ jobs:
       - run: if [ ! -f ./packaging/bin/linux-amd64 ] ; then exit 1 ; fi
       - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_arm.deb ] ; then exit 1 ; fi
       - run: if [ ! -f ./packaging/bin/linux-arm ] ; then exit 1 ; fi
-      - deploy: ./dev/lifecycle/release -v ${CIRCLE_TAG} -t ${GITHUB_RELEASE_TOKEN}
+      - deploy:
+          name: Release artifacts to github
+          command: |
+            ./dev/lifecycle/release -v ${CIRCLE_TAG} -t ${GITHUB_RELEASE_TOKEN}
+
 
 # ---------------------------------------------------------------------------- #
