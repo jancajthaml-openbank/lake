@@ -102,14 +102,16 @@ fi
 mkdir -p ${DEB_SOURCES}/openbank/services/lake
 
 if [ -f "${DEB_SOURCES}/openbank/services/lake/lake" ] ; then
-  rm -f "${DEB_SOURCES}/openbank/services/lake/lake"
+  rm -f ${DEB_SOURCES}/openbank/services/lake/lake
 fi
 
-cp \
-  ${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE} \
-  ${DEB_SOURCES}/openbank/services/lake/lake
+du -hs "${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE}"
 
-du -hs ${DEB_SOURCES}/openbank/services/lake/lake
+cp \
+  "${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE}" \
+  "${DEB_SOURCES}/openbank/services/lake/lake"
+
+du -hs "${DEB_SOURCES}/openbank/services/lake/lake"
 
 generate_changelog
 sed -i 's/Version.*/Version: '${VERSION#v}'/' ${CONTROL}
