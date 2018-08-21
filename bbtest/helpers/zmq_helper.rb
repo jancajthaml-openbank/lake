@@ -131,6 +131,7 @@ module ZMQHelper
   end
 
   def self.lake_handshake()
+    self.ready = false
     until self.ready
       self.pub_channel.send_string("!")
       sleep(0.1)

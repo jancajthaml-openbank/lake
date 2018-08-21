@@ -1,8 +1,14 @@
+lake (v1.0.3+docker-cp-file-growth) unstable; urgency=low
+
+  * includes cp commits after v1.0.3+docker release
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Tue, 21 Aug 2018 10:16:39 +0200
+
 lake (1.0.3) unstable; urgency=low
 
   
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Sat, 18 Aug 2018 10:39:22 +0200
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 20 Aug 2018 23:00:12 +0200
 
 lake (1.0.2) unstable; urgency=low
 
