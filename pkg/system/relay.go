@@ -17,7 +17,6 @@ package system
 import (
 	"fmt"
 	"runtime"
-	"time"
 
 	zmq "github.com/pebbe/zmq4"
 	log "github.com/sirupsen/logrus"
@@ -26,24 +25,21 @@ import (
 	"github.com/jancajthaml-openbank/lake/pkg/utils"
 )
 
-const ERRRACE = "address already in use"
-const ERRBUSSY = "resource temporarily unavailable"
-const backoff = 5 * time.Millisecond
-
-type relay struct {
-	PullPort      int
-	PubPort       int
+// Relay fascade
+type Relay struct {
+	pullPort      int
+	pubPort       int
 	metrics       *metrics.Metrics
 	alive         bool
 	killRequest   chan interface{}
 	killConfirmed chan interface{}
 }
 
-// NewRelay returns new instance of Relay
-func NewRelay(params utils.RunParams, m *metrics.Metrics) relay {
-	return relay{
-		PullPort:      params.PullPort,
-		PubPort:       params.PubPort,
+// New returns new instance of Relay
+func New(params utils.RunParams, m *metrics.Metrics) Relay {
+	return Relay{
+		pullPort:      params.PullPort,
+		pubPort:       params.PubPort,
 		metrics:       m,
 		alive:         false,
 		killRequest:   make(chan interface{}),
@@ -52,7 +48,7 @@ func NewRelay(params utils.RunParams, m *metrics.Metrics) relay {
 }
 
 // Stop gracefully autorecovery ZMQ connection
-func (r relay) Stop() {
+func (r Relay) Stop() {
 	r.killRequest <- nil
 	<-r.killConfirmed
 	log.Info("Stopped ZMQ Relay")
@@ -61,7 +57,7 @@ func (r relay) Stop() {
 }
 
 // Start autorecovery ZMQ connection until killed
-func (r relay) Start() {
+func (r Relay) Start() {
 	r.alive = true
 
 	log.Info("Started ZMQ Relay")
@@ -80,7 +76,7 @@ func isFatalError(err error) bool {
 		zmq.AsErrno(err) == zmq.ETERM
 }
 
-func work(r *relay) (err error) {
+func work(r *Relay) (err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
@@ -89,9 +85,9 @@ func work(r *relay) (err error) {
 		receiver    *zmq.Socket
 		sender      *zmq.Socket
 		killChannel *zmq.Socket
-		pullPort    = fmt.Sprintf("tcp://*:%d", r.PullPort)
-		pubPort     = fmt.Sprintf("tcp://*:%d", r.PubPort)
-		killPort    = fmt.Sprintf("tcp://127.0.0.1:%d", r.PullPort)
+		pullPort    = fmt.Sprintf("tcp://*:%d", r.pullPort)
+		pubPort     = fmt.Sprintf("tcp://*:%d", r.pubPort)
+		killPort    = fmt.Sprintf("tcp://127.0.0.1:%d", r.pullPort)
 	)
 
 	ctx, err := zmq.NewContext()

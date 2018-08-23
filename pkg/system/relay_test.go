@@ -119,7 +119,7 @@ func TestRelayInOrder(t *testing.T) {
 
 	m := metrics.NewMetrics()
 
-	relay := NewRelay(params, m)
+	relay := New(params, m)
 
 	t.Log("Relays message")
 	{
@@ -176,7 +176,7 @@ func TestStartStop(t *testing.T) {
 
 	m := metrics.NewMetrics()
 
-	relay := NewRelay(params, m)
+	relay := New(params, m)
 
 	t.Log("by API ( Start->Stop )")
 	{
@@ -194,7 +194,7 @@ func TestAbleToRelayMessagesAfterCrash(t *testing.T) {
 
 	m := metrics.NewMetrics()
 
-	relay := NewRelay(params, m)
+	relay := New(params, m)
 
 	t.Log("ZMQ is able to relay messages after it was stopped")
 	{

@@ -100,7 +100,7 @@ func main() {
 
 	log.Print(">>> Starting <<<")
 
-	relay := system.NewRelay(params, m)
+	relay := system.New(params, m)
 
 	var wg sync.WaitGroup
 

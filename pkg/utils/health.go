@@ -37,10 +37,12 @@ func systemNotify(state string) {
 	conn.Write([]byte(state))
 }
 
+// NotifyServiceReady notify underlying os that service is ready
 func NotifyServiceReady() {
 	systemNotify("READY=1")
 }
 
+// NotifyServiceStopping notify underlying os that service is stopping
 func NotifyServiceStopping() {
 	systemNotify("STOPPING=1")
 }
