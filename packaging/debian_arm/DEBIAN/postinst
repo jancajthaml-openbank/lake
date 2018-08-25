@@ -6,9 +6,6 @@ case "$1" in
 
   configure)
     if [ -f "/etc/init/lake.conf" ] ; then
-      echo "Loading /etc/init/lake.conf"
-      . /etc/init/lake.conf
-
       systemctl unmask lake.service >/dev/null
       systemctl enable lake.service >/dev/null
     else
