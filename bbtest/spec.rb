@@ -33,7 +33,7 @@ RSpec.configure do |config|
       return ($? == 0 ? containers.split("\n") : [])
     end
 
-    ids = %x(systemctl list-units | awk '{ print $1 }')
+    ids = %x(systemctl -a -t service --no-legend | awk '{ print $1 }')
 
     if $?
       ids = ids.split("\n").map(&:strip).reject { |x|

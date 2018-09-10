@@ -1,5 +1,5 @@
 step "lake is restarted" do ||
-  ids = %x(systemctl list-units | awk '{ print $1 }')
+  ids = %x(systemctl -a -t service --no-legend | awk '{ print $1 }')
   expect($?).to be_success, ids
 
   ids = ids.split("\n").map(&:strip).reject { |x|
