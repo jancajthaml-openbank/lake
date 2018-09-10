@@ -1,8 +1,8 @@
-lake (v1.0.3+codacy-fixes) unstable; urgency=low
+lake (v1.0.3+bbtests-debian-improvements) unstable; urgency=low
 
-  * includes fixes commits after v1.0.3+codacy release
+  * includes debian commits after v1.0.3+bbtests release
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Tue, 21 Aug 2018 18:24:09 +0200
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 23 Aug 2018 09:04:58 +0200
 
 lake (1.0.3) unstable; urgency=low
 
