@@ -12,22 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package config
 
 import "time"
 
-// RunParams is a structure of application parameters
-type RunParams struct {
+// Configuration of application
+type Configuration struct {
 	// PullPort represents ZMQ PULL binding
 	PullPort int
 	// PubPort represents ZMQ PUB binding
 	PubPort int
-	// Log represents log output
-	Log string
+	// LogOutput represents log output
+	LogOutput string
 	// LogLevel ignorecase log level
 	LogLevel string
 	// MetricsRefreshRate how frequently should be metrics updated
 	MetricsRefreshRate time.Duration
 	// MetricsOutput filename of metrics persisted
 	MetricsOutput string
+}
+
+// Resolver loads config
+type Resolver interface {
+	GetConfig() Configuration
+}
+
+type configResolver struct {
+	cfg Configuration
+}
+
+// NewResolver provides config resolver
+func NewResolver() Resolver {
+	return configResolver{cfg: loadConfFromEnv()}
+}
+
+// GetConfig loads application configuration
+func (c configResolver) GetConfig() Configuration {
+	return c.cfg
 }

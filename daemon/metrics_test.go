@@ -1,14 +1,22 @@
-package metrics
+package daemon
 
 import (
+	"context"
 	"testing"
+
+	"github.com/jancajthaml-openbank/lake/config"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMetricsPersist(t *testing.T) {
-	entity := NewMetrics()
+	cfg := config.Configuration{}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	entity := NewMetrics(ctx, cfg)
 
 	t.Log("MessageEgress properly updates egress messages")
 	{

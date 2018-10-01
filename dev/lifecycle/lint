@@ -25,15 +25,21 @@ sem_put() {
 
 scan() {
   if [ -d ${1} ] ; then
-    sem_put gofmt -s -w ./${1}
-    sem_put golint ./${1}/...
-    sem_put misspell ./${1}
-    sem_put go vet ./${1}/...
-    sem_put gocyclo -over 15 ./${1}
+    sem_put gofmt -s -w ${1}
+    sem_put golint ${1}/...
+    sem_put misspell ${1}
+    sem_put go vet ${1}/...
+    sem_put gocyclo -over 15 ${1}
   fi
 }
 
 sem_open $(getconf _NPROCESSORS_ONLN)
 
-scan pkg
+find . -mindepth 2 -name "*.go" -not -path "./vendor/*" -exec dirname {} \; \
+| sort -u \
+| while read package ; do
+  echo "processing ${package}"
+  scan "${package}"
+done
+
 wait

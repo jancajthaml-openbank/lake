@@ -1,4 +1,4 @@
-package system
+package daemon
 
 import (
 	"fmt"
@@ -14,8 +14,7 @@ import (
 	zmq "github.com/pebbe/zmq4"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/jancajthaml-openbank/lake/pkg/metrics"
-	"github.com/jancajthaml-openbank/lake/pkg/utils"
+	"github.com/jancajthaml-openbank/lake/config"
 )
 
 func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
@@ -112,14 +111,16 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string, port
 }
 
 func TestRelayInOrder(t *testing.T) {
-	params := utils.RunParams{
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	cfg := config.Configuration{
 		PullPort: 5562,
 		PubPort:  5561,
 	}
 
-	m := metrics.NewMetrics()
-
-	relay := New(params, m)
+	metrics := NewMetrics(ctx, cfg)
+	relay := NewRelay(ctx, cfg, metrics)
 
 	t.Log("Relays message")
 	{
@@ -137,17 +138,24 @@ func TestRelayInOrder(t *testing.T) {
 		subChannel := make(chan string, len(expectedData))
 
 		var wg sync.WaitGroup
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		ctx, cancel := context.WithCancel(context.Background())
 
 		go relay.Start()
-		go push(ctx, cancel, pushChannel, params.PullPort)
-		go sub(ctx, cancel, subChannel, params.PubPort)
+
+		select {
+		case <-relay.IsReady:
+			break
+		}
+
+		go push(ctx, cancel, pushChannel, cfg.PullPort)
+		go sub(ctx, cancel, subChannel, cfg.PubPort)
 
 		wg.Add(1)
 		go func() {
-			defer wg.Done()
-			defer relay.Stop()
-			defer cancel()
+			defer func() {
+				relay.Stop()
+				wg.Done()
+			}()
 
 			for {
 				accumulatedData = append(accumulatedData, <-subChannel)
@@ -169,73 +177,50 @@ func TestRelayInOrder(t *testing.T) {
 }
 
 func TestStartStop(t *testing.T) {
-	params := utils.RunParams{
+	cfg := config.Configuration{
 		PullPort: 5562,
 		PubPort:  5561,
 	}
 
-	m := metrics.NewMetrics()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	relay := New(params, m)
+	metrics := NewMetrics(ctx, cfg)
+	relay := NewRelay(ctx, cfg, metrics)
 
-	t.Log("by API ( Start->Stop )")
+	t.Log("by daemon support ( Start -> Stop )")
 	{
 		go relay.Start()
-		time.Sleep(300 * time.Millisecond)
+
+		select {
+		case <-relay.IsReady:
+			break
+		}
+
 		relay.Stop()
 	}
 }
 
-func TestAbleToRelayMessagesAfterCrash(t *testing.T) {
-	params := utils.RunParams{
+func TestStopOnContextCancel(t *testing.T) {
+	cfg := config.Configuration{
 		PullPort: 5562,
 		PubPort:  5561,
 	}
 
-	m := metrics.NewMetrics()
-
-	relay := New(params, m)
-
-	t.Log("ZMQ is able to relay messages after it was stopped")
+	t.Log("stop with cancelation of context")
 	{
-		go relay.Start()
-		time.Sleep(300 * time.Millisecond)
-		relay.Stop()
-
-		accumulatedData := make([]string, 0)
-		expectedData := []string{"X", "Y"}
-
-		pushChannel := make(chan string, len(expectedData))
-		subChannel := make(chan string, len(expectedData))
-
-		var wg sync.WaitGroup
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
+		metrics := NewMetrics(ctx, cfg)
+		relay := NewRelay(ctx, cfg, metrics)
+
 		go relay.Start()
-		go push(ctx, cancel, pushChannel, params.PullPort)
-		go sub(ctx, cancel, subChannel, params.PubPort)
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			defer relay.Stop()
-			defer cancel()
-
-			for {
-				accumulatedData = append(accumulatedData, <-subChannel)
-				if ctx.Err() == nil && len(expectedData) != len(accumulatedData) {
-					continue
-				}
-				assert.Equal(t, expectedData, accumulatedData)
-				return
-			}
-		}()
-
-		time.Sleep(time.Second)
-		for _, msg := range expectedData {
-			pushChannel <- msg
+		select {
+		case <-relay.IsReady:
+			break
 		}
 
-		wg.Wait()
+		cancel()
 	}
 }

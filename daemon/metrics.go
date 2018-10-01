@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package metrics
+package daemon
 
 import (
+	"context"
 	"encoding/json"
 	"os"
-	"sync"
 	"time"
 
-	"github.com/jancajthaml-openbank/lake/pkg/utils"
+	"github.com/jancajthaml-openbank/lake/config"
 
 	gom "github.com/rcrowley/go-metrics"
 	log "github.com/sirupsen/logrus"
@@ -34,24 +34,26 @@ type Snapshot struct {
 
 // Metrics holds metrics counters
 type Metrics struct {
+	Support
+	output         string
+	refreshRate    time.Duration
 	messageEgress  gom.Counter
 	messageIngress gom.Counter
 }
 
 // NewMetrics returns blank metrics holder
-func NewMetrics() *Metrics {
-	return &Metrics{
+func NewMetrics(ctx context.Context, cfg config.Configuration) Metrics {
+	return Metrics{
+		Support:        NewDaemonSupport(ctx),
+		output:         cfg.MetricsOutput,
+		refreshRate:    cfg.MetricsRefreshRate,
 		messageEgress:  gom.NewCounter(),
 		messageIngress: gom.NewCounter(),
 	}
 }
 
 // NewSnapshot returns metrics snapshot
-func NewSnapshot(entity *Metrics) Snapshot {
-	if entity == nil {
-		return Snapshot{}
-	}
-
+func NewSnapshot(entity Metrics) Snapshot {
 	return Snapshot{
 		MessageEgress:  entity.messageEgress.Count(),
 		MessageIngress: entity.messageIngress.Count(),
@@ -59,16 +61,16 @@ func NewSnapshot(entity *Metrics) Snapshot {
 }
 
 // MessageEgress increment number of outcomming messages
-func (gom *Metrics) MessageEgress(num int64) {
+func (gom Metrics) MessageEgress(num int64) {
 	gom.messageEgress.Inc(num)
 }
 
 // MessageIngress increment number of incomming messages
-func (gom *Metrics) MessageIngress(num int64) {
+func (gom Metrics) MessageIngress(num int64) {
 	gom.messageIngress.Inc(num)
 }
 
-func (gom *Metrics) persist(filename string) {
+func (gom Metrics) persist(filename string) {
 	tempFile := filename + "_temp"
 	data, err := json.Marshal(NewSnapshot(gom))
 	if err != nil {
@@ -92,31 +94,33 @@ func (gom *Metrics) persist(filename string) {
 		return
 	}
 
-	log.Debugf("metrics updated at %s", filename)
 	return
 }
 
-// PersistPeriodically stores metrics holded in memory periodically to disk
-func PersistPeriodically(wg *sync.WaitGroup, terminationChan chan struct{}, params utils.RunParams, data *Metrics) {
-	defer wg.Done()
+// Start handles everything needed to start metrics daemon
+func (gom Metrics) Start() {
+	defer gom.MarkDone()
 
-	if params.MetricsOutput == "" {
+	if gom.output == "" {
 		log.Warnf("no metrics output defined, skipping metrics persistence")
 		return
 	}
 
-	ticker := time.NewTicker(params.MetricsRefreshRate)
+	ticker := time.NewTicker(gom.refreshRate)
 	defer ticker.Stop()
 
-	log.Debugf("Updating metrics each %v into %v", params.MetricsRefreshRate, params.MetricsOutput)
+	log.Infof("Start metrics daemon, update each %v into %v", gom.refreshRate, gom.output)
+
+	gom.MarkReady()
 
 	for {
 		select {
-		case <-ticker.C:
-			data.persist(params.MetricsOutput)
-		case <-terminationChan:
-			data.persist(params.MetricsOutput)
+		case <-gom.Done():
+			gom.persist(gom.output)
+			log.Info("Stop metrics daemon")
 			return
+		case <-ticker.C:
+			gom.persist(gom.output)
 		}
 	}
 }
