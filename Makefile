@@ -65,20 +65,3 @@ bbtest:
 		--pattern /opt/bbtest/features/*.feature
 	@echo "removing bbtest image"
 	@(docker rm -f $$(docker ps -a --filter="name=lake_bbtest" -q) &> /dev/null || :)
-
-.PHONY: run
-run:
-	@(docker rm -f $$(docker ps -a --filter="name=lake_bbtest" -q) &> /dev/null || :)
-	@(docker exec -it $$(\
-		docker run -dti \
-			--name=lake_bbtest \
-			-v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-			-p 5562:5562 \
-			-p 5561:5561 \
-			-p 443:443 \
-			--privileged=true \
-			--security-opt seccomp:unconfined \
-		openbankdev/lake_bbtest \
-	) bash || :)
-	@(docker rm -f $$(docker ps -a --filter="name=lake_bbtest" -q) &> /dev/null || :)
-

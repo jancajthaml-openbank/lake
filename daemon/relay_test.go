@@ -120,7 +120,7 @@ func TestRelayInOrder(t *testing.T) {
 	}
 
 	metrics := NewMetrics(ctx, cfg)
-	relay := NewRelay(ctx, cfg, metrics)
+	relay := NewRelay(ctx, cfg, &metrics)
 
 	t.Log("Relays message")
 	{
@@ -186,7 +186,7 @@ func TestStartStop(t *testing.T) {
 	defer cancel()
 
 	metrics := NewMetrics(ctx, cfg)
-	relay := NewRelay(ctx, cfg, metrics)
+	relay := NewRelay(ctx, cfg, &metrics)
 
 	t.Log("by daemon support ( Start -> Stop )")
 	{
@@ -212,7 +212,7 @@ func TestStopOnContextCancel(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
 		metrics := NewMetrics(ctx, cfg)
-		relay := NewRelay(ctx, cfg, metrics)
+		relay := NewRelay(ctx, cfg, &metrics)
 
 		go relay.Start()
 
