@@ -103,6 +103,7 @@ func (gom Metrics) Start() {
 
 	if gom.output == "" {
 		log.Warnf("no metrics output defined, skipping metrics persistence")
+		gom.MarkReady()
 		return
 	}
 
