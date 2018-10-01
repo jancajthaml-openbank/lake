@@ -31,13 +31,13 @@ type Relay struct {
 	Support
 	pullPort      int
 	pubPort       int
-	metrics       Metrics
+	metrics       *Metrics
 	killConfirmed chan interface{}
 	killRequest   chan interface{}
 }
 
 // NewRelay returns new instance of Relay
-func NewRelay(ctx context.Context, cfg config.Configuration, metrics Metrics) Relay {
+func NewRelay(ctx context.Context, cfg config.Configuration, metrics *Metrics) Relay {
 	return Relay{
 		Support:       NewDaemonSupport(ctx),
 		pullPort:      cfg.PullPort,

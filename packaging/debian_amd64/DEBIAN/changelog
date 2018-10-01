@@ -1,8 +1,14 @@
-lake (v1.0.3+controlled-structure) unstable; urgency=low
+lake (v1.0.4+better-resources-management) unstable; urgency=low
 
-  * includes structure commits after v1.0.3+controlled release
+  * includes resources commits after v1.0.4+better release
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 1 Oct 2018 10:38:04 +0200
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 1 Oct 2018 18:51:53 +0200
+
+lake (1.0.4) unstable; urgency=low
+
+  
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 1 Oct 2018 18:51:53 +0200
 
 lake (1.0.3) unstable; urgency=low
 

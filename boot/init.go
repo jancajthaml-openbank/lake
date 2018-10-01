@@ -70,7 +70,7 @@ func Initialize() Application {
 	}
 
 	metrics := daemon.NewMetrics(ctx, cfg)
-	relay := daemon.NewRelay(ctx, cfg, metrics)
+	relay := daemon.NewRelay(ctx, cfg, &metrics)
 
 	return Application{
 		cfg:       cfg,
