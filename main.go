@@ -15,111 +15,11 @@
 package main
 
 import (
-	"os"
-	"os/signal"
-	"path/filepath"
-	"syscall"
-
-	"bufio"
-	"strings"
-	"sync"
-
-	log "github.com/sirupsen/logrus"
-
-	"github.com/spf13/viper"
-
-	"github.com/jancajthaml-openbank/lake/pkg/metrics"
-	"github.com/jancajthaml-openbank/lake/pkg/system"
-	"github.com/jancajthaml-openbank/lake/pkg/utils"
+	"github.com/jancajthaml-openbank/lake/boot"
 )
 
-func init() {
-	viper.SetEnvPrefix("LAKE")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv()
-
-	viper.SetDefault("log.level", "DEBUG")
-	viper.SetDefault("port.pull", 5562)
-	viper.SetDefault("port.pub", 5561)
-	viper.SetDefault("metrics.refreshrate", "1s")
-
-	log.SetFormatter(new(utils.LogFormat))
-}
-
-func loadParams() utils.RunParams {
-	return utils.RunParams{
-		PullPort:           viper.GetInt("port.pull"),
-		PubPort:            viper.GetInt("port.pub"),
-		Log:                viper.GetString("log"),
-		LogLevel:           viper.GetString("log.level"),
-		MetricsRefreshRate: viper.GetDuration("metrics.refreshrate"),
-		MetricsOutput:      viper.GetString("metrics.output"),
-	}
-}
-
-func validParams(params utils.RunParams) bool {
-	if params.MetricsOutput != "" && os.MkdirAll(filepath.Dir(params.MetricsOutput), os.ModePerm) != nil {
-		log.Error("invalid metrics output specified")
-		return false
-	}
-
-	return true
-}
-
 func main() {
-	log.Print(">>> Setup <<<")
-
-	params := loadParams()
-	if !validParams(params) {
-		return
-	}
-
-	if params.Log == "" {
-		log.SetOutput(os.Stdout)
-	} else if file, err := os.OpenFile(params.Log, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644); err == nil {
-		defer file.Close()
-		log.SetOutput(bufio.NewWriter(file))
-	} else {
-		log.SetOutput(os.Stdout)
-		log.Warnf("Unable to create %s: %v", params.Log, err)
-	}
-
-	if level, err := log.ParseLevel(params.LogLevel); err == nil {
-		log.Print("Log level set to " + strings.ToUpper(params.LogLevel))
-		log.SetLevel(level)
-	} else {
-		log.Warnf("Invalid log level %v, using level WARN", params.LogLevel)
-		log.SetLevel(log.WarnLevel)
-	}
-
-	exitSignal := make(chan os.Signal, 1)
-	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
-
-	// FIXME separate into its own go routine to be stopable
-	m := metrics.NewMetrics()
-
-	log.Print(">>> Starting <<<")
-
-	relay := system.New(params, m)
-
-	var wg sync.WaitGroup
-
-	terminationChan := make(chan struct{})
-	wg.Add(1)
-	go metrics.PersistPeriodically(&wg, terminationChan, params, m)
-	go relay.Start()
-
-	log.Print(">>> Started <<<")
-
-	<-exitSignal
-
-	// FIXME gracefully empty queues and relay all messages before shutdown
-	log.Print(">>> Terminating <<<")
-
-	relay.Stop()
-
-	close(terminationChan)
-	wg.Wait()
-
-	log.Print(">>> Terminated <<<")
+	application := boot.Initialize()
+	defer application.Stop()
+	application.Run()
 }
