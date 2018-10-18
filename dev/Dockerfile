@@ -35,7 +35,7 @@ FROM base AS go
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
-    GOLANG_VERSION=1.10.1 \
+    GOLANG_VERSION=1.11.1 \
     GOPATH=/go
 
 RUN apt-get -y install --no-install-recommends tar=1.29b-1.1
@@ -64,7 +64,7 @@ RUN curl -L https://github.com/Masterminds/glide/releases/download/v0.13.1/glide
 
 RUN go get -u \
         \
-        github.com/golang/lint/golint \
+        golang.org/x/lint/golint \
         github.com/fzipp/gocyclo \
         github.com/client9/misspell/cmd/misspell
 

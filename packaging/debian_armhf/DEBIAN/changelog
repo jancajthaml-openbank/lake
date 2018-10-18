@@ -1,34 +1,23 @@
-lake (v1.0.4+better-resources-management) unstable; urgency=low
+lake (v1.0.4+more-bbtests) unstable; urgency=low
 
-  * includes resources commits after v1.0.4+better release
+  * includes bbtests commits after 1.0.4+more release
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 1 Oct 2018 18:51:53 +0200
-
-lake (1.0.4) unstable; urgency=low
-
-  
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 18 Oct 2018 00:09:49 +0200
+lake (v1.0.4+more-bbtests) unstable; urgency=low
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 1 Oct 2018 18:51:53 +0200
-
-lake (1.0.3) unstable; urgency=low
-
-  
+lake (v1.0.4+more-bbtests) unstable; urgency=low
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 20 Aug 2018 23:00:12 +0200
-
-lake (1.0.2) unstable; urgency=low
-
-  
+lake (v1.0.4+more-bbtests) unstable; urgency=low
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Wed, 15 Aug 2018 14:27:43 +0200
-
-lake (1.0.1) unstable; urgency=low
+lake (v1.0.4+more-bbtests) unstable; urgency=low
 
   
   * unification and reduction of bbtest flakes, arm arch compilation target
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Tue, 14 Aug 2018 20:08:38 +0200
-
-lake (1.0.0) unstable; urgency=low
+lake (v1.0.4+more-bbtests) unstable; urgency=low
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Fri, 27 Jul 2018 14:14:40 +0200
