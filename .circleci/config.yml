@@ -105,7 +105,7 @@ jobs:
             - lake-base-{{ .Environment.CIRCLE_SHA1 }}
       - run: dep ensure
       - run: ./dev/lifecycle/package --target linux/amd64
-      - run: ./dev/lifecycle/package --target linux/arm
+      - run: ./dev/lifecycle/package --target linux/armhf
       - run:
           name: Package debian
           command: |
@@ -123,7 +123,7 @@ jobs:
             fi
 
             ./dev/lifecycle/debian -v ${VERSION} --arch amd64
-            ./dev/lifecycle/debian -v ${VERSION} --arch arm
+            ./dev/lifecycle/debian -v ${VERSION} --arch armhf
       - save_cache:
           key: lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
           paths:
@@ -212,8 +212,8 @@ jobs:
             - lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
       - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_amd64.deb ] ; then exit 1 ; fi
       - run: if [ ! -f ./packaging/bin/linux-amd64 ] ; then exit 1 ; fi
-      - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_arm.deb ] ; then exit 1 ; fi
-      - run: if [ ! -f ./packaging/bin/linux-arm ] ; then exit 1 ; fi
+      - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_armhf.deb ] ; then exit 1 ; fi
+      - run: if [ ! -f ./packaging/bin/linux-armhf ] ; then exit 1 ; fi
       - deploy:
           name: Release artifacts to github
           command: |

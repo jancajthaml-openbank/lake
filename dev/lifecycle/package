@@ -18,7 +18,7 @@ package_service() {
 
   case ${arch} in
 
-    arm)
+    armhf)
       GOOS=${platform} \
       GOARM=7 \
       CC=arm-linux-gnueabihf-gcc \
@@ -26,20 +26,28 @@ package_service() {
       CGO_ENABLED=1 \
       \
       go build -a -o ${output} || {
-        (>&2 echo "unable to build for ${platform}/arm")
+        (>&2 echo "unable to build for ${platform}/armhf")
         exit 1
       }
+      file ${output}
     ;;
 
-    *)
+    amd64)
       GOOS=${platform} \
-      GOARCH=${arch} \
+      CC=gcc \
+      GOARCH=amd64 \
       CGO_ENABLED=1 \
       \
       go build -a -o ${output} || {
-        (>&2 echo "unable to build for ${platform}/${arch}")
+        (>&2 echo "unable to build for ${platform}/amd64")
         exit 1
       }
+      file ${output}
+    ;;
+
+    *)
+      (>&2 echo "unsupported target ${platform}/${arch}")
+      exit 1
     ;;
 
   esac

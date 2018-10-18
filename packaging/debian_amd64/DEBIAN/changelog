@@ -1,34 +1,50 @@
-lake (v1.0.4+better-resources-management) unstable; urgency=low
+lake (v1.0.4+more-bbtests) unstable; urgency=low
 
-  * includes resources commits after v1.0.4+better release
+  * includes non-released commits
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 1 Oct 2018 18:51:53 +0200
-
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 18 Oct 2018 00:09:49 +0200
 lake (1.0.4) unstable; urgency=low
 
-  
+  * flat and more understandable structure (#69)
+  * debian improvements (#68)
+  * no need to load environment from config file into postinstall (#67)
+  * codacy fixes (#66)
+  * trying to fix docker bug where copying 12MB file from one directory to another results in increasingly growing target file in rate of 1GB/s (#65)
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 1 Oct 2018 18:51:53 +0200
 
 lake (1.0.3) unstable; urgency=low
 
-  
+  * fixing circleci release (#64)
+  * increase timeout to 1 seconds since we do not wait for fd_socket in unit tests (#63)
+  * faster bbtests with more scenarios, gracefull shutdown of Relay, more unit tests, fd_notify when relay is in maín loop (#62)
+  * fixed assertion of metrics directory, optimised bbtests with helpers (#61)
+  * optimising debian packaging and bbtesting (#60)
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 20 Aug 2018 23:00:12 +0200
 
 lake (1.0.2) unstable; urgency=low
 
-  
+  * blocking zmqRecv and other demo finding fixes (#59)
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Wed, 15 Aug 2018 14:27:43 +0200
 
 lake (1.0.1) unstable; urgency=low
 
-  
-  * unification and reduction of bbtest flakes, arm arch compilation target
+  * increasing fidelity of offline development and hanging bbtest teardown (#58)
+  * increasing fidelity of package and bbtest (#57)
+  * wip (#55)
+  * major and snapshot release fixes (#53)
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Tue, 14 Aug 2018 20:08:38 +0200
 
 lake (1.0.0) unstable; urgency=low
 
+  * fixing package on circleci
+  * only release one binary per platofrm, no copying
+  * rework of circleci pipeline
+  * major and snapshot release fixes (#53)
+  * release v1.0.0
+
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Fri, 27 Jul 2018 14:14:40 +0200
+

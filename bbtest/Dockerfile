@@ -15,13 +15,9 @@
 FROM ruby:2.5.0-stretch
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=C.UTF-8 \
-    LAKE_VERSION=1.0.3
-
-MAINTAINER Jan Cajthaml <jan.cajthaml@gmail.com>
+    LANG=C.UTF-8
 
 RUN apt-get -y update && \
-    apt-get -y upgrade && \
     apt-get clean && \
     apt-get -y install \
       libzmq3-dev=4.2.1-4 \
@@ -85,7 +81,7 @@ RUN sed -ri /etc/systemd/journald.conf -e 's!^#?Storage=.*!Storage=volatile!'
 
 COPY packaging/bin /tmp/packages
 
-RUN if [ ! -f /tmp/packages/lake_*_arm.deb ] ; \
+RUN if [ ! -f /tmp/packages/lake_*_amd64.deb ] ; \
     then (>&2 echo "no package to test found"); \
     exit 1 ; fi
 
