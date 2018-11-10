@@ -1,8 +1,17 @@
-lake (v1.0.4+more-bbtests) unstable; urgency=low
+lake (v1.1.0+use-jq-image) unstable; urgency=low
 
   * includes non-released commits
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 18 Oct 2018 00:09:49 +0200
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 18 Oct 2018 11:59:36 +0200
+
+lake (1.1.0) unstable; urgency=low
+
+  * changed debian arm target to armhf, better changelog (#72)
+  * mark ready metrics daemon when no output is provided (#71)
+  * passing dependant daemons as reference (#70)
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 18 Oct 2018 11:59:36 +0200
+
 lake (1.0.4) unstable; urgency=low
 
   * flat and more understandable structure (#69)
