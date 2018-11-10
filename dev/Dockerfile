@@ -70,19 +70,6 @@ RUN go get -u \
 
 # ---------------------------------------------------------------------------- #
 
-FROM base AS jq
-
-ENV DEBIAN_FRONTEND=noninteractive \
-    JQ_VERSION="1.5"
-
-RUN curl -L "https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64" \
-    -# \
-    -o /usr/bin/jq && \
-    \
-    chmod +x /usr/bin/jq
-
-# ---------------------------------------------------------------------------- #
-
 FROM base
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -121,8 +108,6 @@ RUN apt-get -y install --no-install-recommends \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY --from=jq /usr/bin/jq /usr/bin/jq
-
 COPY --from=go /go /go
 COPY --from=go /usr/local/go /usr/local/go
 COPY --from=go /usr/bin/go /usr/bin/go
@@ -133,7 +118,7 @@ COPY --from=go /usr/bin/glide /usr/bin/glide
 COPY --from=go /go/bin/gocyclo /usr/bin/gocyclo
 COPY --from=go /go/bin/golint /usr/bin/golint
 COPY --from=go /go/bin/misspell /usr/bin/misspell
-
+COPY --from=jancajthaml/jq /usr/local/bin/jq /usr/bin/jq
 COPY --from=library/docker:18.06 /usr/local/bin/docker /usr/bin/docker
 
 # ---------------------------------------------------------------------------- #
