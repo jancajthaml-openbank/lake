@@ -68,6 +68,8 @@ RUN go get -u \
         github.com/fzipp/gocyclo \
         github.com/client9/misspell/cmd/misspell
 
+RUN curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b /usr/bin latest
+
 # ---------------------------------------------------------------------------- #
 
 FROM base
@@ -112,6 +114,7 @@ COPY --from=go /go /go
 COPY --from=go /usr/local/go /usr/local/go
 COPY --from=go /usr/bin/go /usr/bin/go
 COPY --from=go /usr/bin/dep /usr/bin/dep
+COPY --from=go /usr/bin/gosec /usr/bin/gosec
 COPY --from=go /usr/bin/gofmt /usr/bin/gofmt
 COPY --from=go /usr/bin/godoc /usr/bin/godoc
 COPY --from=go /usr/bin/glide /usr/bin/glide

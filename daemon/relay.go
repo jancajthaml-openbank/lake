@@ -127,8 +127,10 @@ func work(r Relay) (err error) {
 		case <-r.killRequest:
 			for {
 				if killChannel != nil {
-					killChannel.Send("KILL", 0)
-					return
+					_, err = killChannel.Send("KILL", 0)
+					if err == nil {
+						return
+					}
 				}
 				time.Sleep(10 * time.Millisecond)
 			}
@@ -207,8 +209,13 @@ mainLoop:
 			return
 		}
 		r.metrics.MessageIngress(int64(1))
-		sender.Send(chunk, 0)
-		r.metrics.MessageEgress(int64(1))
+		// FIXME check error
+		_, err = sender.Send(chunk, 0)
+		if err != nil {
+			log.Warnf("Unable to send message error: %+v", err)
+		} else {
+			r.metrics.MessageEgress(int64(1))
+		}
 		goto mainLoop
 	default:
 		if isFatalError(err) {
