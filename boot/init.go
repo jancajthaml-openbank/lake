@@ -49,7 +49,7 @@ func Initialize() Application {
 
 	if cfg.LogOutput == "" {
 		log.SetOutput(os.Stdout)
-	} else if file, err := os.OpenFile(cfg.LogOutput, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644); err == nil {
+	} else if file, err := os.OpenFile(cfg.LogOutput, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600); err == nil {
 		defer file.Close()
 		log.SetOutput(bufio.NewWriter(file))
 	} else {

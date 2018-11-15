@@ -1,8 +1,8 @@
-lake (v1.1.0+use-jq-image) unstable; urgency=low
+lake (v1.1.0+faster-json-marshaller) unstable; urgency=low
 
   * includes non-released commits
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 18 Oct 2018 11:59:36 +0200
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Wed, 14 Nov 2018 22:06:58 +0100
 
 lake (1.1.0) unstable; urgency=low
 

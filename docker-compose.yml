@@ -59,6 +59,12 @@ services:
 
   # -------------------------------------------------------------------------- #
 
+  sec:
+    extends: go
+    entrypoint: ["/opt/lifecycle/sec"]
+
+  # -------------------------------------------------------------------------- #
+
   package:
     extends: go
     entrypoint: ["/opt/lifecycle/package"]

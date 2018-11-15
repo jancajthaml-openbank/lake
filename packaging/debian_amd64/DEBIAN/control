@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.1.0+use-jq-image
+Version: 1.1.0+faster-json-marshaller
 Architecture: amd64
 Maintainer: Jan Cajthaml <jan.cajthaml@gmail.com>
 Depends: init-system-helpers (>= 1.18~), libzmq5 (= 4.2.1-4)

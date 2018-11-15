@@ -31,6 +31,10 @@ fetch:
 lint:
 	@docker-compose run --rm lint || :
 
+.PHONY: sec
+sec:
+	@docker-compose run --rm sec || :
+
 .PHONY: sync
 sync:
 	@docker-compose run --rm sync

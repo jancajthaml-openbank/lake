@@ -16,13 +16,13 @@ package daemon
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"time"
 
 	"github.com/jancajthaml-openbank/lake/config"
+	"github.com/jancajthaml-openbank/lake/utils"
 
-	gom "github.com/rcrowley/go-metrics"
+	metrics "github.com/rcrowley/go-metrics"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -37,8 +37,8 @@ type Metrics struct {
 	Support
 	output         string
 	refreshRate    time.Duration
-	messageEgress  gom.Counter
-	messageIngress gom.Counter
+	messageEgress  metrics.Counter
+	messageIngress metrics.Counter
 }
 
 // NewMetrics returns blank metrics holder
@@ -47,8 +47,8 @@ func NewMetrics(ctx context.Context, cfg config.Configuration) Metrics {
 		Support:        NewDaemonSupport(ctx),
 		output:         cfg.MetricsOutput,
 		refreshRate:    cfg.MetricsRefreshRate,
-		messageEgress:  gom.NewCounter(),
-		messageIngress: gom.NewCounter(),
+		messageEgress:  metrics.NewCounter(),
+		messageIngress: metrics.NewCounter(),
 	}
 }
 
@@ -61,18 +61,19 @@ func NewSnapshot(entity Metrics) Snapshot {
 }
 
 // MessageEgress increment number of outcomming messages
-func (gom Metrics) MessageEgress(num int64) {
-	gom.messageEgress.Inc(num)
+func (metrics Metrics) MessageEgress(num int64) {
+	metrics.messageEgress.Inc(num)
 }
 
 // MessageIngress increment number of incomming messages
-func (gom Metrics) MessageIngress(num int64) {
-	gom.messageIngress.Inc(num)
+func (metrics Metrics) MessageIngress(num int64) {
+	metrics.messageIngress.Inc(num)
 }
 
-func (gom Metrics) persist(filename string) {
+func (metrics Metrics) persist(filename string) {
 	tempFile := filename + "_temp"
-	data, err := json.Marshal(NewSnapshot(gom))
+
+	data, err := utils.JSON.Marshal(NewSnapshot(metrics))
 	if err != nil {
 		log.Warnf("unable to create serialize metrics with error: %v", err)
 		return
@@ -97,31 +98,37 @@ func (gom Metrics) persist(filename string) {
 	return
 }
 
-// Start handles everything needed to start metrics daemon
-func (gom Metrics) Start() {
-	defer gom.MarkDone()
+func getFilename(path string) string {
+	return path
+}
 
-	if gom.output == "" {
+// Start handles everything needed to start metrics daemon
+func (metrics Metrics) Start() {
+	defer metrics.MarkDone()
+
+	if metrics.output == "" {
 		log.Warnf("no metrics output defined, skipping metrics persistence")
-		gom.MarkReady()
+		metrics.MarkReady()
 		return
 	}
 
-	ticker := time.NewTicker(gom.refreshRate)
+	output := getFilename(metrics.output)
+	ticker := time.NewTicker(metrics.refreshRate)
 	defer ticker.Stop()
 
-	log.Infof("Start metrics daemon, update each %v into %v", gom.refreshRate, gom.output)
+	log.Infof("Start metrics daemon, update each %v into %v", metrics.refreshRate, output)
 
-	gom.MarkReady()
+	metrics.MarkReady()
 
 	for {
 		select {
-		case <-gom.Done():
-			gom.persist(gom.output)
+		case <-metrics.Done():
+			log.Info("Stopping metrics daemon")
+			metrics.persist(output)
 			log.Info("Stop metrics daemon")
 			return
 		case <-ticker.C:
-			gom.persist(gom.output)
+			metrics.persist(output)
 		}
 	}
 }
