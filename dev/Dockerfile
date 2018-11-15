@@ -66,7 +66,10 @@ RUN go get -u \
         \
         golang.org/x/lint/golint \
         github.com/fzipp/gocyclo \
-        github.com/client9/misspell/cmd/misspell
+        github.com/client9/misspell/cmd/misspell \
+        github.com/alexkohler/prealloc \
+        github.com/mdempsky/maligned \
+        github.com/jgautheron/goconst/cmd/goconst
 
 RUN curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b /usr/bin latest
 
@@ -121,6 +124,9 @@ COPY --from=go /usr/bin/glide /usr/bin/glide
 COPY --from=go /go/bin/gocyclo /usr/bin/gocyclo
 COPY --from=go /go/bin/golint /usr/bin/golint
 COPY --from=go /go/bin/misspell /usr/bin/misspell
+COPY --from=go /go/bin/prealloc /usr/bin/prealloc
+COPY --from=go /go/bin/maligned /usr/bin/maligned
+COPY --from=go /go/bin/goconst /usr/bin/goconst
 COPY --from=jancajthaml/jq /usr/local/bin/jq /usr/bin/jq
 COPY --from=library/docker:18.06 /usr/local/bin/docker /usr/bin/docker
 
