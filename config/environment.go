@@ -23,20 +23,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const logEnv = "LAKE_LOG"
-const logLevelEnv = "LAKE_LOG_LEVEL"
-const portPullEnv = "LAKE_PORT_PULL"
-const portPubEnv = "LAKE_PORT_PUB"
-const metricsRefreshRateEnv = "LAKE_METRICS_REFRESHRATE"
-const metricsOutputEnv = "LAKE_METRICS_OUTPUT"
-
 func loadConfFromEnv() Configuration {
-	logOutput := getEnvString(logEnv, "")
-	metricsOutput := getEnvString(metricsOutputEnv, "")
-	metricsRefreshRate := getEnvDuration(metricsRefreshRateEnv, time.Second)
-	logLevel := strings.ToUpper(getEnvString(logLevelEnv, "DEBUG"))
-	portPub := getEnvInteger(portPubEnv, 5561)
-	portPull := getEnvInteger(portPullEnv, 5562)
+	logOutput := getEnvString("LAKE_LOG", "")
+	metricsOutput := getEnvString("LAKE_METRICS_OUTPUT", "")
+	metricsRefreshRate := getEnvDuration("LAKE_METRICS_REFRESHRATE", time.Second)
+	logLevel := strings.ToUpper(getEnvString("LAKE_LOG_LEVEL", "DEBUG"))
+	portPub := getEnvInteger("LAKE_PORT_PUB", 5561)
+	portPull := getEnvInteger("LAKE_PORT_PULL", 5562)
 
 	return Configuration{
 		PullPort:           portPull,
