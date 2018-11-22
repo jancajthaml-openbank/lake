@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.1.0+faster-json-marshaller
+Version: 1.1.0+master
 Architecture: armhf
 Maintainer: Jan Cajthaml <jan.cajthaml@gmail.com>
 Depends: init-system-helpers (>= 1.18~), libzmq5 (= 4.2.1-4)

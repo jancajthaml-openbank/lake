@@ -1,9 +1,3 @@
-lake (v1.1.0+faster-json-marshaller) unstable; urgency=low
-
-  * includes non-released commits
-
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Wed, 14 Nov 2018 22:06:58 +0100
-
 lake (1.1.0) unstable; urgency=low
 
   * changed debian arm target to armhf, better changelog (#72)
