@@ -17,5 +17,6 @@
 FROM jancajthaml/go
 
 COPY --from=jancajthaml/jq /usr/local/bin/jq /usr/bin/jq
+COPY --from=library/docker:18.06 /usr/local/bin/docker /usr/bin/docker
 
 # ---------------------------------------------------------------------------- #
