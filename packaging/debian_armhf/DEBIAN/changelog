@@ -1,3 +1,9 @@
+lake (v1.1.0+use-shared-images) unstable; urgency=low
+
+  * includes non-released commits
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 22 Nov 2018 21:14:54 +0100
+
 lake (1.1.0) unstable; urgency=low
 
   * changed debian arm target to armhf, better changelog (#72)
