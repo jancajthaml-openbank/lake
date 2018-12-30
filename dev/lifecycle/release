@@ -40,18 +40,28 @@ if [ ! "${ACCESS_TOKEN}" ] ; then
   exit 1
 fi
 
-REPO=jancajthaml-openbank/lake
+uri=$(git ls-remote --get-url)
+proto="$(echo ${uri} | grep :// | sed -e's,^\(.*://\).*,\1,g')"
 
-echo "[info] start release of ${REPO}:${VERSION} "
+if [[ -z "${proto// }" ]] ; then
+  url=${uri#*:}
+else
+  url=${uri/${proto}github.com\//}
+fi
+
+REPO=${url%.git}
+
+echo "[info] start release of ${REPO}:${VERSION}"
 
 RELEASE_INFO="https://api.github.com/repos/${REPO}/releases/tags/${VERSION}"
-response=$(curl \
+response=$(
+  curl \
     --silent \
     -H "Authorization: token ${ACCESS_TOKEN}" \
     ${RELEASE_INFO} \
 )
 
-RELEASE_ID=$(echo "$response" | jq -r .id)
+RELEASE_ID=$(echo "${response}" | jq -r .id)
 RELEASE_URI="https://api.github.com/repos/${REPO}/releases"
 
 if [ "${RELEASE_ID}" != "null" ] ; then
@@ -75,26 +85,17 @@ END
 
 response=$(
   curl \
+    -X POST \
+    -H "Authorization: token ${ACCESS_TOKEN}" \
     --fail \
-    --request POST \
-    -H "Authorization: token $ACCESS_TOKEN" \
     --silent \
-    --data "$(echo $PAYLOAD)" \
+    --data "$(echo ${PAYLOAD})" \
     ${RELEASE_URI}
 )
 
 UPLOAD_URL=$(echo ${response} | jq -r .upload_url | sed -e "s/{?name,label}//")
 
-assets_dir=$(pwd)/packaging/bin
-
-for asset in $(ls -1 packaging/bin); do
-  abspath="${assets_dir}/${asset}"
-
-  if [ ! -f ${abspath} ] ; then
-    (>&2 echo "[error] asset ${abspath} not found")
-    exit 1
-  fi
-
+for asset in $(ls -d -1 $(pwd)/packaging/bin/*.*) ; do
   echo "[info] uploading ${asset}"
 
   curl \
@@ -102,10 +103,10 @@ for asset in $(ls -1 packaging/bin); do
     -X POST \
     -# \
     --output /dev/null \
-    --data-binary "@${abspath}" \
+    --data-binary "@${asset}" \
     -H "Authorization: token $ACCESS_TOKEN" \
     -H "Content-Type: application/binary" \
-    "${UPLOAD_URL}?name=${asset}"
+    "${UPLOAD_URL}?name=$(basename ${asset})"
 done
 
 echo "[info] released ${VERSION}"
