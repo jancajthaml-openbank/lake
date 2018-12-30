@@ -1,5 +1,4 @@
 .git
 .circleci
-vendor
 packaging/debian_*/openbank
 

@@ -12,36 +12,44 @@ all: bootstrap sync test package bbtest
 
 .PHONY: package
 package:
-	@(rm -rf packaging/bin/* &> /dev/null || :)
-	docker-compose run --rm package --target linux/amd64
-	docker-compose run --rm package --target linux/armhf
-	docker-compose run --rm debian -v $(VERSION)+$(META) --arch amd64
-	docker-compose run --rm debian -v $(VERSION)+$(META) --arch armhf
-	docker-compose build artifacts
+	@$(MAKE) bundle-binaries
+	@$(MAKE) bundle-debian
+
+.PHONY: bundle-binaries
+bundle-binaries:
+	@echo "[info] packaging binaries for linux/amd64"
+	@docker-compose run --rm package --arch linux/amd64 --pkg lake
+
+.PHONY: bundle-debian
+bundle-debian:
+	@echo "[info] packaging for debian"
+	@docker-compose run --rm debian -v $(VERSION)+$(META) --arch amd64
 
 .PHONY: bootstrap
 bootstrap:
-	@docker-compose build go
-
-.PHONY: fetch
-fetch:
-	@docker-compose run fetch
+	@docker-compose build --force-rm go
 
 .PHONY: lint
 lint:
-	@docker-compose run --rm lint || :
+	@docker-compose run --rm lint --pkg lake || :
 
 .PHONY: sec
 sec:
-	@docker-compose run --rm sec || :
+	@docker-compose run --rm sec --pkg lake || :
+
+.PHONY: update
+update:
+	@docker-compose run --rm update --pkg lake
 
 .PHONY: sync
 sync:
-	@docker-compose run --rm sync
+	@echo "[info] sync lake"
+	@docker-compose run --rm sync --pkg lake
 
 .PHONY: test
 test:
-	@docker-compose run --rm test
+	@echo "[info] test lake"
+	@docker-compose run --rm test --pkg lake
 
 .PHONY: release
 release:
@@ -55,7 +63,7 @@ bbtest:
 	@echo "running bbtest image"
 	@docker exec -it $$(\
 		docker run -d -ti \
-		  --name=lake_bbtest \
+			--name=lake_bbtest \
 			-v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 			-v $$(pwd)/bbtest:/opt/bbtest \
 			-v $$(pwd)/reports:/reports \

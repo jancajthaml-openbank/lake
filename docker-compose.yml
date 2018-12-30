@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 
 # ---------------------------------------------------------------------------- #
 
@@ -12,9 +12,9 @@ services:
       context: .
     image: openbankdev/lake_base
     volumes:
-      - ./dev/lifecycle:/opt/lifecycle
-      - .:/go/src/github.com/jancajthaml-openbank/lake
-    working_dir: /go/src/github.com/jancajthaml-openbank/lake
+      - .:/project
+      - ./services/lake:/go/src/github.com/jancajthaml-openbank/lake
+    working_dir: /project
     environment:
       - GOOS
       - GOARCH
@@ -27,67 +27,49 @@ services:
 
   sync:
     extends: go
-    entrypoint: ["dep"]
-    command: ["ensure", "-v"]
-
-  # -------------------------------------------------------------------------- #
-
-  init:
-    extends: go
-    entrypoint: ["dep"]
-    command: ["init"]
+    entrypoint: ["/project/dev/lifecycle/sync"]
 
   # -------------------------------------------------------------------------- #
 
   update:
     extends: go
-    entrypoint: ["dep"]
-    command: ["ensure", "-update"]
-
-  # -------------------------------------------------------------------------- #
-
-  fetch:
-    extends: go
-    entrypoint: ["dep"]
-    command: ["ensure", "-add", "github.com/jancajthaml-openbank/lake-client"]
+    entrypoint: ["/project/dev/lifecycle/update"]
 
   # -------------------------------------------------------------------------- #
 
   lint:
     extends: go
-    entrypoint: ["/opt/lifecycle/lint"]
+    entrypoint: ["/project/dev/lifecycle/lint"]
 
   # -------------------------------------------------------------------------- #
 
   sec:
     extends: go
-    entrypoint: ["/opt/lifecycle/sec"]
+    entrypoint: ["/project/dev/lifecycle/sec"]
 
   # -------------------------------------------------------------------------- #
 
   package:
     extends: go
-    entrypoint: ["/opt/lifecycle/package"]
+    entrypoint: ["/project/dev/lifecycle/package"]
 
   # -------------------------------------------------------------------------- #
 
   release:
     extends: go
-    entrypoint: ["/opt/lifecycle/release"]
+    entrypoint: ["/project/dev/lifecycle/release"]
 
   # -------------------------------------------------------------------------- #
 
   debian:
     extends: go
-    entrypoint: ["/opt/lifecycle/debian"]
+    entrypoint: ["/project/dev/lifecycle/debian"]
 
   # -------------------------------------------------------------------------- #
 
   test:
     extends: go
-    environment:
-      - GOMAXPROCS=1
-    command: ["test", "-v", "./...", "-benchmem", "-bench=.", "-timeout=20s"]
+    entrypoint: ["/project/dev/lifecycle/test"]
 
   # -------------------------------------------------------------------------- #
 
@@ -102,7 +84,7 @@ services:
   artifacts:
     build:
       dockerfile: Dockerfile
-      context: ./packaging
+      context: .
     image: openbank/lake
 
 # ---------------------------------------------------------------------------- #

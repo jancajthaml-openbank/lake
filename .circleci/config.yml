@@ -60,7 +60,7 @@ jobs:
           - GOARCH: amd64
           - GOOS: linux
           - GOBIN: /usr/lib/go/bin/go
-    working_directory: /go/src/github.com/jancajthaml-openbank/lake
+    working_directory: /home/circleci/project
     steps:
       - checkout
       - setup_remote_docker
@@ -78,34 +78,56 @@ jobs:
       - save_cache:
           key: lake-base-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
           paths:
-            - /go/src/github.com/jancajthaml-openbank/lake
+            - /home/circleci/project
 
   # -------------------------------------------------------------------------- #
 
   test:
     docker:
       - image: openbankdev/lake_base
-    working_directory: /go/src/github.com/jancajthaml-openbank/lake
+    working_directory: /home/circleci/project
     steps:
       - restore_cache:
           keys:
             - lake-base-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
-      - run: dep ensure
-      - run: go test -v ./... -benchmem -bench=. -timeout=20s
+      - run:
+          name: ensure services namespace
+          command: |
+            mkdir -p /go/src/github.com/jancajthaml-openbank
+            ln -s /home/circleci/project/services/lake /go/src/github.com/jancajthaml-openbank/lake
+      - run:
+          name: sync dependencies
+          command: |
+            ./dev/lifecycle/sync --pkg lake
+      - run:
+          name: unit test
+          command: |
+            ./dev/lifecycle/test --pkg lake
 
   # -------------------------------------------------------------------------- #
 
   build:
     docker:
       - image: openbankdev/lake_base
-    working_directory: /go/src/github.com/jancajthaml-openbank/lake
+    working_directory: /home/circleci/project
     steps:
       - restore_cache:
           keys:
             - lake-base-{{ .Environment.CIRCLE_SHA1 }}
-      - run: dep ensure
-      - run: ./dev/lifecycle/package --target linux/amd64
-      - run: ./dev/lifecycle/package --target linux/armhf
+      - run:
+          name: ensure services namespace
+          command: |
+            mkdir -p /go/src/github.com/jancajthaml-openbank
+            ln -s /home/circleci/project/services/lake /go/src/github.com/jancajthaml-openbank/lake
+      - run:
+          name: sync dependencies
+          command: |
+            ./dev/lifecycle/sync --pkg lake
+      - run:
+          name: package binary
+          command: |
+            ./dev/lifecycle/package --arch linux/amd64 --pkg lake
+            ./dev/lifecycle/package --arch linux/armhf --pkg lake
       - run:
           name: Package debian
           command: |
@@ -122,14 +144,14 @@ jobs:
               VERSION=${CIRCLE_TAG}
             fi
 
-            ./dev/lifecycle/debian -v ${VERSION} --arch amd64
-            ./dev/lifecycle/debian -v ${VERSION} --arch armhf
+            ./dev/lifecycle/debian -v ${VERSION} --arch amd64 --pkg lake
+            ./dev/lifecycle/debian -v ${VERSION} --arch armhf --pkg lake
       - save_cache:
           key: lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
           paths:
-            - /go/src/github.com/jancajthaml-openbank/lake
+            - /home/circleci/project
       - persist_to_workspace:
-          root: /go/src/github.com/jancajthaml-openbank/lake/packaging
+          root: /home/circleci/project/packaging
           paths:
             - bin
   # -------------------------------------------------------------------------- #
@@ -137,13 +159,13 @@ jobs:
   package:
     docker:
       - image: openbankdev/lake_base
-    working_directory: /go/src/github.com/jancajthaml-openbank/lake
+    working_directory: /home/circleci/project
     steps:
       - setup_remote_docker
       - restore_cache:
           keys:
             - lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
-      - run: docker build -t openbank/lake ./packaging
+      - run: docker build -t openbank/lake .
       - run: docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
       - deploy:
           name: Push snapshot docker images to DockerHUB
@@ -204,20 +226,19 @@ jobs:
   release:
     docker:
       - image: openbankdev/lake_base
-    working_directory: /go/src/github.com/jancajthaml-openbank/lake
+    working_directory: /home/circleci/project
     steps:
       - setup_remote_docker
       - restore_cache:
           keys:
             - lake-binaries-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
+      - run: if [ ! -f ./packaging/bin/lake-linux-amd64 ] ; then exit 1 ; fi
+      - run: if [ ! -f ./packaging/bin/lake-linux-armhf ] ; then exit 1 ; fi
       - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_amd64.deb ] ; then exit 1 ; fi
-      - run: if [ ! -f ./packaging/bin/linux-amd64 ] ; then exit 1 ; fi
       - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_armhf.deb ] ; then exit 1 ; fi
-      - run: if [ ! -f ./packaging/bin/linux-armhf ] ; then exit 1 ; fi
       - deploy:
           name: Release artifacts to github
           command: |
             ./dev/lifecycle/release -v ${CIRCLE_TAG} -t ${GITHUB_RELEASE_TOKEN}
-
 
 # ---------------------------------------------------------------------------- #

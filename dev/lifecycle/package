@@ -3,18 +3,25 @@
 set -eu
 trap exit INT TERM
 
-dist="packaging/bin"
-target="linux/amd64"
+TARGET_ARCHITECTURE="linux/amd64"
+TARGET_PACKAGE=""
 
 package_service() {
-  local arch=${2#*/}
-  local platform=${2%%/*}
-  local output=${1}/${platform}-${arch}
+  local working_dir=/go/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
+  local arch=${TARGET_ARCHITECTURE#*/}
+  local platform=${TARGET_ARCHITECTURE%%/*}
+  local output=$(pwd)/packaging/bin/${TARGET_PACKAGE}-${platform}-${arch}
+
   if [ -f ${output} ] ; then
     rm -f ${output}
   fi
 
-  echo "[info] packaging for ${platform}/${arch}"
+  cd ${working_dir}
+
+  echo "[info] cleaning"
+  go clean
+
+  echo "[info] packaging ${TARGET_PACKAGE} for ${platform}/${arch}"
 
   case ${arch} in
 
@@ -26,10 +33,9 @@ package_service() {
       CGO_ENABLED=1 \
       \
       go build -a -o ${output} || {
-        (>&2 echo "unable to build for ${platform}/armhf")
+        (>&2 echo "[error] unable to build for ${platform}/armhf")
         exit 1
       }
-      file ${output}
     ;;
 
     amd64)
@@ -39,20 +45,20 @@ package_service() {
       CGO_ENABLED=1 \
       \
       go build -a -o ${output} || {
-        (>&2 echo "unable to build for ${platform}/amd64")
+        (>&2 echo "[error] unable to build for ${platform}/amd64")
         exit 1
       }
-      file ${output}
     ;;
 
     *)
-      (>&2 echo "unsupported target ${platform}/${arch}")
+      (>&2 echo "[error] unsupported target ${platform}/${arch}")
       exit 1
     ;;
 
   esac
 
   chmod +x ${output}
+  file ${output}
 }
 
 while [ $# -gt 0 ] ; do
@@ -60,14 +66,14 @@ key="$1"
 
 case $key in
 
-  --target)
-    target="$2"
+  --arch)
+    TARGET_ARCHITECTURE="$2"
     shift
     shift
   ;;
 
-  -o|--output)
-    dist="$2"
+  --pkg)
+    TARGET_PACKAGE="$2"
     shift
     shift
   ;;
@@ -79,9 +85,11 @@ case $key in
 esac
 done
 
-echo "[info] cleaning"
-go clean
+if [ ! "${TARGET_PACKAGE}" ] ; then
+  (>&2 echo "[error] target package not provided")
+  exit 1
+fi
 
-package_service ${dist} ${target}
+package_service
 
 echo "[info] done"

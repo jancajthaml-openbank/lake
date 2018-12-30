@@ -1,8 +1,20 @@
-lake (v1.1.0+use-shared-images) unstable; urgency=low
+lake (v1.1.2+cleanup) unstable; urgency=low
 
   * includes non-released commits
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 22 Nov 2018 21:14:54 +0100
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Sun, 30 Dec 2018 14:49:38 +0100
+
+lake (1.1.1) unstable; urgency=low
+
+  * making lint work again (#79)
+  * docker in dev image (#78)
+  * use prebuilt bbtest and go base images
+  * updated README.md about contributing and security disclosure (#77)
+  * inlined env constants (#76)
+  * faster json, better bbtests, gosec integration (#75)
+  * using jq image (#73)
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Fri, 30 Nov 2018 18:05:09 +0100
 
 lake (1.1.0) unstable; urgency=low
 

@@ -4,9 +4,10 @@ step "systemctl contains following" do |packages|
 
   eventually() {
     items.each { |item|
-      units = %x(systemctl -a -t service --no-legend | awk '{ print $1 }' | grep #{item})
+      units = %x(systemctl -a -t service --no-legend | awk '{ print $1 }')
       units = units.split("\n").map(&:strip).reject(&:empty?)
-      expect(units).not_to be_empty, "#{item} was not found"
+      subset = units.reject { |x| !x.include?(item) }
+      expect(subset).not_to be_empty, "\"#{item}\" was not found in #{units}"
     }
   }
 end
@@ -15,9 +16,10 @@ step "systemctl does not contains following" do |packages|
   items = packages.split("\n").map(&:strip).reject(&:empty?)
 
   items.each { |item|
-    units = %x(systemctl -a -t service --no-legend | awk '{ print $1 }' | grep #{item})
+    units = %x(systemctl -a -t service --no-legend | awk '{ print $1 }')
     units = units.split("\n").map(&:strip).reject(&:empty?)
-    expect(units).to be_empty, "#{item} was not found"
+    subset = units.reject { |x| !x.include?(item) }
+    expect(subset).to be_empty, "#{item} was found not found in #{units}"
   }
 end
 

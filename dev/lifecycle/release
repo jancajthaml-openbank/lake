@@ -10,35 +10,39 @@ while [ $# -gt 0 ] ; do
 key="$1"
 
 case $key in
-    -v|--version)
+
+  -v|--version)
     VERSION="$2"
     shift
     shift
-    ;;
-    -t|--token)
+  ;;
+
+  -t|--token)
     ACCESS_TOKEN="$2"
     shift
     shift
-    ;;
-    *)
+  ;;
+
+  *)
     shift
-    ;;
+  ;;
+
 esac
 done
 
 if [ ! "${VERSION}" ] ; then
-  (>&2 echo "version not provided")
+  (>&2 echo "[error] version not provided")
   exit 1
 fi
 
 if [ ! "${ACCESS_TOKEN}" ] ; then
-  (>&2 echo "github access token not provided")
+  (>&2 echo "[error] github access token not provided")
   exit 1
 fi
 
-REPO=jancajthaml-openbank/lake
+REPO=jancajthaml-openbank/fio-bco
 
-echo "start release of ${REPO}:${VERSION} "
+echo "[info] start release of ${REPO}:${VERSION} "
 
 RELEASE_INFO="https://api.github.com/repos/${REPO}/releases/tags/${VERSION}"
 response=$(curl \
@@ -51,10 +55,10 @@ RELEASE_ID=$(echo "$response" | jq -r .id)
 RELEASE_URI="https://api.github.com/repos/${REPO}/releases"
 
 if [ "${RELEASE_ID}" != "null" ] ; then
-  (>&2 echo "release ${VERSION} already exists")
+  (>&2 echo "[error] release ${VERSION} already exists")
   exit 1
 else
-  echo "creating new release ${VERSION}"
+  echo "[info] creating new release ${VERSION}"
 fi
 
 PAYLOAD=$(cat <<-END
@@ -79,23 +83,23 @@ response=$(
     ${RELEASE_URI}
 )
 
-UPLOAD_URL=$(echo $response | jq -r .upload_url | sed -e "s/{?name,label}//")
+UPLOAD_URL=$(echo ${response} | jq -r .upload_url | sed -e "s/{?name,label}//")
 
-assets_dir=packaging/bin
+assets_dir=$(pwd)/packaging/bin
 
 for asset in $(ls -1 packaging/bin); do
   abspath="${assets_dir}/${asset}"
 
-  if [ ! -f $abspath ] ; then
-    (>&2 echo "asset ${abspath} not found")
+  if [ ! -f ${abspath} ] ; then
+    (>&2 echo "[error] asset ${abspath} not found")
     exit 1
   fi
 
-  echo "uploading $asset"
+  echo "[info] uploading ${asset}"
 
   curl \
     --fail \
-    --request POST \
+    -X POST \
     -# \
     --output /dev/null \
     --data-binary "@${abspath}" \
@@ -104,4 +108,4 @@ for asset in $(ls -1 packaging/bin); do
     "${UPLOAD_URL}?name=${asset}"
 done
 
-echo "released ${VERSION}"
+echo "[info] released ${VERSION}"
