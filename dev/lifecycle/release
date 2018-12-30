@@ -40,21 +40,26 @@ if [ ! "${ACCESS_TOKEN}" ] ; then
   exit 1
 fi
 
-REPO=jancajthaml-openbank/fio-bco
+REPO=jancajthaml-openbank/lake
 
 echo "[info] start release of ${REPO}:${VERSION} "
 
 RELEASE_INFO="https://api.github.com/repos/${REPO}/releases/tags/${VERSION}"
 response=$(curl \
     --silent \
-    -H "Authorization: token $ACCESS_TOKEN" \
+    -H "Authorization: token ${ACCESS_TOKEN}" \
     ${RELEASE_INFO} \
 )
 
 RELEASE_ID=$(echo "$response" | jq -r .id)
 RELEASE_URI="https://api.github.com/repos/${REPO}/releases"
 
-echo "[info] creating release ${VERSION}"
+if [ "${RELEASE_ID}" != "null" ] ; then
+  (>&2 echo "[error] release ${VERSION} already exists")
+  exit 1
+else
+  echo "[info] creating new release ${VERSION}"
+fi
 
 PAYLOAD=$(cat <<-END
 {
@@ -72,7 +77,7 @@ response=$(
   curl \
     --fail \
     --request POST \
-    -H "Authorization: token ${ACCESS_TOKEN}" \
+    -H "Authorization: token $ACCESS_TOKEN" \
     --silent \
     --data "$(echo $PAYLOAD)" \
     ${RELEASE_URI}
@@ -82,7 +87,7 @@ UPLOAD_URL=$(echo ${response} | jq -r .upload_url | sed -e "s/{?name,label}//")
 
 assets_dir=$(pwd)/packaging/bin
 
-for asset in $(ls -1 packaging/bin) ; do
+for asset in $(ls -1 packaging/bin); do
   abspath="${assets_dir}/${asset}"
 
   if [ ! -f ${abspath} ] ; then
