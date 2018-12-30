@@ -1,7 +1,6 @@
 Feature: Service can be configured
 
   Scenario: properly installed debian package
-
     Given lake is running
     Then systemctl contains following
     """
@@ -9,7 +8,6 @@ Feature: Service can be configured
     """
 
   Scenario: configure log level
-
     Given lake is running with following configuration
     """
       LAKE_LOG_LEVEL=DEBUG

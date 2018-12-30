@@ -28,11 +28,6 @@ RSpec.configure do |config|
   config.after(:suite) do |_|
     print "\n[ suite ending   ]\n"
 
-    get_containers = lambda do |image|
-      containers = %x(docker ps -aqf "ancestor=#{image}" 2>/dev/null)
-      return ($? == 0 ? containers.split("\n") : [])
-    end
-
     ids = %x(systemctl -a -t service --no-legend | awk '{ print $1 }')
 
     if $?

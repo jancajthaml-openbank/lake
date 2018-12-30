@@ -14,10 +14,10 @@
   version = "v1.1.5"
 
 [[projects]]
-  branch = "master"
   name = "github.com/konsorten/go-windows-terminal-sequences"
   packages = ["."]
-  revision = "b729f2633dfe35f4d1d8a32385f6685610ce1cb5"
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/modern-go/concurrent"
@@ -35,7 +35,7 @@
   branch = "master"
   name = "github.com/pebbe/zmq4"
   packages = ["."]
-  revision = "3515f4e6f439e167f92f2b99a9497cf5ea8e3cea"
+  revision = "956ee4ed393e28e547b9767b3a261582c3d30eec"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -47,13 +47,13 @@
   branch = "master"
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
-  revision = "e2704e165165ec55d062f5919b4b29494e9fa790"
+  revision = "3113b8401b8a98917cde58f8bbd42a1b1c03b1fd"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
-  revision = "a67f783a3814b8729bd2dac5780b5f78f8dbd64d"
-  version = "v1.1.0"
+  revision = "bcd833dfe83d3cebad139e4a29ed79cb2318bf95"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -68,7 +68,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "5295e8364332db77d75fce11f1d19c053919a9c9"
+  revision = "505ab145d0a99da450461ae2c1a9f6cd10d1f447"
 
 [[projects]]
   branch = "master"
@@ -77,11 +77,11 @@
     "unix",
     "windows"
   ]
-  revision = "e4b3c5e9061176387e7cea65e4dc5853801f3fb7"
+  revision = "9a3f9b0469bbc6b8802087ae5c0af9f61502de01"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "298b1cd471a90b58f618d7ef60906d3c4b8dd9eb35e6adb414caa870a6f88d41"
+  inputs-digest = "a9dc22d1dd765720cd2a85db33ca29507296d965f0ee088764382898e69427f8"
   solver-name = "gps-cdcl"
   solver-version = 1

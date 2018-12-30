@@ -21,8 +21,8 @@ FROM jancajthaml/bbtest
 COPY packaging/bin /tmp/packages
 
 RUN \
-    if [ ! -f /tmp/packages/lake_*_amd64.deb ] ; \
-      then (>&2 echo "no package to test found"); \
+    if [ -z "$(find . /tmp/packages -type f -name 'lake_*_amd64.deb' -print)" ] ; then \
+      (>&2 echo "no package to test found") ; \
       exit 1 ; \
     fi
 

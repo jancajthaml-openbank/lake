@@ -11,21 +11,21 @@ key="$1"
 
 case $key in
 
-    --arch)
-      TARGET_ARCHITECTURE="$2"
-      shift
-      shift
-    ;;
+  --arch)
+    TARGET_ARCHITECTURE="$2"
+    shift
+    shift
+  ;;
 
-    -v|--version)
-      VERSION="$2"
-      shift
-      shift
-    ;;
+  -v|--version)
+    VERSION="$2"
+    shift
+    shift
+  ;;
 
-    *)
-      shift
-    ;;
+  *)
+    shift
+  ;;
 
 esac
 done
@@ -43,14 +43,14 @@ fi
 generate_changelog() {
   VER="${VERSION}"
   tag=HEAD
-  ADDS=$(echo ${VER} | sed -e 's/~.*//' | cut -s -d- -f2)
+  ADDS=$(echo ${VER} | sed -e 's/~.*//' | cut -s -d- -f2 | sed '/^[[:space:]]*$/d')
   if [ -f ${CHANGELOG} ] ; then
     rm -f ${CHANGELOG}
   fi
 
   touch ${CHANGELOG}
 
-  if [[ -n "${ADDS// }" ]] ; then
+  if [[ -z "${ADDS// }" ]] ; then
     DATE=$(git log -1 --format=%cD ${tag})
     echo "lake (${VER}) ${DIST}; urgency=low" >> ${CHANGELOG}
     echo "" >> ${CHANGELOG}
@@ -74,17 +74,23 @@ generate_changelog() {
 
     DATE=$(git log -1 --format=%cD ${tag_to})
 
-    echo "lake (${tag_to#v}) ${DIST}; urgency=low" >> ${CHANGELOG}
-    echo "" >> ${CHANGELOG}
+    commits=$(echo "$(git log --pretty=oneline --pretty=format:%s ^${tag_from} ${tag_to})" | sed '/^[[:space:]]*$/d')
 
-    echo "$(git log --pretty=oneline --pretty=format:%s ^${tag_from} ${tag_to})" | \
-    while read note ; do
-      echo "  * ${note}" >> ${CHANGELOG}
-    done
+    if [[ -n "${commits// }" ]] ; then
 
-    echo "" >> ${CHANGELOG}
-    echo " -- Jan Cajthaml <jan.cajthaml@gmail.com>  ${DATE}" >> ${CHANGELOG}
-    echo "" >> ${CHANGELOG}
+      echo "lake (${tag_to#v}) ${DIST}; urgency=low" >> ${CHANGELOG}
+      echo "" >> ${CHANGELOG}
+
+      echo "${commits}" | \
+      while read note ; do
+        echo "  * ${note}" >> ${CHANGELOG}
+      done
+
+      echo "" >> ${CHANGELOG}
+
+      echo " -- Jan Cajthaml <jan.cajthaml@gmail.com>  ${DATE}" >> ${CHANGELOG}
+      echo "" >> ${CHANGELOG}
+    fi
   done
 }
 
@@ -104,8 +110,8 @@ CONTROL=${DEB_SOURCES}/DEBIAN/control
 DIST=unstable
 FIRST=1
 
-if [ ! -f "${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE}" ] ; then
-  (>&2 echo "did not found binary to package at ${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE}")
+if [ ! -f "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" ] ; then
+  (>&2 echo "did not found binary to package at ${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}")
   exit 1
 fi
 
@@ -115,10 +121,10 @@ if [ -f "${DEB_SOURCES}/openbank/services/lake/lake" ] ; then
   rm -f ${DEB_SOURCES}/openbank/services/lake/lake
 fi
 
-du -hs "${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE}"
+du -hs "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}"
 
 cp \
-  "${BIN_SOURCES}/linux-${TARGET_ARCHITECTURE}" \
+  "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
   "${DEB_SOURCES}/openbank/services/lake/lake"
 
 file "${DEB_SOURCES}/openbank/services/lake/lake"
@@ -126,4 +132,8 @@ file "${DEB_SOURCES}/openbank/services/lake/lake"
 generate_changelog
 sed -i 's/Version.*/Version: '${VERSION#v}'/' ${CONTROL}
 
+find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec rm -f {} \;
+
 dpkg-deb --build "${DEB_SOURCES}" "${BIN_SOURCES}"
+
+find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec du -hs {} \;

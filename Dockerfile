@@ -14,14 +14,18 @@
 
 FROM alpine
 
-COPY bin /opt/artifacts
+COPY packaging/bin/* /opt/artifacts/
 
 RUN \
     if \
+      \
+      [ ! -f /opt/artifacts/lake-linux-amd64 ] || \
+      [ ! -f /opt/artifacts/lake-linux-armhf ] || \
+      \
       [ -z "$(find . /opt/artifacts -type f -name 'lake_*_amd64.deb' -print)" ] || \
-      [ ! -f /opt/artifacts/linux-amd64 ] || \
-      [ -z "$(find /opt/artifacts -type f -name 'lake_*_armhf.deb' -print)" ] || \
-      [ ! -f /opt/artifacts/linux-armhf ] ; then \
+      [ -z "$(find /opt/artifacts -type f -name 'lake_*_armhf.deb' -print)" ] \
+      \
+      ; then \
       (>&2 echo "missing expected files, run package and debian for both amd64 and armhf") ; \
       exit 1 ; \
     fi
