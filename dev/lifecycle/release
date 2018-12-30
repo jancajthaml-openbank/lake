@@ -40,16 +40,15 @@ if [ ! "${ACCESS_TOKEN}" ] ; then
   exit 1
 fi
 
-uri=$(git ls-remote --get-url)
-proto="$(echo ${uri} | grep :// | sed -e's,^\(.*://\).*,\1,g')"
-
-if [[ -z "${proto// }" ]] ; then
-  url=${uri#*:}
-else
-  url=${uri/${proto}github.com\//}
-fi
-
-REPO=${url%.git}
+REPO=$(git ls-remote --get-url)
+REPO=${REPO%.git}
+REPO=${REPO#*:}
+REPO=${REPO#/}
+REPO=${REPO#/}
+REPO=${REPO#/}
+REPO=${REPO#github.com}
+REPO=${REPO#/}
+REPO=${REPO}
 
 echo "[info] start release of ${REPO}:${VERSION}"
 
