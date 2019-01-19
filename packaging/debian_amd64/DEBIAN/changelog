@@ -1,71 +1,73 @@
-lake (v1.1.2+cleanup) unstable; urgency=low
+lake (1.1.3) unstable; urgency=low
 
-  * includes non-released commits
+  * Update release
+  * Release by tag fix (#81)
+  * Better project structure and more robust testing, minor quality of life improvements (#80)
 
- -- Jan Cajthaml <jan.cajthaml@gmail.com>  Sun, 30 Dec 2018 14:49:38 +0100
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Sun, 30 Dec 2018 19:14:20 +0100
 
 lake (1.1.1) unstable; urgency=low
 
-  * making lint work again (#79)
-  * docker in dev image (#78)
-  * use prebuilt bbtest and go base images
-  * updated README.md about contributing and security disclosure (#77)
-  * inlined env constants (#76)
-  * faster json, better bbtests, gosec integration (#75)
-  * using jq image (#73)
+  * Making lint work again (#79)
+  * Docker in dev image (#78)
+  * Use prebuilt bbtest and go base images
+  * Updated README.md about contributing and security disclosure (#77)
+  * Inlined env constants (#76)
+  * Faster json, better bbtests, gosec integration (#75)
+  * Using jq image (#73)
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Fri, 30 Nov 2018 18:05:09 +0100
 
 lake (1.1.0) unstable; urgency=low
 
-  * changed debian arm target to armhf, better changelog (#72)
-  * mark ready metrics daemon when no output is provided (#71)
-  * passing dependant daemons as reference (#70)
+  * Changed debian arm target to armhf, better changelog (#72)
+  * Mark ready metrics daemon when no output is provided (#71)
+  * Passing dependant daemons as reference (#70)
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Thu, 18 Oct 2018 11:59:36 +0200
 
 lake (1.0.4) unstable; urgency=low
 
-  * flat and more understandable structure (#69)
-  * debian improvements (#68)
-  * no need to load environment from config file into postinstall (#67)
-  * codacy fixes (#66)
-  * trying to fix docker bug where copying 12MB file from one directory to another results in increasingly growing target file in rate of 1GB/s (#65)
+  * Flat and more understandable structure (#69)
+  * Debian improvements (#68)
+  * No need to load environment from config file into postinstall (#67)
+  * Codacy fixes (#66)
+  * Trying to fix docker bug where copying 12MB file from one directory to another results in increasingly growing target file in rate of 1GB/s (#65)
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 1 Oct 2018 18:51:53 +0200
 
 lake (1.0.3) unstable; urgency=low
 
-  * fixing circleci release (#64)
-  * increase timeout to 1 seconds since we do not wait for fd_socket in unit tests (#63)
-  * faster bbtests with more scenarios, gracefull shutdown of Relay, more unit tests, fd_notify when relay is in maín loop (#62)
-  * fixed assertion of metrics directory, optimised bbtests with helpers (#61)
-  * optimising debian packaging and bbtesting (#60)
+  * Fixing circleci release (#64)
+  * Increase timeout to 1 seconds since we do not wait for fd_socket in unit tests (#63)
+  * Faster bbtests with more scenarios, gracefull shutdown of Relay, more unit tests, fd_notify when relay is in maín loop (#62)
+  * Fixed assertion of metrics directory, optimised bbtests with helpers (#61)
+  * Optimising debian packaging and bbtesting (#60)
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 20 Aug 2018 23:00:12 +0200
 
 lake (1.0.2) unstable; urgency=low
 
-  * blocking zmqRecv and other demo finding fixes (#59)
+  * Blocking zmqRecv and other demo finding fixes (#59)
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Wed, 15 Aug 2018 14:27:43 +0200
 
 lake (1.0.1) unstable; urgency=low
 
-  * increasing fidelity of offline development and hanging bbtest teardown (#58)
-  * increasing fidelity of package and bbtest (#57)
-  * wip (#55)
-  * major and snapshot release fixes (#53)
+  * Increasing fidelity of offline development and hanging bbtest teardown (#58)
+  * Increasing fidelity of package and bbtest (#57)
+  * Wip (#55)
+  * Major and snapshot release fixes (#53)
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Tue, 14 Aug 2018 20:08:38 +0200
 
 lake (1.0.0) unstable; urgency=low
 
-  * fixing package on circleci
-  * only release one binary per platofrm, no copying
-  * rework of circleci pipeline
-  * major and snapshot release fixes (#53)
-  * release v1.0.0
+  * Fixing package on circleci
+  * Only release one binary per platofrm, no copying
+  * Rework of circleci pipeline
+  * Major and snapshot release fixes (#53)
+  * Release v1.0.0
 
  -- Jan Cajthaml <jan.cajthaml@gmail.com>  Fri, 27 Jul 2018 14:14:40 +0200
 
