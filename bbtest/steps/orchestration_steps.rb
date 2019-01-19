@@ -31,11 +31,21 @@ step "lake is running" do ||
   }
 end
 
-step "lake is running with following configuration" do |configuration|
-  params = configuration.split("\n").map(&:strip).reject(&:empty?).join("\n").inspect.delete('\"')
+step "lake is reconfigured with" do |configuration|
+  params = Hash[configuration.split("\n").map(&:strip).reject(&:empty?).map {|el| el.split '='}]
+  defaults = {
+    "LOG_LEVEL" => "DEBUG",
+    "PORT_PULL" => "5562",
+    "PORT_PUB" => "5561",
+    "METRICS_REFRESHRATE" => "1h",
+    "METRICS_OUTPUT" => "/opt/lake/metrics/metrics.json",
+  }
+
+  config = Array[defaults.merge(params).map {|k,v| "LAKE_#{k}=#{v}"}]
+  config = config.join("\n").inspect.delete('\"')
 
   %x(mkdir -p /etc/init)
-  %x(echo '#{params}' > /etc/init/lake.conf)
+  %x(echo '#{config}' > /etc/init/lake.conf)
 
   %x(systemctl restart lake 2>&1)
 

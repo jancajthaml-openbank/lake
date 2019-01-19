@@ -74,7 +74,7 @@ generate_changelog() {
 
     DATE=$(git log -1 --format=%cD ${tag_to})
 
-    commits=$(echo "$(git log --pretty=oneline --pretty=format:%s ^${tag_from} ${tag_to})" | sed '/^[[:space:]]*$/d')
+    commits=$(echo "$(git log --no-merges --pretty=oneline --pretty=format:%s ^${tag_from} ${tag_to})" | sed '/^[[:space:]]*$/d' | uniq)
 
     if [[ -n "${commits// }" ]] ; then
 
@@ -83,7 +83,7 @@ generate_changelog() {
 
       echo "${commits}" | \
       while read note ; do
-        echo "  * ${note}" >> ${CHANGELOG}
+        echo "  * $(tr '[:lower:]' '[:upper:]' <<< ${note:0:1})${note:1}" >> ${CHANGELOG}
       done
 
       echo "" >> ${CHANGELOG}
