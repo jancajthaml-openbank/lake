@@ -8,7 +8,7 @@ VERSION := $(shell git fetch --tags --force 2> /dev/null; tags=($$(git tag --sor
 .ONESHELL:
 
 .PHONY: all
-all: bootstrap sync test package bbtest
+all: bootstrap test package bbtest
 
 .PHONY: package
 package:
@@ -40,11 +40,6 @@ sec:
 .PHONY: update
 update:
 	@docker-compose run --rm update --pkg lake
-
-.PHONY: sync
-sync:
-	@echo "[info] sync lake"
-	@docker-compose run --rm sync --pkg lake
 
 .PHONY: test
 test:
