@@ -25,6 +25,12 @@ services:
 
   # -------------------------------------------------------------------------- #
 
+  sync:
+    extends: go
+    entrypoint: ["/project/dev/lifecycle/sync"]
+
+  # -------------------------------------------------------------------------- #
+
   update:
     extends: go
     entrypoint: ["/project/dev/lifecycle/update"]
