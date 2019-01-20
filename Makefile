@@ -37,14 +37,14 @@ lint:
 sec:
 	@docker-compose run --rm sec --pkg lake || :
 
+.PHONY: sync
+sync:
+	@echo "[info] sync vault"
+	@docker-compose run --rm sync --pkg lake
+
 .PHONY: update
 update:
 	@docker-compose run --rm update --pkg lake
-
-.PHONY: sync
-sync:
-	@echo "[info] sync lake"
-	@docker-compose run --rm sync --pkg lake
 
 .PHONY: test
 test:

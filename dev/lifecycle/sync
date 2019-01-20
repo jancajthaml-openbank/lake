@@ -30,5 +30,5 @@ fi
 
 cd /go/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
 
-dep ensure -v
-
+GO111MODULE=on \
+  go mod vendor
