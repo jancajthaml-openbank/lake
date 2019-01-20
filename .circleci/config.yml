@@ -122,11 +122,15 @@ jobs:
           name: ensure services namespace
           command: |
             mkdir -p /go/src/github.com/jancajthaml-openbank
-            ln -s /home/circleci/project/services/lake /go/src/github.com/jancajthaml-openbank/lake
+            cp -r /home/circleci/project/services/lake /go/src/github.com/jancajthaml-openbank/lake
       - run:
           name: sync dependencies
           command: |
             ./dev/lifecycle/sync --pkg lake
+      - run:
+          name: move vendor folder to project
+          command: |
+            cp -r /go/src/github.com/jancajthaml-openbank/lake/vendor /home/circleci/project/services/lake/vendor
       - run:
           name: package binary
           command: |
