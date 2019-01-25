@@ -107,7 +107,7 @@ func work(r Relay) (err error) {
 			case error:
 				err = x
 			default:
-				err = fmt.Errorf("Unknown panic")
+				err = fmt.Errorf("unknown panic")
 			}
 		}
 	}()
@@ -174,7 +174,7 @@ zmqKillChannelNew:
 
 zmqPullBind:
 	if receiver.Bind(pullPort) != nil {
-		err = fmt.Errorf("Unable create bind ZMQ PULL")
+		err = fmt.Errorf("unable create bind ZMQ PULL")
 		time.Sleep(10 * time.Millisecond)
 		goto zmqPullBind
 	}
@@ -182,7 +182,7 @@ zmqPullBind:
 
 zmqPubBind:
 	if sender.Bind(pubPort) != nil {
-		err = fmt.Errorf("Unable create bind ZMQ PUB")
+		err = fmt.Errorf("unable create bind ZMQ PUB")
 		time.Sleep(10 * time.Millisecond)
 		goto zmqPubBind
 	}
@@ -190,7 +190,7 @@ zmqPubBind:
 
 zmqKillChannelConnect:
 	if killChannel.Connect(killPort) != nil {
-		err = fmt.Errorf("Unable to connect kill channel")
+		err = fmt.Errorf("unable to connect kill channel")
 		time.Sleep(10 * time.Millisecond)
 		goto zmqKillChannelConnect
 	}

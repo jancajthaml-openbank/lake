@@ -41,7 +41,7 @@ func (app Application) WaitReady(deadline time.Duration) (err error) {
 			case error:
 				err = x
 			default:
-				err = fmt.Errorf("Unknown panic")
+				err = fmt.Errorf("unknown panic")
 			}
 		}
 	}()

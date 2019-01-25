@@ -29,15 +29,16 @@ if [ ! "${TARGET_PACKAGE}" ] ; then
 fi
 
 scan() {
-  if [ -f ${1} ] ; then
-    gofmt -s -w ${1}
-    /go/bin/golint ${1}
-    /go/bin/misspell ${1}
-    /go/bin/prealloc ${1}
-    /go/bin/gocyclo -over 15 ${1}
-    /go/bin/prealloc ${1}
-    /go/bin/goconst ${1}
+  if [ ! -f ${1} ] ; then
+    return
   fi
+  (gofmt -s -w ${1} || :)
+  (/go/bin/golint -min_confidence 0.5 ${1} || :)
+  (/go/bin/misspell ${1} || :)
+  (/go/bin/prealloc ${1} || :)
+  (/go/bin/gocyclo -over 15 ${1} || :)
+  (/go/bin/prealloc ${1} || :)
+  (/go/bin/goconst ${1} || :)
 }
 
 find /go/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE} \
