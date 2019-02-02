@@ -22,6 +22,20 @@ RSpec.configure do |config|
       %x(rm -rf #{folder}/*)
     }
 
+    print "[ installing package ]\n"
+
+    %x(find /etc/bbtest/packages -type f -name 'lake_*_amd64.deb')
+      .split("\n")
+      .map(&:strip)
+      .reject { |x| x.empty? }
+      .each { |package|
+        IO.popen("apt-get -y install -f #{package}") do |io|
+          while (line = io.gets) do
+            puts line
+          end
+        end
+      }
+
     print "[ suite started  ]\n"
   end
 

@@ -8,6 +8,7 @@ case "$1" in
     if [ -f "/etc/init/lake.conf" ] ; then
       systemctl unmask lake.service >/dev/null
       systemctl enable lake.service >/dev/null
+      (systemctl start lake.service >/dev/null || :)
     else
       (>&2 echo "/etc/init/lake.conf file not found")
       exit 1
