@@ -29,8 +29,9 @@ import (
 // Relay fascade
 type Relay struct {
 	Support
-	pullPort      int
-	pubPort       int
+	pullPort      string
+	pubPort       string
+	killPort      string
 	metrics       *Metrics
 	killConfirmed chan interface{}
 	killRequest   chan interface{}
@@ -40,24 +41,52 @@ type Relay struct {
 func NewRelay(ctx context.Context, cfg config.Configuration, metrics *Metrics) Relay {
 	return Relay{
 		Support:       NewDaemonSupport(ctx),
-		pullPort:      cfg.PullPort,
-		pubPort:       cfg.PubPort,
+		pullPort:      fmt.Sprintf("tcp://*:%d", cfg.PullPort),
+		pubPort:       fmt.Sprintf("tcp://*:%d", cfg.PubPort),
+		killPort:      fmt.Sprintf("tcp://127.0.0.1:%d", cfg.PullPort),
 		metrics:       metrics,
 		killRequest:   make(chan interface{}),
 		killConfirmed: make(chan interface{}),
 	}
 }
 
+// WaitReady wait for relay to be ready
+func (relay Relay) WaitReady(deadline time.Duration) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			switch x := e.(type) {
+			case string:
+				err = fmt.Errorf(x)
+			case error:
+				err = x
+			default:
+				err = fmt.Errorf("unknown panic")
+			}
+		}
+	}()
+
+	ticker := time.NewTicker(deadline)
+	select {
+	case <-relay.IsReady:
+		ticker.Stop()
+		err = nil
+		return
+	case <-ticker.C:
+		err = fmt.Errorf("daemon was not ready within %v seconds", deadline)
+		return
+	}
+}
+
 // Start handles everything needed to start relay
-func (r Relay) Start() {
-	defer r.MarkDone()
-	defer func() { r.killConfirmed <- nil }()
+func (relay Relay) Start() {
+	defer relay.MarkDone()
+	defer func() { relay.killConfirmed <- nil }()
 
 	alive := true
 
 	go func() {
 		select {
-		case <-r.Done():
+		case <-relay.Done():
 			if !alive {
 				return
 			}
@@ -66,20 +95,20 @@ func (r Relay) Start() {
 			defer ticker.Stop()
 			for {
 				select {
-				case <-r.killConfirmed:
-					log.Info("Stopped Relay")
+				case <-relay.killConfirmed:
+					log.Info("Stop relay daemon")
 					return
 				case <-ticker.C:
-					r.killRequest <- nil
+					relay.killRequest <- nil
 				}
 			}
 		}
 	}()
 
-	log.Info("Started Relay")
+	log.Info("Start relay daemon")
 
 	for {
-		err := work(r)
+		err := work(relay)
 		if !alive {
 			return
 		}
@@ -95,7 +124,7 @@ func isFatalError(err error) bool {
 		zmq.AsErrno(err) == zmq.ETERM
 }
 
-func work(r Relay) (err error) {
+func work(relay Relay) (err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
@@ -117,14 +146,11 @@ func work(r Relay) (err error) {
 		receiver    *zmq.Socket
 		sender      *zmq.Socket
 		killChannel *zmq.Socket
-		pullPort    = fmt.Sprintf("tcp://*:%d", r.pullPort)
-		pubPort     = fmt.Sprintf("tcp://*:%d", r.pubPort)
-		killPort    = fmt.Sprintf("tcp://127.0.0.1:%d", r.pullPort)
 	)
 
 	go func() {
 		select {
-		case <-r.killRequest:
+		case <-relay.killRequest:
 			for {
 				if killChannel != nil {
 					_, err = killChannel.Send("KILL", 0)
@@ -173,23 +199,23 @@ zmqKillChannelNew:
 	defer killChannel.Close()
 
 zmqPullBind:
-	if receiver.Bind(pullPort) != nil {
+	if receiver.Bind(relay.pullPort) != nil {
 		err = fmt.Errorf("unable create bind ZMQ PULL")
 		time.Sleep(10 * time.Millisecond)
 		goto zmqPullBind
 	}
-	defer receiver.Unbind(pullPort)
+	defer receiver.Unbind(relay.pullPort)
 
 zmqPubBind:
-	if sender.Bind(pubPort) != nil {
+	if sender.Bind(relay.pubPort) != nil {
 		err = fmt.Errorf("unable create bind ZMQ PUB")
 		time.Sleep(10 * time.Millisecond)
 		goto zmqPubBind
 	}
-	defer sender.Unbind(pubPort)
+	defer sender.Unbind(relay.pubPort)
 
 zmqKillChannelConnect:
-	if killChannel.Connect(killPort) != nil {
+	if killChannel.Connect(relay.killPort) != nil {
 		err = fmt.Errorf("unable to connect kill channel")
 		time.Sleep(10 * time.Millisecond)
 		goto zmqKillChannelConnect
@@ -197,7 +223,7 @@ zmqKillChannelConnect:
 
 	log.Info("Relay in main loop")
 
-	r.MarkReady()
+	relay.MarkReady()
 
 mainLoop:
 	chunk, err = receiver.Recv(0)
@@ -208,13 +234,13 @@ mainLoop:
 			log.Info("Relay killed")
 			return
 		}
-		r.metrics.MessageIngress(int64(1))
+		relay.metrics.MessageIngress(int64(1))
 		// FIXME check error
 		_, err = sender.Send(chunk, 0)
 		if err != nil {
 			log.Warnf("Unable to send message error: %+v", err)
 		} else {
-			r.metrics.MessageEgress(int64(1))
+			relay.metrics.MessageEgress(int64(1))
 		}
 		goto mainLoop
 	default:
