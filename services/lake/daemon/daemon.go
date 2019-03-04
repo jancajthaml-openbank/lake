@@ -16,7 +16,13 @@ package daemon
 
 import (
 	"context"
+	"time"
 )
+
+// Daemon contract for type using support
+type Daemon interface {
+	WaitReady(deadline time.Duration) error
+}
 
 // NewDaemonSupport constructor
 func NewDaemonSupport(parentCtx context.Context) Support {

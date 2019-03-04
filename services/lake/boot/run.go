@@ -21,6 +21,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jancajthaml-openbank/lake/daemon"
 	"github.com/jancajthaml-openbank/lake/utils"
 
 	log "github.com/sirupsen/logrus"
@@ -32,52 +33,33 @@ func (app Application) Stop() {
 }
 
 // WaitReady wait for daemons to be ready
-func (app Application) WaitReady(deadline time.Duration) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			switch x := e.(type) {
-			case string:
-				err = fmt.Errorf(x)
-			case error:
-				err = x
-			default:
-				err = fmt.Errorf("unknown panic")
-			}
-		}
-	}()
+func (app Application) WaitReady(deadline time.Duration) error {
+	errors := make([]error, 0)
+	mux := new(sync.Mutex)
 
 	var wg sync.WaitGroup
+	waitWithDeadline := func(support daemon.Daemon) {
+		go func() {
+			err := support.WaitReady(deadline)
+			if err != nil {
+				mux.Lock()
+				errors = append(errors, err)
+				mux.Unlock()
+			}
+			wg.Done()
+		}()
+	}
+
 	wg.Add(2)
-
-	go func() {
-		ticker := time.NewTicker(deadline)
-
-		select {
-		case <-app.metrics.IsReady:
-			wg.Done()
-			ticker.Stop()
-			return
-		case <-ticker.C:
-			panic("metrics was not ready within 5 seconds")
-		}
-	}()
-
-	go func() {
-		ticker := time.NewTicker(deadline)
-
-		select {
-		case <-app.relay.IsReady:
-			wg.Done()
-			ticker.Stop()
-			return
-		case <-ticker.C:
-			panic("relay was not ready within 5 seconds")
-		}
-	}()
-
+	waitWithDeadline(app.relay)
+	waitWithDeadline(app.metrics)
 	wg.Wait()
 
-	return
+	if len(errors) > 0 {
+		return fmt.Errorf("%+v", errors)
+	}
+
+	return nil
 }
 
 // WaitInterrupt wait for signal

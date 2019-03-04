@@ -16,7 +16,9 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/jancajthaml-openbank/lake/config"
@@ -99,7 +101,39 @@ func (metrics Metrics) persist(filename string) {
 }
 
 func getFilename(path string) string {
-	return path
+	dirname := filepath.Dir(path)
+	ext := filepath.Ext(path)
+	filename := filepath.Base(path)
+	filename = filename[:len(filename)-len(ext)]
+
+	return dirname + "/" + filename + ext
+}
+
+// WaitReady wait for metrics to be ready
+func (metrics Metrics) WaitReady(deadline time.Duration) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			switch x := e.(type) {
+			case string:
+				err = fmt.Errorf(x)
+			case error:
+				err = x
+			default:
+				err = fmt.Errorf("unknown panic")
+			}
+		}
+	}()
+
+	ticker := time.NewTicker(deadline)
+	select {
+	case <-metrics.IsReady:
+		ticker.Stop()
+		err = nil
+		return
+	case <-ticker.C:
+		err = fmt.Errorf("daemon was not ready within %v seconds", deadline)
+		return
+	}
 }
 
 // Start handles everything needed to start metrics daemon
