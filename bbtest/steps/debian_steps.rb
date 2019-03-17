@@ -1,10 +1,24 @@
 
+step "package :package is installed" do |package|
+  out = %x(apt-get -y install -f /etc/bbtest/packages/#{package})
+  expect($?).to be_success, out
+
+  expect(File.file?("/etc/init/lake.conf")).to be(true)
+end
+
+step "package :package is uninstalled" do |package|
+  out = %x(apt-get -y remove #{package})
+  expect($?).to be_success, out
+
+  expect(File.file?("/etc/init/lake.conf")).to be(false)
+end
+
 step "systemctl contains following" do |packages|
   items = packages.split("\n").map(&:strip).reject(&:empty?)
 
   eventually() {
     items.each { |item|
-      units = %x(systemctl -a -t service --no-legend | awk '{ print $1 }')
+      units = %x(systemctl list-units --no-legend | awk '{ print $1 }')
       units = units.split("\n").map(&:strip).reject(&:empty?)
       subset = units.reject { |x| !x.include?(item) }
       expect(subset).not_to be_empty, "\"#{item}\" was not found in #{units}"
@@ -16,10 +30,10 @@ step "systemctl does not contains following" do |packages|
   items = packages.split("\n").map(&:strip).reject(&:empty?)
 
   items.each { |item|
-    units = %x(systemctl -a -t service --no-legend | awk '{ print $1 }')
+    units = %x(systemctl list-units --no-legend | awk '{ print $1 }')
     units = units.split("\n").map(&:strip).reject(&:empty?)
     subset = units.reject { |x| !x.include?(item) }
-    expect(subset).to be_empty, "#{item} was found not found in #{units}"
+    expect(subset).to be_empty, "\"#{item}\" was found in #{units}"
   }
 end
 

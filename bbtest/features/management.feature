@@ -4,16 +4,17 @@ Feature: Bootstrap shared
     Given lake is running
     And   systemctl contains following
     """
+      lake-relay.service
       lake.service
     """
 
-    When stop unit "lake.service"
-    Given unit "lake.service" is not running
+    When stop unit "lake-relay.service"
+    Given unit "lake-relay.service" is not running
 
-    When start unit "lake.service"
-    Given unit "lake.service" is running
+    When start unit "lake-relay.service"
+    Given unit "lake-relay.service" is running
 
-    When restart unit "lake.service"
-    Given unit "lake.service" is running
+    When restart unit "lake-relay.service"
+    Given unit "lake-relay.service" is running
 
     Then lake is running

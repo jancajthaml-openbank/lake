@@ -26,6 +26,9 @@ RUN \
       exit 1 ; \
     fi
 
+RUN find . /etc/bbtest/packages -type f -name 'lake_*_amd64.deb' | \
+    xargs -I {} mv {} /etc/bbtest/packages/lake.deb
+
 RUN apt-get update && \
     apt-get install -y \
       init-system-helpers>=1.18~ \
