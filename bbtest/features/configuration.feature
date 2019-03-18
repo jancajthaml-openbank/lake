@@ -1,18 +1,11 @@
 Feature: Service can be configured
 
-  Scenario: properly installed debian package
-    Given lake is running
-    Then systemctl contains following
-    """
-      lake.service
-    """
-
   Scenario: configure log level
     Given lake is reconfigured with
     """
       LOG_LEVEL=DEBUG
     """
-    Then journalctl of "lake.service" contains following
+    Then journalctl of "lake-relay.service" contains following
     """
       Log level set to DEBUG
     """
@@ -21,7 +14,7 @@ Feature: Service can be configured
     """
       LOG_LEVEL=ERROR
     """
-    Then journalctl of "lake.service" contains following
+    Then journalctl of "lake-relay.service" contains following
     """
       Log level set to ERROR
     """
@@ -30,7 +23,7 @@ Feature: Service can be configured
     """
       LOG_LEVEL=INFO
     """
-    Then journalctl of "lake.service" contains following
+    Then journalctl of "lake-relay.service" contains following
     """
       Log level set to INFO
     """

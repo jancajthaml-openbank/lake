@@ -3,7 +3,7 @@ step "lake is restarted" do ||
   expect($?).to be_success, ids
 
   ids = ids.split("\n").map(&:strip).reject { |x|
-    x.empty? || !x.start_with?("lake")
+    x.empty? || !x.start_with?("lake-")
   }.map { |x| x.chomp(".service") }
 
   expect(ids).not_to be_empty
@@ -22,7 +22,7 @@ end
 
 step "lake is running" do ||
   eventually() {
-    out = %x(systemctl show -p SubState lake 2>&1 | sed 's/SubState=//g')
+    out = %x(systemctl show -p SubState lake-relay 2>&1 | sed 's/SubState=//g')
     expect(out.strip).to eq("running")
   }
 
@@ -32,7 +32,7 @@ step "lake is running" do ||
 end
 
 step "lake is reconfigured with" do |configuration|
-  params = Hash[configuration.split("\n").map(&:strip).reject(&:empty?).map {|el| el.split '='}]
+  params = Hash[configuration.split("\n").map(&:strip).reject(&:empty?).map { |el| el.split '=' }]
   defaults = {
     "LOG_LEVEL" => "DEBUG",
     "PORT_PULL" => "5562",
@@ -47,10 +47,10 @@ step "lake is reconfigured with" do |configuration|
   %x(mkdir -p /etc/init)
   %x(echo '#{config}' > /etc/init/lake.conf)
 
-  %x(systemctl restart lake 2>&1)
+  %x(systemctl restart lake-relay 2>&1)
 
   eventually() {
-    out = %x(systemctl show -p SubState lake 2>&1 | sed 's/SubState=//g')
+    out = %x(systemctl show -p SubState lake-relay 2>&1 | sed 's/SubState=//g')
     expect(out.strip).to eq("running")
   }
 
