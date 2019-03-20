@@ -32,6 +32,7 @@ func NewDaemonSupport(parentCtx context.Context) Support {
 		cancel:     cancel,
 		exitSignal: make(chan struct{}),
 		IsReady:    make(chan interface{}),
+		canStart:   make(chan interface{}),
 	}
 }
 
@@ -41,6 +42,12 @@ type Support struct {
 	cancel     context.CancelFunc
 	exitSignal chan struct{}
 	IsReady    chan interface{}
+	canStart   chan interface{}
+}
+
+// GreenLight signals daemon to start work
+func (s Support) GreenLight() {
+	s.canStart <- nil
 }
 
 // MarkDone signals daemon is finished
