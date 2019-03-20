@@ -147,6 +147,8 @@ func TestRelayInOrder(t *testing.T) {
 			break
 		}
 
+		relay.GreenLight()
+
 		go push(ctx, cancel, pushChannel, cfg.PullPort)
 		go sub(ctx, cancel, subChannel, cfg.PubPort)
 
@@ -196,6 +198,7 @@ func TestStartStop(t *testing.T) {
 		case <-relay.IsReady:
 			break
 		}
+		relay.GreenLight()
 
 		relay.Stop()
 	}
@@ -220,6 +223,8 @@ func TestStopOnContextCancel(t *testing.T) {
 		case <-relay.IsReady:
 			break
 		}
+
+		relay.GreenLight()
 
 		cancel()
 	}

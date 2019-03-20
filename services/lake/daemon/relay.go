@@ -72,13 +72,16 @@ func (relay Relay) WaitReady(deadline time.Duration) (err error) {
 		err = nil
 		return
 	case <-ticker.C:
-		err = fmt.Errorf("daemon was not ready within %v seconds", deadline)
+		err = fmt.Errorf("relay-daemon was not ready within %v seconds", deadline)
 		return
 	}
 }
 
 // Start handles everything needed to start relay
 func (relay Relay) Start() {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	defer recover()
 	defer relay.MarkDone()
 	defer func() { relay.killConfirmed <- nil }()
 
@@ -105,63 +108,12 @@ func (relay Relay) Start() {
 		}
 	}()
 
-	log.Info("Start relay daemon")
-
-	for {
-		err := work(relay)
-		if !alive {
-			return
-		}
-		if err != nil {
-			log.Warnf("Relay recovering from crash %+v", err)
-		}
-	}
-}
-
-func isFatalError(err error) bool {
-	return err == zmq.ErrorSocketClosed ||
-		err == zmq.ErrorContextClosed ||
-		zmq.AsErrno(err) == zmq.ETERM
-}
-
-func work(relay Relay) (err error) {
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-
-	defer func() {
-		if e := recover(); e != nil {
-			switch x := e.(type) {
-			case string:
-				err = fmt.Errorf(x)
-			case error:
-				err = x
-			default:
-				err = fmt.Errorf("unknown panic")
-			}
-		}
-	}()
-
 	var (
 		chunk       string
 		receiver    *zmq.Socket
 		sender      *zmq.Socket
 		killChannel *zmq.Socket
 	)
-
-	go func() {
-		select {
-		case <-relay.killRequest:
-			for {
-				if killChannel != nil {
-					_, err = killChannel.Send("KILL", 0)
-					if err == nil {
-						return
-					}
-				}
-				time.Sleep(10 * time.Millisecond)
-			}
-		}
-	}()
 
 zmqContextNew:
 	ctx, err := zmq.NewContext()
@@ -221,9 +173,31 @@ zmqKillChannelConnect:
 		goto zmqKillChannelConnect
 	}
 
-	log.Info("Relay in main loop")
-
 	relay.MarkReady()
+
+	select {
+	case <-relay.canStart:
+		break
+	case <-relay.Done():
+		return
+	}
+
+	go func() {
+		select {
+		case <-relay.killRequest:
+			for {
+				if killChannel != nil {
+					_, err = killChannel.Send("KILL", 0)
+					if err == nil {
+						return
+					}
+				}
+				time.Sleep(10 * time.Millisecond)
+			}
+		}
+	}()
+
+	log.Info("Start relay daemon")
 
 mainLoop:
 	chunk, err = receiver.Recv(0)
@@ -235,6 +209,7 @@ mainLoop:
 			return
 		}
 		relay.metrics.MessageIngress(int64(1))
+
 		// FIXME check error
 		_, err = sender.Send(chunk, 0)
 		if err != nil {
@@ -250,4 +225,10 @@ mainLoop:
 		}
 		goto mainLoop
 	}
+}
+
+func isFatalError(err error) bool {
+	return err == zmq.ErrorSocketClosed ||
+		err == zmq.ErrorContextClosed ||
+		zmq.AsErrno(err) == zmq.ETERM
 }

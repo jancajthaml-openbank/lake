@@ -150,9 +150,16 @@ func (metrics Metrics) Start() {
 	ticker := time.NewTicker(metrics.refreshRate)
 	defer ticker.Stop()
 
-	log.Infof("Start metrics daemon, update each %v into %v", metrics.refreshRate, output)
-
 	metrics.MarkReady()
+
+	select {
+	case <-metrics.canStart:
+		break
+	case <-metrics.Done():
+		return
+	}
+
+	log.Infof("Start metrics daemon, update each %v into %v", metrics.refreshRate, output)
 
 	for {
 		select {
