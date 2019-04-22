@@ -1,3 +1,13 @@
+lake (1.1.6) unstable; urgency=low
+
+  * Black box test metrics keys (#99)
+  * Updated copyright year to 2019 (#98)
+  * Bump github.com/sirupsen/logrus from 1.4.0 to 1.4.1 in /services/lake (#97)
+  * Require config file presence for units (#96)
+  * Start daemon after app starts (#95)
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Sun, 14 Apr 2019 17:55:14 +0200
+
 lake (1.1.5) unstable; urgency=low
 
   * Blackbox-testing install and uninstall (#94)
