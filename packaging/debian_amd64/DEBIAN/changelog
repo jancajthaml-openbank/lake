@@ -1,3 +1,10 @@
+lake (1.1.7) unstable; urgency=low
+
+  * Simplified config resolver (#104)
+  * Rolling contract (#100)
+
+ -- Jan Cajthaml <jan.cajthaml@gmail.com>  Mon, 22 Apr 2019 10:04:59 +0200
+
 lake (1.1.6) unstable; urgency=low
 
   * Black box test metrics keys (#99)
