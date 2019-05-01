@@ -206,6 +206,9 @@ jobs:
     steps:
       - restore_cache:
           keys:
+            - cache-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-base-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          keys:
             - cache-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-dependencies-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           keys:
@@ -235,6 +238,9 @@ jobs:
     steps:
       - setup_remote_docker:
           version: 18.06.0-ce
+      - restore_cache:
+          keys:
+            - cache-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-base-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           keys:
             - cache-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-dependencies-{{ .Environment.CIRCLE_SHA1 }}
@@ -307,7 +313,6 @@ jobs:
     machine: true
     working_directory: /home/circleci/project
     steps:
-      - checkout
       - restore_cache:
           keys:
             - cache-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-base-{{ .Environment.CIRCLE_SHA1 }}
