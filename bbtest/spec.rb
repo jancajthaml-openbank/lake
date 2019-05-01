@@ -20,6 +20,8 @@ RSpec.configure do |config|
     install + others.shuffle + uninstall
   end
 
+  $unit = UnitHelper.new()
+
   config.before(:suite) do |_|
     print "[ suite starting ]\n"
 
@@ -30,19 +32,16 @@ RSpec.configure do |config|
       %x(rm -rf #{folder}/*)
     }
 
-    print "[ suite started  ]\n"
+    print "[ downloading unit ]\n"
+    $unit.download()
+
+    print "[ suite started    ]\n"
   end
 
   config.after(:suite) do |_|
     print "\n[ suite ending   ]\n"
 
-    [
-      "lake",
-    ].each { |e|
-      %x(journalctl -o short-precise -u #{e}.service --no-pager > /reports/#{e}.log 2>&1)
-      %x(systemctl stop #{e} 2>&1)
-      %x(journalctl -o short-precise -u #{e}.service --no-pager > /reports/#{e}.log 2>&1)
-    }
+    $unit.teardown()
 
     ZMQHelper.stop()
 

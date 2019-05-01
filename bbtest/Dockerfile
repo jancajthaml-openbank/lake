@@ -18,19 +18,10 @@
 
 FROM jancajthaml/bbtest
 
-COPY packaging/bin /etc/bbtest/packages
-
-RUN \
-    if [ -z "$(find . /etc/bbtest/packages -type f -name 'lake_*_amd64.deb' -print)" ] ; then \
-      (>&2 echo "no package to test found") ; \
-      exit 1 ; \
-    fi
-
-RUN find . /etc/bbtest/packages -type f -name 'lake_*_amd64.deb' | \
-    xargs -I {} mv {} /etc/bbtest/packages/lake.deb
+COPY --from=library/docker:18.06 /usr/local/bin/docker /usr/bin/docker
 
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
       init-system-helpers>=1.18~ \
       libzmq5>=4.2.1~
 
