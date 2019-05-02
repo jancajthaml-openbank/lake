@@ -18,7 +18,7 @@ package:
 
 .PHONY: bundle-binaries
 bundle-binaries:
-	@docker-compose run --rm package --arch linux/arm64 --pkg lake
+	@docker-compose run --rm package --arch linux/amd64 --pkg lake
 
 .PHONY: bundle-debian
 bundle-debian:
