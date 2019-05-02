@@ -56,7 +56,7 @@ generate_changelog() {
     echo "" >> ${CHANGELOG}
     echo "  * includes non-released commits" >> ${CHANGELOG}
     echo "" >> ${CHANGELOG}
-    echo " -- Jan Cajthaml <jan.cajthaml@gmail.com>  ${DATE}" >> ${CHANGELOG}
+    echo " -- Jan Cajthaml <jan.cajthaml@gmail.com> ${DATE}" >> ${CHANGELOG}
     echo "" >> ${CHANGELOG}
   fi
 

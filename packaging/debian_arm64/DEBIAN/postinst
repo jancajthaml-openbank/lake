@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+
+  configure)
+    if [ -f "/etc/init/lake.conf" ] ; then
+      systemctl unmask \
+        lake.path \
+        lake.service \
+        lake-relay.service \
+      >/dev/null
+
+      systemctl enable \
+        lake.path \
+        lake.service \
+        lake-relay.service \
+      >/dev/null
+
+      (systemctl start lake.service >/dev/null || :)
+    else
+      (>&2 echo "/etc/init/lake.conf file not found")
+      exit 1
+    fi
+  ;;
+
+  abort-upgrade|abort-remove|abort-deconfigure)
+  ;;
+
+  *)
+    (>&2 echo "postinst called with unknown argument \ `$1`")
+    exit 1
+  ;;
+
+esac
+
+exit 0

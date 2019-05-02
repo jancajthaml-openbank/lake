@@ -1,0 +1,7 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: openbank-lake
+Source: https://github.com/jancajthaml-openbank/lake
+
+Files: *
+Copyright: Jan Cajthaml <jan.cajthaml@gmail.com>
+License: Apache

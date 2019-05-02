@@ -1,0 +1,10 @@
+[Unit]
+Description=openbank lake services namespace
+PartOf=lake.service
+ConditionPathExists=/etc/init/lake.conf
+
+[Path]
+PathChanged=/etc/init/lake.conf
+
+[Install]
+WantedBy=lake.service
