@@ -25,17 +25,22 @@ RSpec.configure do |config|
   config.before(:suite) do |_|
     print "[ suite starting ]\n"
 
-    ZMQHelper.start()
-
     ["/reports"].each { |folder|
       FileUtils.mkdir_p folder
       %x(rm -rf #{folder}/*)
     }
 
+    ZMQHelper.start()
+
     print "[ downloading unit ]\n"
+
     $unit.download()
 
     print "[ suite started    ]\n"
+  end
+
+  config.after(:type => :feature) do
+    $unit.cleanup()
   end
 
   config.after(:suite) do |_|
@@ -47,6 +52,5 @@ RSpec.configure do |config|
 
     print "[ suite ended    ]"
   end
-
 
 end

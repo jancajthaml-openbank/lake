@@ -7,10 +7,7 @@ services:
   # -------------------------------------------------------------------------- #
 
   go:
-    build:
-      dockerfile: dev/Dockerfile
-      context: .
-    image: openbankdev/lake_base
+    image: jancajthaml/go
     volumes:
       - .:/project
       - ./services/lake:/go/src/github.com/jancajthaml-openbank/lake
@@ -70,14 +67,6 @@ services:
   test:
     extends: go
     entrypoint: ["/project/dev/lifecycle/test"]
-
-  # -------------------------------------------------------------------------- #
-
-  bbtest:
-    build:
-      context: .
-      dockerfile: bbtest/Dockerfile
-    image: openbankdev/lake_bbtest
 
   # -------------------------------------------------------------------------- #
 

@@ -18,17 +18,14 @@ package:
 
 .PHONY: bundle-binaries
 bundle-binaries:
-	@echo "[info] packaging binaries for linux/amd64"
-	@docker-compose run --rm package --arch linux/amd64 --pkg lake
+	@docker-compose run --rm package --arch linux/arm64 --pkg lake
 
 .PHONY: bundle-debian
 bundle-debian:
-	@echo "[info] packaging for debian"
 	@docker-compose run --rm debian -v $(VERSION)+$(META) --arch amd64
 
 .PHONY: bundle-docker
 bundle-docker:
-	@echo "[info] packaging for docker"
 	@docker build -t openbank/lake:$(VERSION)-$(META) .
 
 .PHONY: bootstrap
@@ -45,16 +42,10 @@ sec:
 
 .PHONY: sync
 sync:
-	@echo "[info] sync vault"
 	@docker-compose run --rm sync --pkg lake
-
-.PHONY: update
-update:
-	@docker-compose run --rm update --pkg lake
 
 .PHONY: test
 test:
-	@echo "[info] test lake"
 	@docker-compose run --rm test --pkg lake
 
 .PHONY: release
@@ -63,10 +54,7 @@ release:
 
 .PHONY: bbtest
 bbtest:
-	@docker-compose build bbtest
-	@echo "removing older images if present"
 	@(docker rm -f $$(docker ps -a --filter="name=lake_bbtest" -q) &> /dev/null || :)
-	@echo "running bbtest image"
 	@docker exec -it $$(\
 		docker run -d -ti \
 			--name=lake_bbtest \
@@ -78,11 +66,10 @@ bbtest:
 			-v $$(pwd)/reports:/reports \
 			--privileged=true \
 			--security-opt seccomp:unconfined \
-		openbankdev/lake_bbtest \
+		jancajthaml/bbtest \
 	) rspec --require /opt/bbtest/spec.rb \
 		--format documentation \
 		--format RspecJunitFormatter \
 		--out junit.xml \
 		--pattern /opt/bbtest/features/*.feature
-	@echo "removing bbtest image"
 	@(docker rm -f $$(docker ps -a --filter="name=lake_bbtest" -q) &> /dev/null || :)

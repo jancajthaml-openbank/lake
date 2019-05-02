@@ -30,9 +30,4 @@ fi
 
 cd /go/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
 
-#ls -la /go/src/github.com/securego/
-
-#ls -la /usr/local/go/pkg/linux_amd64
-#exit 1
-
 gosec ./...
