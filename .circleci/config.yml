@@ -9,9 +9,7 @@ workflows:
   commit:
     jobs:
       - checkout
-      - versions:
-          requires:
-            - checkout
+      - versions
       - deps:
           requires:
             - checkout
