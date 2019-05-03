@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.1.7+improve-circleci-stage2
+Version: 1.1.7+artifacts-from-scratch
 Architecture: amd64
 Maintainer: Jan Cajthaml <jan.cajthaml@gmail.com>
 Depends: init-system-helpers (>= 1.18~), libzmq5 (>= 4.2.1~)
