@@ -59,6 +59,7 @@ bbtest:
 		docker run -d -ti \
 			--name=lake_bbtest \
 			-e UNIT_VERSION="$(VERSION)-$(META)" \
+			-e UNIT_ARCH=amd64 \
 			-v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 			-v /var/run/docker.sock:/var/run/docker.sock \
       -v /var/lib/docker/containers:/var/lib/docker/containers \
