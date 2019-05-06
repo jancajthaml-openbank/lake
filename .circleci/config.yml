@@ -46,13 +46,9 @@ workflows:
       - bbtest-amd64:
           requires:
             - publish
-      - bbtest-arm64:
-          requires:
-            - publish
       - release:
           requires:
             - bbtest-amd64
-            - bbtest-arm64
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(-.+)?/
@@ -71,10 +67,6 @@ workflows:
       - checkout
       - versions
       - bbtest-amd64:
-          requires:
-            - checkout
-            - versions
-      - bbtest-arm64:
           requires:
             - checkout
             - versions
@@ -387,53 +379,6 @@ jobs:
                 -v /home/circleci/project/bbtest:/opt/bbtest \
                 -v /home/circleci/project/reports:/reports \
               jancajthaml/bbtest:amd64 \
-            ) rspec --require /opt/bbtest/spec.rb \
-              --format documentation \
-              --format RspecJunitFormatter \
-              --out junit.xml \
-              --pattern /opt/bbtest/features/*.feature
-      - store_test_results:
-          path: /home/circleci/project/bbtest
-      - store_artifacts:
-          path: /home/circleci/project/reports
-          destination: reports
-
-  # -------------------------------------------------------------------------- #
-
-  bbtest-arm64:
-    machine: true
-    working_directory: /home/circleci/project
-    steps:
-      - restore_cache:
-          key: code-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - restore_cache:
-          key: versions-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run: docker pull jancajthaml/bbtest:arm64
-      - run:
-          name: Run blackbox tests
-          command: |
-            VERSION=$(cat /home/circleci/project/DOCKER_VERSION)
-
-             docker run -ti \
-              -e UNIT_VERSION="${VERSION}" \
-              -e UNIT_ARCH=arm64 \
-              -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-              -v /var/run/docker.sock:/var/run/docker.sock \
-              -v /var/lib/docker/containers:/var/lib/docker/containers \
-              -v /home/circleci/project/bbtest:/opt/bbtest \
-              -v /home/circleci/project/reports:/reports \
-            jancajthaml/bbtest:arm64
-
-            docker exec -it $(\
-              docker run -d -ti \
-                -e UNIT_VERSION="${VERSION}" \
-                -e UNIT_ARCH=arm64 \
-                -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-                -v /var/run/docker.sock:/var/run/docker.sock \
-                -v /var/lib/docker/containers:/var/lib/docker/containers \
-                -v /home/circleci/project/bbtest:/opt/bbtest \
-                -v /home/circleci/project/reports:/reports \
-              jancajthaml/bbtest:arm64 \
             ) rspec --require /opt/bbtest/spec.rb \
               --format documentation \
               --format RspecJunitFormatter \
