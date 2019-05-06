@@ -121,13 +121,9 @@ if [ -f "${DEB_SOURCES}/openbank/services/lake/lake" ] ; then
   rm -f ${DEB_SOURCES}/openbank/services/lake/lake
 fi
 
-du -hs "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}"
-
 cp \
   "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
   "${DEB_SOURCES}/openbank/services/lake/lake"
-
-file "${DEB_SOURCES}/openbank/services/lake/lake"
 
 generate_changelog
 sed -i 's/Version.*/Version: '${VERSION#v}'/' ${CONTROL}
@@ -137,3 +133,5 @@ find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec rm -f {} \
 dpkg-deb --build "${DEB_SOURCES}" "${BIN_SOURCES}"
 
 find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec du -hs {} \;
+
+exit 0
