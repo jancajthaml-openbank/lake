@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.1.7+fix-changelog
+Version: 1.1.8+master
 Section: misc
 Priority: extra
 Architecture: amd64
