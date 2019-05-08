@@ -28,7 +28,7 @@ class UnitHelper
       branch = version[parts[0].length+1..-1]
       docker_version = "#{parts[0]}-#{branch}"
       debian_version = "#{parts[0]}+#{branch}"
-    elsif parts.parts == 1
+    elsif parts.length == 1
       docker_version = parts[0]
       debian_version = parts[0]
     end
