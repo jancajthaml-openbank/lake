@@ -77,20 +77,23 @@ generate_changelog() {
     rm -f ${target}
   fi
 
+  if [ -f ${target}.Debian.gz ] ; then
+    rm -f ${target}.Debian.gz
+  fi
+
   touch ${target}
 
-  DIST=unstable
   VER="${VERSION}"
   tag=HEAD
   ADDS=$(echo ${VER} | sed -e 's/~.*//' | cut -s -d- -f2 | sed '/^[[:space:]]*$/d')
 
   if [[ -z "${ADDS// }" ]] ; then
-    DATE=$(git log -1 --format=%cD ${tag})
-    echo "lake (${VER}) ${DIST}; urgency=low" >> ${target}
+    DATE=$(date '+%a, %-d %b %Y %H:%M:%S %z')
+    echo "lake (${VER}) unstable; urgency=low" >> ${target}
     echo "" >> ${target}
     echo "  * includes non-released commits" >> ${target}
     echo "" >> ${target}
-    echo " -- Jan Cajthaml <jan.cajthaml@gmail.com> ${DATE}" >> ${target}
+    echo " -- Jan Cajthaml <jan.cajthaml@gmail.com>  ${DATE}" >> ${target}
     echo "" >> ${target}
   fi
 
@@ -112,7 +115,7 @@ generate_changelog() {
 
     if [[ -n "${commits// }" ]] ; then
 
-      echo "lake (${tag_to#v}) ${DIST}; urgency=low" >> ${target}
+      echo "lake (${tag_to#v}) stable; urgency=low" >> ${target}
       echo "" >> ${target}
 
       echo "${commits}" | \
@@ -196,7 +199,6 @@ find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec rm -f {} \
 dpkg-deb --build "${DEB_SOURCES}" "${BIN_SOURCES}"
 
 find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
-
 find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec du -hs {} \;
 
 exit 0
