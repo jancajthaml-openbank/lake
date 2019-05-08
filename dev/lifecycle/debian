@@ -60,12 +60,12 @@ lake \- starts openbank message relay
 .SH DESCRIPTION
 The
 .B pldd
-lake relay transforms publish messages to pull queue for openbank
-services
+lake relay transforms publish messages to pull queue for openbank services
 .EE
 EOL
 
-  gzip -n -9 ${DEB_SOURCES}/usr/share/man/man8/lake.8
+  cat ${target} | gzip -n -9 > ${target}.Debian.gz
+  rm ${target}
 }
 
 generate_changelog() {

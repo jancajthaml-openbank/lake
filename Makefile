@@ -70,7 +70,7 @@ bbtest:
 			-e UNIT_ARCH=amd64 \
 			-v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 			-v /var/run/docker.sock:/var/run/docker.sock \
-      -v /var/lib/docker/containers:/var/lib/docker/containers \
+			-v /var/lib/docker/containers:/var/lib/docker/containers \
 			-v $$(pwd)/bbtest:/opt/bbtest \
 			-v $$(pwd)/reports:/reports \
 		jancajthaml/bbtest:amd64 \
