@@ -6,67 +6,87 @@ workflows:
 
   version: 2
 
-  commit:
+  tag:
     jobs:
       - checkout:
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - versions:
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - deps:
           requires:
             - checkout
           filters:
+            branches:
+              only: master
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - test:
           requires:
             - deps
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - bin-amd64:
           requires:
             - deps
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - bin-armhf:
           requires:
             - deps
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - bin-arm64:
           requires:
             - deps
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - debian-amd64:
           requires:
             - bin-amd64
             - versions
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - debian-armhf:
           requires:
             - bin-armhf
             - versions
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - debian-arm64:
           requires:
             - bin-arm64
             - versions
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - publish:
           requires:
             - test
@@ -74,22 +94,67 @@ workflows:
             - debian-armhf
             - debian-arm64
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - bbtest-amd64:
           requires:
             - publish
           filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /.*/
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - release:
           requires:
             - bbtest-amd64
           filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(-.+)?/
             branches:
               ignore: /.*/
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/
+
+  commit:
+    jobs:
+      - checkout
+      - versions
+      - deps:
+          requires:
+            - checkout
+      - test:
+          requires:
+            - deps
+      - bin-amd64:
+          requires:
+            - deps
+      - bin-armhf:
+          requires:
+            - deps
+      - bin-arm64:
+          requires:
+            - deps
+      - debian-amd64:
+          requires:
+            - bin-amd64
+            - versions
+      - debian-armhf:
+          requires:
+            - bin-armhf
+            - versions
+      - debian-arm64:
+          requires:
+            - bin-arm64
+            - versions
+      - publish:
+          requires:
+            - test
+            - debian-amd64
+            - debian-armhf
+            - debian-arm64
+      - bbtest-amd64:
+          requires:
+            - publish
 
   rolling_bbtest:
     triggers:
