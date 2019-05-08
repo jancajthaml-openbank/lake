@@ -6,19 +6,21 @@ case "$1" in
 
   configure)
     if [ -f "/etc/init/lake.conf" ] ; then
-      systemctl unmask \
-        lake.path \
-        lake.service \
-        lake-relay.service \
-      >/dev/null
+      if [ -d /run/systemd/system ] ; then
+        systemctl unmask \
+          lake.path \
+          lake.service \
+          lake-relay.service \
+        >/dev/null
 
-      systemctl enable \
-        lake.path \
-        lake.service \
-        lake-relay.service \
-      >/dev/null
+        systemctl enable \
+          lake.path \
+          lake.service \
+          lake-relay.service \
+        >/dev/null
 
-      (systemctl start lake.service >/dev/null || :)
+        (systemctl start lake.service >/dev/null || :)
+      fi
     else
       (>&2 echo "/etc/init/lake.conf file not found")
       exit 1

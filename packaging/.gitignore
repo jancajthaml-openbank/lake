@@ -1,2 +1,5 @@
 bin
-debian_*/openbank/services/lake/lake
+debian_*/usr/bin
+debian_*/usr/share/changelog.Debian.gz
+debian_*/usr/share/man/man8/lake.8.gz
+

@@ -32,7 +32,7 @@ package_service() {
       GOARCH=arm \
       CGO_ENABLED=1 \
       \
-      go build -a -o ${output} || {
+      go build -tags netgo -a -o ${output} || {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
         exit 1
       }
@@ -44,7 +44,7 @@ package_service() {
       GOARCH=arm64 \
       CGO_ENABLED=1 \
       \
-      go build -a -o ${output} || {
+      go build -tags netgo -a -o ${output} || {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
         exit 1
       }
@@ -56,7 +56,7 @@ package_service() {
       GOARCH=amd64 \
       CGO_ENABLED=1 \
       \
-      go build -a -o ${output} || {
+      go build -tags netgo -a -o ${output} || {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
         exit 1
       }
@@ -73,6 +73,7 @@ package_service() {
 
   echo "[info] (${platform}/${arch}) check"
 
+  objdump -p ${output}
   file ${output}
   du -hs ${output}
 

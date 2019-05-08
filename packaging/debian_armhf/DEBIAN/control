@@ -1,9 +1,10 @@
 Package: lake
-Version: 1.1.7+bbtest-arm64
-Architecture: armhf
-Maintainer: Jan Cajthaml <jan.cajthaml@gmail.com>
-Depends: init-system-helpers (>= 1.18~), libzmq5 (>= 4.2.1~)
-Section: openbank
+Version: 1.1.7+fix-changelog
+Section: misc
 Priority: extra
-Vcs-Git: git@github.com:jancajthaml-openbank/lake.git
-Description: Openbank messaging relay
+Architecture: armhf
+Vcs-Git: https://github.com/jancajthaml-openbank/lake.git
+Maintainer: Jan Cajthaml <jan.cajthaml@gmail.com>
+Depends: libzmq5 (>= 4.2.1~), libc6
+Description: message relay for openbank.
+ ZMQ backed message relay for OpenBank services.
