@@ -6,5 +6,5 @@ Architecture: armhf
 Vcs-Git: https://github.com/jancajthaml-openbank/lake.git
 Maintainer: Jan Cajthaml <jan.cajthaml@gmail.com>
 Depends: libzmq5 (>= 4.2.1~), libc6
-Description: message relay for openbank.
+Description: message relay for openbank
  ZMQ backed message relay for OpenBank services.
