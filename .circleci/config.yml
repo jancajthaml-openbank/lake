@@ -500,22 +500,58 @@ jobs:
     steps:
       - restore_cache:
           key: binaries-amd64-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run: if [ ! -f ./packaging/bin/lake-linux-amd64 ] ; then exit 1 ; fi
+      - run:
+          command: |
+            if [ ! -f ./packaging/bin/lake-linux-amd64 ] ; then
+              echo "lake-linux-amd64 not found at"
+              ls -la ./packaging/bin
+              exit 1
+            fi
       - restore_cache:
           key: binaries-armhf-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run: if [ ! -f ./packaging/bin/lake-linux-armhf ] ; then exit 1 ; fi
+      - run:
+          command: |
+            if [ ! -f ./packaging/bin/lake-linux-armhf ] ; then
+              echo "lake-linux-armhf not found at"
+              ls -la ./packaging/bin
+              exit 1
+            fi
       - restore_cache:
           key: binaries-arm64-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run: if [ ! -f ./packaging/bin/lake-linux-arm64 ] ; then exit 1 ; fi
+      - run:
+          command: |
+            if [ ! -f ./packaging/bin/lake-linux-arm64 ] ; then
+              echo "lake-linux-arm64 not found at"
+              ls -la ./packaging/bin
+              exit 1
+            fi
       - restore_cache:
           key: debian-amd64-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_amd64.deb ] ; then exit 1 ; fi
+      - run:
+          command: |
+            if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_amd64.deb ] ; then
+              echo "lake_${CIRCLE_TAG#v}_amd64.deb not found at"
+              ls -la ./packaging/bin
+              exit 1
+            fi
       - restore_cache:
           key: debian-armhf-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_armhf.deb ] ; then exit 1 ; fi
+      - run:
+          command: |
+            if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_armhf.deb ] ; then
+              echo "lake_${CIRCLE_TAG#v}_armhf.deb not found at"
+              ls -la ./packaging/bin
+              exit 1
+            fi
       - restore_cache:
           key: debian-arm64-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run: if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_arm64.deb ] ; then exit 1 ; fi
+      - run:
+          command: |
+            if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_arm64.deb ] ; then
+              echo "lake_${CIRCLE_TAG#v}_arm64.deb not found at"
+              ls -la ./packaging/bin
+              exit 1
+            fi
       - deploy:
           name: Release artifacts to github
           command: |
