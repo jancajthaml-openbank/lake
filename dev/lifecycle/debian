@@ -40,24 +40,58 @@ if [ ! "${TARGET_ARCHITECTURE}" ] ; then
   exit 1
 fi
 
+generate_manpage() {
+  mkdir -p ${DEB_SOURCES}/usr/share/man/man8
+
+  target="${DEB_SOURCES}/usr/share/man/man8/lake.8"
+
+  if [ -f ${target} ] ; then
+    rm -f ${target}
+  fi
+
+  if [ -f ${target}.gz ] ; then
+    rm -f ${target}.gz
+  fi
+
+cat > ${target} <<EOL
+.TH LAKE 8 2019 "Lake" "OpenBank Message Relay"
+.SH NAME
+lake \- starts openbank message relay
+.SH DESCRIPTION
+The
+.B pldd
+lake relay transforms publish messages to pull queue for openbank
+services
+.EE
+EOL
+
+  gzip -n -9 ${DEB_SOURCES}/usr/share/man/man8/lake.8
+}
+
 generate_changelog() {
+  mkdir -p ${DEB_SOURCES}/usr/share/doc/lake
+
+  target="${DEB_SOURCES}/usr/share/doc/lake/changelog"
+
+  if [ -f ${target} ] ; then
+    rm -f ${target}
+  fi
+
+  touch ${target}
+
+  DIST=unstable
   VER="${VERSION}"
   tag=HEAD
   ADDS=$(echo ${VER} | sed -e 's/~.*//' | cut -s -d- -f2 | sed '/^[[:space:]]*$/d')
-  if [ -f ${CHANGELOG} ] ; then
-    rm -f ${CHANGELOG}
-  fi
-
-  touch ${CHANGELOG}
 
   if [[ -z "${ADDS// }" ]] ; then
     DATE=$(git log -1 --format=%cD ${tag})
-    echo "lake (${VER}) ${DIST}; urgency=low" >> ${CHANGELOG}
-    echo "" >> ${CHANGELOG}
-    echo "  * includes non-released commits" >> ${CHANGELOG}
-    echo "" >> ${CHANGELOG}
-    echo " -- Jan Cajthaml <jan.cajthaml@gmail.com> ${DATE}" >> ${CHANGELOG}
-    echo "" >> ${CHANGELOG}
+    echo "lake (${VER}) ${DIST}; urgency=low" >> ${target}
+    echo "" >> ${target}
+    echo "  * includes non-released commits" >> ${target}
+    echo "" >> ${target}
+    echo " -- Jan Cajthaml <jan.cajthaml@gmail.com> ${DATE}" >> ${target}
+    echo "" >> ${target}
   fi
 
   PAIRS=()
@@ -78,20 +112,23 @@ generate_changelog() {
 
     if [[ -n "${commits// }" ]] ; then
 
-      echo "lake (${tag_to#v}) ${DIST}; urgency=low" >> ${CHANGELOG}
-      echo "" >> ${CHANGELOG}
+      echo "lake (${tag_to#v}) ${DIST}; urgency=low" >> ${target}
+      echo "" >> ${target}
 
       echo "${commits}" | \
       while read note ; do
-        echo "  * $(tr '[:lower:]' '[:upper:]' <<< ${note:0:1})${note:1}" >> ${CHANGELOG}
+        echo "  * $(tr '[:lower:]' '[:upper:]' <<< ${note:0:1})${note:1}" >> ${target}
       done
 
-      echo "" >> ${CHANGELOG}
+      echo "" >> ${target}
 
-      echo " -- Jan Cajthaml <jan.cajthaml@gmail.com>  ${DATE}" >> ${CHANGELOG}
-      echo "" >> ${CHANGELOG}
+      echo " -- Jan Cajthaml <jan.cajthaml@gmail.com>  ${DATE}" >> ${target}
+      echo "" >> ${target}
     fi
   done
+
+  cat ${target} | gzip -n -9 > ${target}.Debian.gz
+  rm ${target}
 }
 
 ################################################################################
@@ -105,32 +142,60 @@ if [ ! -d "${DEB_SOURCES}" ] ; then
   exit 1
 fi
 
-CHANGELOG=${DEB_SOURCES}/DEBIAN/changelog
-CONTROL=${DEB_SOURCES}/DEBIAN/control
-DIST=unstable
-FIRST=1
-
 if [ ! -f "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" ] ; then
   (>&2 echo "did not found binary to package at ${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}")
   exit 1
 fi
 
-mkdir -p ${DEB_SOURCES}/openbank/services/lake
-
-if [ -f "${DEB_SOURCES}/openbank/services/lake/lake" ] ; then
-  rm -f ${DEB_SOURCES}/openbank/services/lake/lake
+mkdir -p ${DEB_SOURCES}/usr/bin
+if [ -f "${DEB_SOURCES}/usr/bin/lake" ] ; then
+  rm -f ${DEB_SOURCES}/usr/bin/lake
 fi
 
-cp \
-  "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
-  "${DEB_SOURCES}/openbank/services/lake/lake"
+case ${TARGET_ARCHITECTURE} in
+
+  armhf)
+    arm-linux-gnueabihf-objcopy \
+      --strip-debug \
+      --strip-unneeded \
+      "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
+      "${DEB_SOURCES}/usr/bin/lake"
+  ;;
+
+  arm64)
+    aarch64-linux-gnu-objcopy \
+      --strip-debug \
+      --strip-unneeded \
+      "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
+      "${DEB_SOURCES}/usr/bin/lake"
+  ;;
+
+  amd64)
+    objcopy \
+      --strip-debug \
+      --strip-unneeded \
+      "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
+      "${DEB_SOURCES}/usr/bin/lake"
+  ;;
+
+  *)
+    cp \
+      "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
+      "${DEB_SOURCES}/usr/bin/lake"
+  ;;
+
+esac
 
 generate_changelog
-sed -i 's/Version.*/Version: '${VERSION#v}'/' ${CONTROL}
+generate_manpage
+
+sed -i 's/Version.*/Version: '${VERSION#v}'/' "${DEB_SOURCES}/DEBIAN/control"
 
 find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec rm -f {} \;
 
 dpkg-deb --build "${DEB_SOURCES}" "${BIN_SOURCES}"
+
+find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
 
 find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec du -hs {} \;
 
