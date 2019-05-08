@@ -8,44 +8,80 @@ workflows:
 
   commit:
     jobs:
-      - checkout
-      - versions
+      - checkout:
+          filters:
+            tags:
+              only: /.*/
+      - versions:
+          filters:
+            tags:
+              only: /.*/
       - deps:
           requires:
             - checkout
+          filters:
+            tags:
+              only: /.*/
       - test:
           requires:
             - deps
+          filters:
+            tags:
+              only: /.*/
       - bin-amd64:
           requires:
             - deps
+          filters:
+            tags:
+              only: /.*/
       - bin-armhf:
           requires:
             - deps
+          filters:
+            tags:
+              only: /.*/
       - bin-arm64:
           requires:
             - deps
+          filters:
+            tags:
+              only: /.*/
       - debian-amd64:
           requires:
             - bin-amd64
             - versions
+          filters:
+            tags:
+              only: /.*/
       - debian-armhf:
           requires:
             - bin-armhf
             - versions
+          filters:
+            tags:
+              only: /.*/
       - debian-arm64:
           requires:
             - bin-arm64
             - versions
+          filters:
+            tags:
+              only: /.*/
       - publish:
           requires:
             - test
             - debian-amd64
             - debian-armhf
             - debian-arm64
+          filters:
+            tags:
+              only: /.*/
       - bbtest-amd64:
           requires:
             - publish
+          filters:
+            tags:
+              only: /.*/
       - release:
           requires:
             - bbtest-amd64
