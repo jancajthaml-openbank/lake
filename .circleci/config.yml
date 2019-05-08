@@ -250,6 +250,7 @@ jobs:
           name: Sync dependencies
           command: |
             cd /go/src/github.com/jancajthaml-openbank/lake
+            rm go.sum
             go mod vendor
       - run:
           name: Move vendor folder to project
