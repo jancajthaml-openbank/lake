@@ -21,10 +21,18 @@ class UnitHelper
     version = ENV['UNIT_VERSION']
     parts = version.split(/(?:v)([^-]+)\-(.+)/)
 
-    raise "invalid version #{version}" if parts.length != 3
+    docker_version = ""
+    debian_version = ""
 
-    version = parts[1]
-    branch = parts[2]
+    if parts.length == 3
+      docker_version = "#{parts[1]}-#{parts[2]}"
+      debian_version = "#{parts[1]}+#{parts[2]}"
+    elsif parts.length == 2
+      docker_version = parts[1]
+      debian_version = parts[1]
+    else
+      raise "invalid version #{version}"
+    end
 
     arch = ENV['UNIT_ARCH']
 
@@ -39,7 +47,7 @@ class UnitHelper
     begin
       file.write([
         "FROM alpine",
-        "COPY --from=openbank/lake:v#{version}-#{branch} /opt/artifacts/lake_#{version}+#{branch}_#{arch}.deb /opt/artifacts/lake.deb",
+        "COPY --from=openbank/lake:v#{docker_version} /opt/artifacts/lake_#{debian_version}_#{arch}.deb /opt/artifacts/lake.deb",
         "RUN ls -la /opt/artifacts"
       ].join("\n"))
       file.close
