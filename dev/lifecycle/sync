@@ -30,5 +30,9 @@ fi
 
 cd /go/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
 
+if [ -f go.sum ] ; then
+  rm go.sum
+fi
+
 GO111MODULE=on \
   go mod vendor

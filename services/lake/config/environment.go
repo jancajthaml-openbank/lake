@@ -15,16 +15,14 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func loadConfFromEnv() Configuration {
-	logOutput := getEnvString("LAKE_LOG", "")
 	metricsOutput := getEnvString("LAKE_METRICS_OUTPUT", "")
 	metricsRefreshRate := getEnvDuration("LAKE_METRICS_REFRESHRATE", time.Second)
 	logLevel := strings.ToUpper(getEnvString("LAKE_LOG_LEVEL", "DEBUG"))
@@ -34,7 +32,6 @@ func loadConfFromEnv() Configuration {
 	return Configuration{
 		PullPort:           portPull,
 		PubPort:            portPub,
-		LogOutput:          logOutput,
 		LogLevel:           logLevel,
 		MetricsRefreshRate: metricsRefreshRate,
 		MetricsOutput:      metricsOutput,
@@ -56,7 +53,7 @@ func getEnvInteger(key string, fallback int) int {
 	}
 	cast, err := strconv.Atoi(value)
 	if err != nil {
-		log.Panicf("invalid value of variable %s", key)
+		panic(fmt.Sprintf("invalid value of variable %s", key))
 	}
 	return cast
 }
@@ -68,7 +65,7 @@ func getEnvDuration(key string, fallback time.Duration) time.Duration {
 	}
 	cast, err := time.ParseDuration(value)
 	if err != nil {
-		log.Panicf("invalid value of variable %s", key)
+		panic(fmt.Sprintf("invalid value of variable %s", key))
 	}
 	return cast
 }

@@ -58,13 +58,11 @@ cat > ${target} <<EOL
 .SH NAME
 lake \- starts openbank message relay
 .SH DESCRIPTION
-The
-.B pldd
-lake relay transforms publish messages to pull queue for openbank services
+The lake relay transforms publish messages to pull queue for openbank services.
 .EE
 EOL
 
-  cat ${target} | gzip -n -9 > ${target}.Debian.gz
+  cat ${target} | gzip -n -9 > ${target}.gz
   rm ${target}
 }
 
@@ -89,7 +87,7 @@ generate_changelog() {
 
   if [[ -z "${ADDS// }" ]] ; then
     DATE=$(date '+%a, %-d %b %Y %H:%M:%S %z')
-    echo "lake (${VER}) unstable; urgency=low" >> ${target}
+    echo "lake (${VER}) experimental; urgency=medium" >> ${target}
     echo "" >> ${target}
     echo "  * includes non-released commits" >> ${target}
     echo "" >> ${target}
@@ -115,7 +113,7 @@ generate_changelog() {
 
     if [[ -n "${commits// }" ]] ; then
 
-      echo "lake (${tag_to#v}) stable; urgency=low" >> ${target}
+      echo "lake (${tag_to#v}) unstable; urgency=medium" >> ${target}
       echo "" >> ${target}
 
       echo "${commits}" | \
@@ -130,8 +128,15 @@ generate_changelog() {
     fi
   done
 
-  cat ${target} | gzip -n -9 > ${target}.Debian.gz
+  cat ${target} | gzip -n -9 > ${target}.gz
   rm ${target}
+}
+
+check_files() {
+  chmod 0755 "${DEB_SOURCES}/DEBIAN/control"
+  chmod 0755 "${DEB_SOURCES}/DEBIAN/postinst"
+  chmod 0755 "${DEB_SOURCES}/DEBIAN/postrm"
+  chmod 0755 "${DEB_SOURCES}/DEBIAN/preinst"
 }
 
 ################################################################################
@@ -195,6 +200,8 @@ generate_manpage
 sed -i 's/Version.*/Version: '${VERSION#v}'/' "${DEB_SOURCES}/DEBIAN/control"
 
 find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec rm -f {} \;
+
+check_files
 
 dpkg-deb --build "${DEB_SOURCES}" "${BIN_SOURCES}"
 

@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	zmq "github.com/pebbe/zmq4"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/jancajthaml-openbank/lake/config"
 )
@@ -34,10 +33,10 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, p
 			break
 		}
 		if err.Error() == "resource temporarily unavailable" {
-			log.Warn("Test : Resources unavailable in connect")
+			fmt.Println("Test : Resources unavailable in connect")
 			time.Sleep(time.Millisecond)
 		} else {
-			log.Warn("Test : Unable to connect ZMQ socket", err)
+			fmt.Printf("Test : Unable to connect ZMQ socket %+v\n", err)
 			return
 		}
 	}
@@ -48,12 +47,12 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, p
 		if err == nil {
 			break
 		}
-		log.Info("Test : Unable to connect to ZMQ address ", err)
+		fmt.Printf("Test : Unable to connect to ZMQ address %+v\n", err)
 		time.Sleep(time.Millisecond)
 	}
 
 	if err = channel.SetSubscribe(""); err != nil {
-		log.Warn("Test : Subscription failed ", err)
+		fmt.Printf("Test : Subscription failed %+v\n", err)
 		return
 	}
 
@@ -61,10 +60,10 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, p
 		chunk, err = channel.Recv(0)
 		if err != nil {
 			if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
-				log.Info("Test : ZMQ connection closed ", err)
+				fmt.Printf("Test : ZMQ connection closed %+v\n", err)
 				return
 			}
-			log.Info("Test : Error while receiving ZMQ message ", err)
+			fmt.Printf("Test : Error while receiving ZMQ message %+v\n", err)
 			continue
 		}
 		callback <- chunk
@@ -87,10 +86,10 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string, port
 			break
 		}
 		if err.Error() == "resource temporarily unavailable" {
-			log.Warn("Test : Resources unavailable in connect")
+			fmt.Println("Test : Resources unavailable in connect")
 			time.Sleep(time.Millisecond)
 		} else {
-			log.Warn("Test : Unable to connect ZMQ socket ", err)
+			fmt.Printf("Test : Unable to connect ZMQ socket %+v\n", err)
 			return
 		}
 	}
@@ -101,7 +100,7 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string, port
 		if err == nil {
 			break
 		}
-		log.Info("Test : Unable to connect to ZMQ address ", err)
+		fmt.Printf("Test : Unable to connect to ZMQ address %+v\n", err)
 		time.Sleep(time.Millisecond)
 	}
 
