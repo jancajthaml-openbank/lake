@@ -22,8 +22,6 @@ type Configuration struct {
 	PullPort int
 	// PubPort represents ZMQ PUB binding
 	PubPort int
-	// LogOutput represents log output
-	LogOutput string
 	// LogLevel ignorecase log level
 	LogLevel string
 	// MetricsRefreshRate how frequently should be metrics updated
