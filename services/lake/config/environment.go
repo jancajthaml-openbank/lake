@@ -16,7 +16,9 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -28,6 +30,10 @@ func loadConfFromEnv() Configuration {
 	logLevel := strings.ToUpper(getEnvString("LAKE_LOG_LEVEL", "DEBUG"))
 	portPub := getEnvInteger("LAKE_PORT_PUB", 5561)
 	portPull := getEnvInteger("LAKE_PORT_PULL", 5562)
+
+	if metricsOutput != "" && os.MkdirAll(filepath.Dir(metricsOutput), os.ModePerm) != nil {
+		log.Fatal("unable to assert metrics output")
+	}
 
 	return Configuration{
 		PullPort:           portPull,

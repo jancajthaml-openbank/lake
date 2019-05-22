@@ -1,22 +1,19 @@
-package daemon
+package metrics
 
 import (
 	"context"
 	"testing"
-
-	"github.com/jancajthaml-openbank/lake/config"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMetricsPersist(t *testing.T) {
-	cfg := config.Configuration{}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	entity := NewMetrics(ctx, cfg)
+	entity := NewMetrics(ctx, "", time.Hour)
 
 	t.Log("MessageEgress properly updates egress messages")
 	{
@@ -27,7 +24,6 @@ func TestMetricsPersist(t *testing.T) {
 		}
 
 		assert.Equal(t, int64(10000), entity.messageEgress.Count())
-
 		entity.messageEgress.Clear()
 		assert.Equal(t, int64(0), entity.messageEgress.Count())
 	}
@@ -41,7 +37,6 @@ func TestMetricsPersist(t *testing.T) {
 		}
 
 		assert.Equal(t, int64(10000), entity.messageIngress.Count())
-
 		entity.messageIngress.Clear()
 		assert.Equal(t, int64(0), entity.messageIngress.Count())
 	}

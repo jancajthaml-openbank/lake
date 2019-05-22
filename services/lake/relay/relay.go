@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package daemon
+package relay
 
 import (
 	"context"
@@ -20,30 +20,31 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/jancajthaml-openbank/lake/metrics"
+	"github.com/jancajthaml-openbank/lake/utils"
+
 	zmq "github.com/pebbe/zmq4"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/jancajthaml-openbank/lake/config"
 )
 
 // Relay fascade
 type Relay struct {
-	Support
+	utils.DaemonSupport
 	pullPort      string
 	pubPort       string
 	killPort      string
-	metrics       *Metrics
+	metrics       *metrics.Metrics
 	killConfirmed chan interface{}
 	killRequest   chan interface{}
 }
 
 // NewRelay returns new instance of Relay
-func NewRelay(ctx context.Context, cfg config.Configuration, metrics *Metrics) Relay {
+func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) Relay {
 	return Relay{
-		Support:       NewDaemonSupport(ctx),
-		pullPort:      fmt.Sprintf("tcp://*:%d", cfg.PullPort),
-		pubPort:       fmt.Sprintf("tcp://*:%d", cfg.PubPort),
-		killPort:      fmt.Sprintf("tcp://127.0.0.1:%d", cfg.PullPort),
+		DaemonSupport: utils.NewDaemonSupport(ctx),
+		pullPort:      fmt.Sprintf("tcp://*:%d", pull),
+		pubPort:       fmt.Sprintf("tcp://*:%d", pub),
+		killPort:      fmt.Sprintf("tcp://127.0.0.1:%d", pull),
 		metrics:       metrics,
 		killRequest:   make(chan interface{}),
 		killConfirmed: make(chan interface{}),
@@ -176,7 +177,7 @@ zmqKillChannelConnect:
 	relay.MarkReady()
 
 	select {
-	case <-relay.canStart:
+	case <-relay.CanStart:
 		break
 	case <-relay.Done():
 		return

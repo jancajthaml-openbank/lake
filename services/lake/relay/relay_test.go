@@ -1,19 +1,17 @@
-package daemon
+package relay
 
 import (
+	"context"
 	"fmt"
+	"runtime"
 	"sync"
 	"testing"
-
-	"context"
-	"runtime"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/jancajthaml-openbank/lake/metrics"
 
 	zmq "github.com/pebbe/zmq4"
-
-	"github.com/jancajthaml-openbank/lake/config"
+	"github.com/stretchr/testify/assert"
 )
 
 func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
@@ -113,13 +111,8 @@ func TestRelayInOrder(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	cfg := config.Configuration{
-		PullPort: 5562,
-		PubPort:  5561,
-	}
-
-	metrics := NewMetrics(ctx, cfg)
-	relay := NewRelay(ctx, cfg, &metrics)
+	metrics := metrics.NewMetrics(ctx, "", time.Hour)
+	relay := NewRelay(ctx, 5562, 5561, &metrics)
 
 	t.Log("Relays message")
 	{
@@ -148,8 +141,8 @@ func TestRelayInOrder(t *testing.T) {
 
 		relay.GreenLight()
 
-		go push(ctx, cancel, pushChannel, cfg.PullPort)
-		go sub(ctx, cancel, subChannel, cfg.PubPort)
+		go push(ctx, cancel, pushChannel, 5562)
+		go sub(ctx, cancel, subChannel, 5561)
 
 		wg.Add(1)
 		go func() {
@@ -178,16 +171,11 @@ func TestRelayInOrder(t *testing.T) {
 }
 
 func TestStartStop(t *testing.T) {
-	cfg := config.Configuration{
-		PullPort: 5562,
-		PubPort:  5561,
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	metrics := NewMetrics(ctx, cfg)
-	relay := NewRelay(ctx, cfg, &metrics)
+	metrics := metrics.NewMetrics(ctx, "", time.Hour)
+	relay := NewRelay(ctx, 5562, 5561, &metrics)
 
 	t.Log("by daemon support ( Start -> Stop )")
 	{
@@ -204,17 +192,12 @@ func TestStartStop(t *testing.T) {
 }
 
 func TestStopOnContextCancel(t *testing.T) {
-	cfg := config.Configuration{
-		PullPort: 5562,
-		PubPort:  5561,
-	}
-
 	t.Log("stop with cancelation of context")
 	{
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
-		metrics := NewMetrics(ctx, cfg)
-		relay := NewRelay(ctx, cfg, &metrics)
+		metrics := metrics.NewMetrics(ctx, "", time.Hour)
+		relay := NewRelay(ctx, 5562, 5561, &metrics)
 
 		go relay.Start()
 

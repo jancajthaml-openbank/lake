@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package daemon
+package metrics
 
 import (
 	"context"
@@ -21,7 +21,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/jancajthaml-openbank/lake/config"
 	"github.com/jancajthaml-openbank/lake/utils"
 
 	metrics "github.com/rcrowley/go-metrics"
@@ -36,7 +35,7 @@ type Snapshot struct {
 
 // Metrics holds metrics counters
 type Metrics struct {
-	Support
+	utils.DaemonSupport
 	output         string
 	refreshRate    time.Duration
 	messageEgress  metrics.Counter
@@ -44,11 +43,11 @@ type Metrics struct {
 }
 
 // NewMetrics returns blank metrics holder
-func NewMetrics(ctx context.Context, cfg config.Configuration) Metrics {
+func NewMetrics(ctx context.Context, output string, refreshRate time.Duration) Metrics {
 	return Metrics{
-		Support:        NewDaemonSupport(ctx),
-		output:         cfg.MetricsOutput,
-		refreshRate:    cfg.MetricsRefreshRate,
+		DaemonSupport:  utils.NewDaemonSupport(ctx),
+		output:         output,
+		refreshRate:    refreshRate,
 		messageEgress:  metrics.NewCounter(),
 		messageIngress: metrics.NewCounter(),
 	}
@@ -153,7 +152,7 @@ func (metrics Metrics) Start() {
 	metrics.MarkReady()
 
 	select {
-	case <-metrics.canStart:
+	case <-metrics.CanStart:
 		break
 	case <-metrics.Done():
 		return
