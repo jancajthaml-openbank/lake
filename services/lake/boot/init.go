@@ -17,46 +17,38 @@ package boot
 import (
 	"context"
 	"os"
-	"path/filepath"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/jancajthaml-openbank/lake/config"
-	"github.com/jancajthaml-openbank/lake/daemon"
+	"github.com/jancajthaml-openbank/lake/metrics"
+	"github.com/jancajthaml-openbank/lake/relay"
 	"github.com/jancajthaml-openbank/lake/utils"
 )
 
-// Application encapsulate initialized application
-type Application struct {
+// Program encapsulate initialized application
+type Program struct {
 	cfg       config.Configuration
 	interrupt chan os.Signal
-	metrics   daemon.Metrics
-	relay     daemon.Relay
+	metrics   metrics.Metrics
+	relay     relay.Relay
 	cancel    context.CancelFunc
 }
 
 // Initialize application
-func Initialize() Application {
+func Initialize() Program {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	cfg := config.GetConfig()
 
 	utils.SetupLogger(cfg.LogLevel)
 
-	log.Infof(">>> Setup <<<")
+	metricsDaemon := metrics.NewMetrics(ctx, cfg.MetricsOutput, cfg.MetricsRefreshRate)
+	relayDaemon := relay.NewRelay(ctx, cfg.PullPort, cfg.PubPort, &metricsDaemon)
 
-	if cfg.MetricsOutput != "" && os.MkdirAll(filepath.Dir(cfg.MetricsOutput), os.ModePerm) != nil {
-		log.Fatal("invalid metrics output specified")
-	}
-
-	metrics := daemon.NewMetrics(ctx, cfg)
-	relay := daemon.NewRelay(ctx, cfg, &metrics)
-
-	return Application{
+	return Program{
 		cfg:       cfg,
 		interrupt: make(chan os.Signal, 1),
-		metrics:   metrics,
-		relay:     relay,
+		metrics:   metricsDaemon,
+		relay:     relayDaemon,
 		cancel:    cancel,
 	}
 }
