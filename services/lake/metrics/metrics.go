@@ -17,95 +17,45 @@ package metrics
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/jancajthaml-openbank/lake/utils"
 
-	metrics "github.com/rcrowley/go-metrics"
 	log "github.com/sirupsen/logrus"
 )
-
-// Snapshot holds metrics snapshot status
-type Snapshot struct {
-	MessageEgress  int64 `json:"messageEgress"`
-	MessageIngress int64 `json:"messageIngress"`
-}
 
 // Metrics holds metrics counters
 type Metrics struct {
 	utils.DaemonSupport
 	output         string
 	refreshRate    time.Duration
-	messageEgress  metrics.Counter
-	messageIngress metrics.Counter
+	messageEgress  *uint64
+	messageIngress *uint64
 }
 
 // NewMetrics returns blank metrics holder
 func NewMetrics(ctx context.Context, output string, refreshRate time.Duration) Metrics {
+	egress := uint64(0)
+	ingress := uint64(0)
+
 	return Metrics{
 		DaemonSupport:  utils.NewDaemonSupport(ctx),
 		output:         output,
 		refreshRate:    refreshRate,
-		messageEgress:  metrics.NewCounter(),
-		messageIngress: metrics.NewCounter(),
-	}
-}
-
-// NewSnapshot returns metrics snapshot
-func NewSnapshot(entity Metrics) Snapshot {
-	return Snapshot{
-		MessageEgress:  entity.messageEgress.Count(),
-		MessageIngress: entity.messageIngress.Count(),
+		messageEgress:  &egress,
+		messageIngress: &ingress,
 	}
 }
 
 // MessageEgress increment number of outcomming messages
-func (metrics Metrics) MessageEgress(num int64) {
-	metrics.messageEgress.Inc(num)
+func (metrics *Metrics) MessageEgress() {
+	atomic.AddUint64(metrics.messageEgress, 1)
 }
 
 // MessageIngress increment number of incomming messages
-func (metrics Metrics) MessageIngress(num int64) {
-	metrics.messageIngress.Inc(num)
-}
-
-func (metrics Metrics) persist(filename string) {
-	tempFile := filename + "_temp"
-
-	data, err := utils.JSON.Marshal(NewSnapshot(metrics))
-	if err != nil {
-		log.Warnf("unable to create serialize metrics with error: %v", err)
-		return
-	}
-	f, err := os.OpenFile(tempFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
-	if err != nil {
-		log.Warnf("unable to create file with error: %v", err)
-		return
-	}
-	defer f.Close()
-
-	if _, err := f.Write(data); err != nil {
-		log.Warnf("unable to write file with error: %v", err)
-		return
-	}
-
-	if err := os.Rename(tempFile, filename); err != nil {
-		log.Warnf("unable to move file with error: %v", err)
-		return
-	}
-
-	return
-}
-
-func getFilename(path string) string {
-	dirname := filepath.Dir(path)
-	ext := filepath.Ext(path)
-	filename := filepath.Base(path)
-	filename = filename[:len(filename)-len(ext)]
-
-	return dirname + "/" + filename + ext
+func (metrics *Metrics) MessageIngress() {
+	atomic.AddUint64(metrics.messageIngress, 1)
 }
 
 // WaitReady wait for metrics to be ready
@@ -145,10 +95,12 @@ func (metrics Metrics) Start() {
 		return
 	}
 
-	output := getFilename(metrics.output)
 	ticker := time.NewTicker(metrics.refreshRate)
 	defer ticker.Stop()
 
+	if err := metrics.Hydrate(); err != nil {
+		log.Warn(err.Error())
+	}
 	metrics.MarkReady()
 
 	select {
@@ -158,17 +110,17 @@ func (metrics Metrics) Start() {
 		return
 	}
 
-	log.Infof("Start metrics daemon, update each %v into %v", metrics.refreshRate, output)
+	log.Infof("Start metrics daemon, update each %v into %v", metrics.refreshRate, metrics.output)
 
 	for {
 		select {
 		case <-metrics.Done():
 			log.Info("Stopping metrics daemon")
-			metrics.persist(output)
+			metrics.Persist()
 			log.Info("Stop metrics daemon")
 			return
 		case <-ticker.C:
-			metrics.persist(output)
+			metrics.Persist()
 		}
 	}
 }

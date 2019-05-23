@@ -5,8 +5,9 @@ Feature: Relay message
     """
       LOG_LEVEL=DEBUG
     """
+    And lake performs handshake
+
     When lake recieves "A b"
     And lake recieves "C d"
     Then lake responds with "A b"
     And lake responds with "C d"
-    And no other messages were recieved

@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.1.8+single-app-struct
+Version: 1.1.8+hydrate-metrics
 Section: misc
 Priority: extra
 Architecture: amd64

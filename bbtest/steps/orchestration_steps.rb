@@ -25,10 +25,6 @@ step "lake is running" do ||
     out = %x(systemctl show -p SubState lake-relay 2>&1 | sed 's/SubState=//g')
     expect(out.strip).to eq("running")
   }
-
-  eventually(timeout: 5) {
-    ZMQHelper.lake_handshake()
-  }
 end
 
 step "lake is reconfigured with" do |configuration|
@@ -38,10 +34,10 @@ step "lake is reconfigured with" do |configuration|
     "PORT_PULL" => "5562",
     "PORT_PUB" => "5561",
     "METRICS_REFRESHRATE" => "1h",
-    "METRICS_OUTPUT" => "/reports/metrics.json",
+    "METRICS_OUTPUT" => "/reports",
   }
 
-  config = Array[defaults.merge(params).map {|k,v| "LAKE_#{k}=#{v}"}]
+  config = Array[defaults.merge(params).map { |k,v| "LAKE_#{k}=#{v}"} ]
   config = config.join("\n").inspect.delete('\"')
 
   %x(mkdir -p /etc/init)
@@ -52,9 +48,5 @@ step "lake is reconfigured with" do |configuration|
   eventually() {
     out = %x(systemctl show -p SubState lake-relay 2>&1 | sed 's/SubState=//g')
     expect(out.strip).to eq("running")
-  }
-
-  eventually(timeout: 5) {
-    ZMQHelper.lake_handshake()
   }
 end

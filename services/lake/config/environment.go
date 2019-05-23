@@ -25,7 +25,7 @@ import (
 )
 
 func loadConfFromEnv() Configuration {
-	metricsOutput := getEnvString("LAKE_METRICS_OUTPUT", "")
+	metricsOutput := getEnvString("LAKE_METRICS_OUTPUT", "/tmp")
 	metricsRefreshRate := getEnvDuration("LAKE_METRICS_REFRESHRATE", time.Second)
 	logLevel := strings.ToUpper(getEnvString("LAKE_LOG_LEVEL", "DEBUG"))
 	portPub := getEnvInteger("LAKE_PORT_PUB", 5561)
@@ -40,8 +40,20 @@ func loadConfFromEnv() Configuration {
 		PubPort:            portPub,
 		LogLevel:           logLevel,
 		MetricsRefreshRate: metricsRefreshRate,
-		MetricsOutput:      metricsOutput,
+		MetricsOutput:      metricsOutput + "/metrics.json",
 	}
+}
+
+func getEnvFilename(key, fallback string) string {
+	var value = strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	value = filepath.Clean(value)
+	if os.MkdirAll(value, os.ModePerm) != nil {
+		return fallback
+	}
+	return value
 }
 
 func getEnvString(key, fallback string) string {
