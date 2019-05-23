@@ -209,14 +209,14 @@ mainLoop:
 			log.Info("Relay killed")
 			return
 		}
-		relay.metrics.MessageIngress(int64(1))
+		relay.metrics.MessageIngress()
 
 		// FIXME check error
 		_, err = sender.Send(chunk, 0)
 		if err != nil {
 			log.Warnf("Unable to send message error: %+v", err)
 		} else {
-			relay.metrics.MessageEgress(int64(1))
+			relay.metrics.MessageEgress()
 		}
 		goto mainLoop
 	default:

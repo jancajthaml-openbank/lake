@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMetricsPersist(t *testing.T) {
+func TestMetrics(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -17,27 +18,23 @@ func TestMetricsPersist(t *testing.T) {
 
 	t.Log("MessageEgress properly updates egress messages")
 	{
-		require.Equal(t, int64(0), entity.messageEgress.Count())
+		require.Equal(t, uint64(0), atomic.LoadUint64(entity.messageEgress))
 
 		for i := 1; i <= 10000; i++ {
-			entity.MessageEgress(int64(1))
+			entity.MessageEgress()
 		}
 
-		assert.Equal(t, int64(10000), entity.messageEgress.Count())
-		entity.messageEgress.Clear()
-		assert.Equal(t, int64(0), entity.messageEgress.Count())
+		assert.Equal(t, uint64(10000), atomic.LoadUint64(entity.messageEgress))
 	}
 
 	t.Log("MessageIngress properly updates ingress messages")
 	{
-		require.Equal(t, int64(0), entity.messageIngress.Count())
+		require.Equal(t, uint64(0), atomic.LoadUint64(entity.messageIngress))
 
 		for i := 1; i <= 10000; i++ {
-			entity.MessageIngress(int64(1))
+			entity.MessageIngress()
 		}
 
-		assert.Equal(t, int64(10000), entity.messageIngress.Count())
-		entity.messageIngress.Clear()
-		assert.Equal(t, int64(0), entity.messageIngress.Count())
+		assert.Equal(t, uint64(10000), atomic.LoadUint64(entity.messageIngress))
 	}
 }

@@ -23,8 +23,6 @@ module ZMQHelper
     self.pull_channel = pull_channel
     self.pub_channel = pub_channel
 
-    self.ready = false
-
     self.pull_daemon = Thread.new do
       loop do
 
@@ -39,11 +37,6 @@ module ZMQHelper
           next
         end
         next if data.empty?
-        if data == "!" and !self.ready
-          self.ready = true
-          next
-        end
-        next if data == "!"
         self.mutex.synchronize do
           self.recv_backlog << data
         end
@@ -99,8 +92,7 @@ module ZMQHelper
                   :pull_daemon,
                   :mutex,
                   :poisonPill,
-                  :recv_backlog,
-                  :ready
+                  :recv_backlog
   end
 
   self.recv_backlog = []
@@ -127,14 +119,6 @@ module ZMQHelper
   def self.ack(data)
     self.mutex.synchronize do
       self.recv_backlog.reject! { |v| v === data }
-    end
-  end
-
-  def self.lake_handshake()
-    self.ready = false
-    until self.ready
-      self.pub_channel.send_string("!")
-      sleep(0.1)
     end
   end
 
