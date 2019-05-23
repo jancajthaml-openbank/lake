@@ -25,7 +25,7 @@ import (
 )
 
 func loadConfFromEnv() Configuration {
-	metricsOutput := getEnvString("LAKE_METRICS_OUTPUT", "/tmp")
+	metricsOutput := getEnvFilename("LAKE_METRICS_OUTPUT", "/tmp")
 	metricsRefreshRate := getEnvDuration("LAKE_METRICS_REFRESHRATE", time.Second)
 	logLevel := strings.ToUpper(getEnvString("LAKE_LOG_LEVEL", "DEBUG"))
 	portPub := getEnvInteger("LAKE_PORT_PUB", 5561)
