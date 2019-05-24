@@ -15,18 +15,26 @@
 package metrics
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"strconv"
-	"sync/atomic"
 
 	"github.com/jancajthaml-openbank/lake/utils"
 )
 
 // MarshalJSON serialises Metrics as json preserving uint64
 func (entity *Metrics) MarshalJSON() ([]byte, error) {
-	return []byte("{\"messageEgress\":" + strconv.FormatUint(atomic.LoadUint64(entity.messageEgress), 10) + ",\"messageIngress\":" + strconv.FormatUint(atomic.LoadUint64(entity.messageIngress), 10) + "}"), nil
+	var buffer bytes.Buffer
+
+	buffer.WriteString("{\"messageEgress\":")
+	buffer.WriteString(strconv.FormatUint(*entity.messageEgress, 10))
+	buffer.WriteString(",\"messageIngress\":")
+	buffer.WriteString(strconv.FormatUint(*entity.messageIngress, 10))
+	buffer.WriteString("}")
+
+	return buffer.Bytes(), nil
 }
 
 func (metrics *Metrics) Persist() error {
