@@ -2,25 +2,34 @@
 
 set -e
 
+if [ "$(ps -o comm -p 1 --no-headers | tr -d ' ')" = "systemd" ] ; then
+  SYSTEMD_AVAIL=true
+else
+  SYSTEMD_AVAIL=false
+fi
+
+enable() {
+  wanted_by=$(cat /lib/systemd/system/${1} | sed -n -e 's/^.*WantedBy=//p')
+  mkdir -p /etc/systemd/system/${wanted_by}.wants
+  ln -s \
+    "/lib/systemd/system/${1}" \
+    "/etc/systemd/system/${wanted_by}.wants/${1}"
+}
+
 case "$1" in
 
   configure)
-    if [ -f "/etc/init/lake.conf" ] ; then
-      if [ -d /run/systemd/system ] ; then
-        systemctl unmask \
-          lake.path \
-          lake.service \
-          lake-relay.service \
-        >/dev/null
+    if [ -f /etc/init/lake.conf ] ; then
 
-        systemctl enable \
-          lake.path \
-          lake.service \
-          lake-relay.service \
-        >/dev/null
+      enable lake.path
+      enable lake.service
+      enable lake-relay.service
 
+      if [ ${SYSTEMD_AVAIL} ] ; then
+        (systemctl daemon-reload || :)
         (systemctl start lake.service >/dev/null || :)
       fi
+
     else
       (>&2 echo "/etc/init/lake.conf file not found")
       exit 1
