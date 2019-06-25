@@ -211,7 +211,6 @@ mainLoop:
 		}
 		relay.metrics.MessageIngress()
 
-		// FIXME check error
 		_, err = sender.Send(chunk, 0)
 		if err != nil {
 			log.Warnf("Unable to send message error: %+v", err)
