@@ -15,28 +15,14 @@
 package metrics
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 
 	"github.com/jancajthaml-openbank/lake/utils"
 )
 
-// MarshalJSON serialises Metrics as json preserving uint64
-func (entity *Metrics) MarshalJSON() ([]byte, error) {
-	var buffer bytes.Buffer
-
-	buffer.WriteString("{\"messageEgress\":")
-	buffer.WriteString(strconv.FormatUint(*entity.messageEgress, 10))
-	buffer.WriteString(",\"messageIngress\":")
-	buffer.WriteString(strconv.FormatUint(*entity.messageIngress, 10))
-	buffer.WriteString("}")
-
-	return buffer.Bytes(), nil
-}
-
+// Persist saved metrics state to storage
 func (metrics *Metrics) Persist() error {
 	if metrics == nil {
 		return fmt.Errorf("cannot persist nil reference")
@@ -46,10 +32,11 @@ func (metrics *Metrics) Persist() error {
 	if err != nil {
 		return err
 	}
-	f, err := os.OpenFile(tempFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	f, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
+
 	defer f.Close()
 	if _, err := f.Write(data); err != nil {
 		return err
@@ -57,14 +44,16 @@ func (metrics *Metrics) Persist() error {
 	if err := os.Rename(tempFile, metrics.output); err != nil {
 		return err
 	}
+
 	return nil
 }
 
+// Hydrate loads metrics state from storage
 func (metrics *Metrics) Hydrate() error {
 	if metrics == nil {
 		return fmt.Errorf("cannot hydrate nil reference")
 	}
-	f, err := os.OpenFile(metrics.output, os.O_RDONLY, os.ModePerm)
+	f, err := os.OpenFile(metrics.output, os.O_RDONLY, 0444)
 	if err != nil {
 		return err
 	}
