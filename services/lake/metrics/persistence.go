@@ -53,15 +53,18 @@ func (metrics *Metrics) Hydrate() error {
 	if metrics == nil {
 		return fmt.Errorf("cannot hydrate nil reference")
 	}
+	fi, err := os.Stat(metrics.output)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
 	f, err := os.OpenFile(metrics.output, os.O_RDONLY, 0444)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	fi, err := f.Stat()
-	if err != nil {
-		return err
-	}
 	buf := make([]byte, fi.Size())
 	_, err = f.Read(buf)
 	if err != nil && err != io.EOF {
