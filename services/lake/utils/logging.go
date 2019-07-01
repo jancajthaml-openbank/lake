@@ -35,6 +35,7 @@ var (
 	panicPrefix = []byte("PANI ")
 )
 
+// SetupLogger properly sets up logging
 func SetupLogger(level string) {
 
 	log.SetFormatter(new(LogFormat))

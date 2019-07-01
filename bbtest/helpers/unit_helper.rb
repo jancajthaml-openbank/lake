@@ -92,18 +92,6 @@ class UnitHelper
         %x(journalctl -o short-precise -u #{unit}.service --no-pager > /reports/#{unit.gsub('@','_')}.log 2>&1)
         %x(systemctl stop #{unit} 2>&1)
         %x(journalctl -o short-precise -u #{unit}.service --no-pager > /reports/#{unit.gsub('@','_')}.log 2>&1)
-
-        if unit.include?("@")
-          metrics_file = "/opt/#{unit[/[^@]+/]}/metrics/metrics.#{unit[/([^@]+)$/]}.json"
-        else
-          metrics_file = "/opt/#{unit}/metrics/metrics.json"
-        end
-
-        File.open(metrics_file, 'rb') { |fr|
-          File.open("/reports/metrics/#{unit.gsub('@','_')}.json", 'w') { |fw|
-            fw.write(fr.read)
-          }
-        } if File.file?(metrics_file)
       }
   end
 

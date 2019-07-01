@@ -15,38 +15,12 @@
 package metrics
 
 import (
-	"context"
 	"fmt"
 	"sync/atomic"
 	"time"
 
-	"github.com/jancajthaml-openbank/lake/utils"
-
 	log "github.com/sirupsen/logrus"
 )
-
-// Metrics holds metrics counters
-type Metrics struct {
-	utils.DaemonSupport
-	output         string
-	refreshRate    time.Duration
-	messageEgress  *uint64
-	messageIngress *uint64
-}
-
-// NewMetrics returns blank metrics holder
-func NewMetrics(ctx context.Context, output string, refreshRate time.Duration) Metrics {
-	egress := uint64(0)
-	ingress := uint64(0)
-
-	return Metrics{
-		DaemonSupport:  utils.NewDaemonSupport(ctx),
-		output:         output,
-		refreshRate:    refreshRate,
-		messageEgress:  &egress,
-		messageIngress: &ingress,
-	}
-}
 
 // MessageEgress increment number of outcomming messages
 func (metrics *Metrics) MessageEgress() {

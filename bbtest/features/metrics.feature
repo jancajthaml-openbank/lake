@@ -12,6 +12,7 @@ Feature: Metrics test
       messageEgress
       messageIngress
     """
+    And metrics file /reports/metrics.json has permissions -rw-r--r--
 
   Scenario: metrics can remembers previous values after reboot
     Given lake is reconfigured with
