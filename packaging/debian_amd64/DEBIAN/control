@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.1.9+persistence-unit-test-coverage
+Version: 1.1.9+prepare-config-at-start-of-bbtest
 Section: misc
 Priority: extra
 Architecture: amd64
