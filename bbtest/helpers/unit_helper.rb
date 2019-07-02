@@ -71,6 +71,22 @@ class UnitHelper
     raise "no package to install" unless File.file?('/etc/bbtest/packages/lake.deb')
   end
 
+  def prepare_config()
+    defaults = {
+      "LOG_LEVEL" => "DEBUG",
+      "PORT_PULL" => "5562",
+      "PORT_PUB" => "5561",
+      "METRICS_REFRESHRATE" => "1h",
+      "METRICS_OUTPUT" => "/reports",
+    }
+
+    config = Array[defaults.map {|k,v| "LAKE_#{k}=#{v}"}]
+    config = config.join("\n").inspect.delete('\"')
+
+    %x(mkdir -p /etc/init)
+    %x(echo '#{config}' > /etc/init/lake.conf)
+  end
+
   def cleanup()
     %x(systemctl -t service --no-legend | awk '{ print $1 }' | sort -t @ -k 2 -g)
       .split("\n")
