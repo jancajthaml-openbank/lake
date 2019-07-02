@@ -80,12 +80,21 @@ func TestHydrate(t *testing.T) {
 		require.Nil(t, err)
 		defer os.Remove(tmpfile.Name())
 
-		data := []byte("{\"messageEgress\":32,\"messageIngress\":77}")
+		egress_old := uint64(10)
+		ingress_old := uint64(20)
+
+		old := Metrics{
+			messageEgress:  &egress_old,
+			messageIngress: &ingress_old,
+		}
+
+		data, err := old.MarshalJSON()
+		require.Nil(t, err)
 
 		require.Nil(t, ioutil.WriteFile(tmpfile.Name(), data, 0444))
 
-		egress := uint64(10)
-		ingress := uint64(20)
+		egress := uint64(0)
+		ingress := uint64(0)
 
 		entity := Metrics{
 			output:         tmpfile.Name(),
@@ -96,9 +105,9 @@ func TestHydrate(t *testing.T) {
 		require.Nil(t, entity.Hydrate())
 
 		assert.NotNil(t, entity.messageEgress)
-		assert.Equal(t, 32, int(*entity.messageEgress))
+		assert.Equal(t, 10, int(*entity.messageEgress))
 
 		assert.NotNil(t, entity.messageIngress)
-		assert.Equal(t, 77, int(*entity.messageIngress))
+		assert.Equal(t, 20, int(*entity.messageIngress))
 	}
 }
