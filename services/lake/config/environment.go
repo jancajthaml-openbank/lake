@@ -26,6 +26,7 @@ import (
 
 func loadConfFromEnv() Configuration {
 	metricsOutput := getEnvFilename("LAKE_METRICS_OUTPUT", "/tmp")
+	metricsContinuous := getEnvBoolean("LAKE_METRICS_CONTINOUS", true)
 	metricsRefreshRate := getEnvDuration("LAKE_METRICS_REFRESHRATE", time.Second)
 	logLevel := strings.ToUpper(getEnvString("LAKE_LOG_LEVEL", "DEBUG"))
 	portPub := getEnvInteger("LAKE_PORT_PUB", 5561)
@@ -39,12 +40,25 @@ func loadConfFromEnv() Configuration {
 		PullPort:           portPull,
 		PubPort:            portPub,
 		LogLevel:           logLevel,
+		MetricsContinuous:  metricsContinuous,
 		MetricsRefreshRate: metricsRefreshRate,
 		MetricsOutput:      metricsOutput + "/metrics.json",
 	}
 }
 
-func getEnvFilename(key, fallback string) string {
+func getEnvBoolean(key string, fallback bool) bool {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	cast, err := strconv.ParseBool(value)
+	if err != nil {
+		panic(fmt.Sprintf("invalid value of variable %s", key))
+	}
+	return cast
+}
+
+func getEnvFilename(key string, fallback string) string {
 	var value = strings.TrimSpace(os.Getenv(key))
 	if value == "" {
 		return fallback
@@ -56,7 +70,7 @@ func getEnvFilename(key, fallback string) string {
 	return value
 }
 
-func getEnvString(key, fallback string) string {
+func getEnvString(key string, fallback string) string {
 	value := strings.TrimSpace(os.Getenv(key))
 	if value == "" {
 		return fallback

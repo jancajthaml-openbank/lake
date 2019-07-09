@@ -34,7 +34,8 @@ step "lake is reconfigured with" do |configuration|
     "PORT_PULL" => "5562",
     "PORT_PUB" => "5561",
     "METRICS_REFRESHRATE" => "1h",
-    "METRICS_OUTPUT" => "/reports",
+    "METRICS_OUTPUT" => "/reports/bbtest",
+    "METRICS_CONTINOUS" => "true",
   }
 
   config = Array[defaults.merge(params).map { |k,v| "LAKE_#{k}=#{v}"} ]

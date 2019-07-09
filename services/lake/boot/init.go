@@ -41,7 +41,7 @@ func Initialize() Program {
 
 	utils.SetupLogger(cfg.LogLevel)
 
-	metricsDaemon := metrics.NewMetrics(ctx, cfg.MetricsOutput, cfg.MetricsRefreshRate)
+	metricsDaemon := metrics.NewMetrics(ctx, cfg.MetricsContinuous, cfg.MetricsOutput, cfg.MetricsRefreshRate)
 	relayDaemon := relay.NewRelay(ctx, cfg.PullPort, cfg.PubPort, &metricsDaemon)
 
 	return Program{

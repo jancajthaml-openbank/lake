@@ -98,6 +98,14 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
+      - perf-amd64:
+          requires:
+            - publish
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/
       - bbtest-amd64:
           requires:
             - publish
@@ -152,11 +160,14 @@ workflows:
             - debian-amd64
             - debian-armhf
             - debian-arm64
+      - perf-amd64:
+          requires:
+            - publish
       - bbtest-amd64:
           requires:
             - publish
 
-  rolling_bbtest:
+  rolling_test:
     triggers:
       - schedule:
           cron: "0 * * * *"
@@ -168,6 +179,22 @@ workflows:
       - checkout
       - versions
       - bbtest-amd64:
+          requires:
+            - checkout
+            - versions
+
+  rolling_performance:
+    triggers:
+      - schedule:
+          cron: "0 1,6,12,18 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - checkout
+      - versions
+      - perf-amd64:
           requires:
             - checkout
             - versions
@@ -475,6 +502,7 @@ jobs:
             VERSION=$(cat /home/circleci/project/DOCKER_VERSION)
             docker exec -it $(\
               docker run -d -ti \
+                --cap-add SYS_ADMIN \
                 -e UNIT_VERSION="${VERSION}" \
                 -e UNIT_ARCH=amd64 \
                 -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
@@ -488,10 +516,46 @@ jobs:
               --format RspecJunitFormatter \
               --out junit.xml \
               --pattern /opt/bbtest/features/*.feature
+          no_output_timeout: 5m
       - store_test_results:
           path: /home/circleci/project/bbtest
       - store_artifacts:
-          path: /home/circleci/project/reports
+          path: /home/circleci/project/reports/bbtest
+          destination: reports
+
+  # -------------------------------------------------------------------------- #
+
+  perf-amd64:
+    machine: true
+    working_directory: /home/circleci/project
+    steps:
+      - restore_cache:
+          key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - run: docker pull jancajthaml/bbtest:amd64
+      - run:
+          name: Run perf tests
+          command: |
+            VERSION=$(cat /home/circleci/project/DOCKER_VERSION)
+            docker exec -it $(\
+              docker run -d -ti \
+                --cap-add SYS_ADMIN \
+                -e UNIT_VERSION="${VERSION}" \
+                -e UNIT_ARCH=amd64 \
+                -e NUMBER_OF_WORKERS=50 \
+                -e MAX_MESSAGES_PER_WORKER=200000 \
+                -e NO_TTY=1 \
+                -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+                -v /var/run/docker.sock:/var/run/docker.sock \
+                -v /var/lib/docker/containers:/var/lib/docker/containers \
+                -v /home/circleci/project/perf:/opt/app \
+                -v /home/circleci/project/reports:/reports \
+              jancajthaml/bbtest:amd64 \
+            ) python3 /opt/app/main.py
+          no_output_timeout: 5h
+      - store_artifacts:
+          path: /home/circleci/project/reports/perf
           destination: reports
 
   # -------------------------------------------------------------------------- #

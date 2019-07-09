@@ -14,7 +14,7 @@ func TestMetrics(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	entity := NewMetrics(ctx, "", time.Hour)
+	entity := NewMetrics(ctx, false, "", time.Hour)
 
 	t.Log("MessageEgress properly updates egress messages")
 	{

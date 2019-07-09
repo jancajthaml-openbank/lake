@@ -14,6 +14,7 @@ case "$1" in
       echo "LAKE_PORT_PUB=5561" >> /etc/init/lake.conf
       echo "LAKE_METRICS_REFRESHRATE=1s" >> /etc/init/lake.conf
       echo "LAKE_METRICS_OUTPUT=/opt/lake/metrics" >> /etc/init/lake.conf
+      echo "LAKE_METRICS_CONTINOUS=true" >> /etc/init/lake.conf
     fi
   ;;
 

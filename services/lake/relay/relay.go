@@ -27,6 +27,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const KILL_MESSAGE = "K"
+
 // Relay fascade
 type Relay struct {
 	utils.DaemonSupport
@@ -188,7 +190,7 @@ zmqKillChannelConnect:
 		case <-relay.killRequest:
 			for {
 				if killChannel != nil {
-					_, err = killChannel.Send("KILL", 0)
+					_, err = killChannel.Send(KILL_MESSAGE, 0)
 					if err == nil {
 						return
 					}
@@ -204,7 +206,7 @@ mainLoop:
 	chunk, err = receiver.Recv(0)
 	switch err {
 	case nil:
-		if chunk == "KILL" {
+		if chunk == KILL_MESSAGE {
 			err = nil
 			log.Info("Relay killed")
 			return
