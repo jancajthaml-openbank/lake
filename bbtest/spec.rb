@@ -26,7 +26,7 @@ RSpec.configure do |config|
   config.before(:suite) do |_|
     print "[ suite starting ]\n"
 
-    ["/reports"].each { |folder|
+    ["/reports/bbtest"].each { |folder|
       FileUtils.mkdir_p folder
       %x(rm -rf #{folder}/*)
     }

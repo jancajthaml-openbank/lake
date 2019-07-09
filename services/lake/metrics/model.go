@@ -29,19 +29,21 @@ import (
 type Metrics struct {
 	utils.DaemonSupport
 	output         string
+	continuous     bool
 	refreshRate    time.Duration
 	messageEgress  *uint64
 	messageIngress *uint64
 }
 
 // NewMetrics returns blank metrics holder
-func NewMetrics(ctx context.Context, output string, refreshRate time.Duration) Metrics {
+func NewMetrics(ctx context.Context, continuous bool, output string, refreshRate time.Duration) Metrics {
 	egress := uint64(0)
 	ingress := uint64(0)
 
 	return Metrics{
 		DaemonSupport:  utils.NewDaemonSupport(ctx),
 		output:         output,
+		continuous:     continuous,
 		refreshRate:    refreshRate,
 		messageEgress:  &egress,
 		messageIngress: &ingress,

@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.1.9+prepare-config-at-start-of-bbtest
+Version: 1.1.9+performance-tests
 Section: misc
 Priority: extra
 Architecture: amd64

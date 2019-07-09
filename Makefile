@@ -68,6 +68,9 @@ bbtest:
 			--name=lake_bbtest_amd64 \
 			-e UNIT_VERSION="$(VERSION)-$(META)" \
 			-e UNIT_ARCH=amd64 \
+			--cap-add SYS_ADMIN \
+			--memory=1g \
+			--memory-swappiness=0 \
 			-v /sys/fs/cgroup:/sys/fs/cgroup:ro \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			-v /var/lib/docker/containers:/var/lib/docker/containers \
@@ -80,3 +83,24 @@ bbtest:
 		--out junit.xml \
 		--pattern /opt/bbtest/features/*.feature
 	@(docker rm -f $$(docker ps -a --filter="name=lake_bbtest_amd64" -q) &> /dev/null || :)
+
+.PHONY: perf
+perf:
+	@(docker rm -f $$(docker ps -a --filter="name=lake_perf_amd64" -q) &> /dev/null || :)
+	@docker exec -it $$(\
+		docker run -d -ti \
+			--name=lake_perf_amd64 \
+			-e UNIT_VERSION="$(VERSION)-$(META)" \
+			-e UNIT_ARCH=amd64 \
+			--cap-add SYS_ADMIN \
+			--memory=1g \
+			--memory-swappiness=0 \
+			-v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			-v /var/lib/docker/containers:/var/lib/docker/containers \
+			-v $$(pwd)/perf:/opt/app \
+			-v $$(pwd)/reports:/reports \
+		jancajthaml/bbtest:amd64 \
+	) python3 /opt/app/main.py
+	@(docker rm -f $$(docker ps -a --filter="name=lake_perf_amd64" -q) &> /dev/null || :)
+

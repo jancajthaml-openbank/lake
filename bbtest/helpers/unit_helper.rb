@@ -21,15 +21,15 @@ class UnitHelper
     version = ENV['UNIT_VERSION'].sub(/v/, '')
     parts = version.split('-')
 
-    docker_version = ""
+    image_version = ""
     debian_version = ""
 
     if parts.length > 1
       branch = version[parts[0].length+1..-1]
-      docker_version = "#{parts[0]}-#{branch}"
+      image_version = "v#{parts[0]}-#{branch}"
       debian_version = "#{parts[0]}+#{branch}"
     elsif parts.length == 1
-      docker_version = parts[0]
+      image_version = "v#{parts[0]}"
       debian_version = parts[0]
     end
 
@@ -46,7 +46,7 @@ class UnitHelper
     begin
       file.write([
         "FROM alpine",
-        "COPY --from=openbank/lake:v#{docker_version} /opt/artifacts/lake_#{debian_version}_#{arch}.deb /opt/artifacts/lake.deb",
+        "COPY --from=openbank/lake:#{image_version} /opt/artifacts/lake_#{debian_version}_#{arch}.deb /opt/artifacts/lake.deb",
         "RUN ls -la /opt/artifacts"
       ].join("\n"))
       file.close
@@ -77,7 +77,8 @@ class UnitHelper
       "PORT_PULL" => "5562",
       "PORT_PUB" => "5561",
       "METRICS_REFRESHRATE" => "1h",
-      "METRICS_OUTPUT" => "/reports",
+      "METRICS_OUTPUT" => "/reports/bbtest",
+      "METRICS_CONTINOUS" => "true",
     }
 
     config = Array[defaults.map {|k,v| "LAKE_#{k}=#{v}"}]
@@ -94,7 +95,7 @@ class UnitHelper
       .reject { |x| x.empty? || !x.start_with?("lake") }
       .map { |x| x.chomp(".service") }
       .each { |unit|
-        %x(journalctl -o short-precise -u #{unit}.service --no-pager > /reports/#{unit.gsub('@','_')}.log 2>&1)
+        %x(journalctl -o short-precise -u #{unit}.service --no-pager > /reports/bbtest/#{unit.gsub('@','_')}.log 2>&1)
       }
   end
 
@@ -105,9 +106,9 @@ class UnitHelper
       .reject { |x| x.empty? || !x.start_with?("lake") }
       .map { |x| x.chomp(".service") }
       .each { |unit|
-        %x(journalctl -o short-precise -u #{unit}.service --no-pager > /reports/#{unit.gsub('@','_')}.log 2>&1)
+        %x(journalctl -o short-precise -u #{unit}.service --no-pager > /reports/bbtest/#{unit.gsub('@','_')}.log 2>&1)
         %x(systemctl stop #{unit} 2>&1)
-        %x(journalctl -o short-precise -u #{unit}.service --no-pager > /reports/#{unit.gsub('@','_')}.log 2>&1)
+        %x(journalctl -o short-precise -u #{unit}.service --no-pager > /reports/bbtest/#{unit.gsub('@','_')}.log 2>&1)
       }
   end
 

@@ -24,9 +24,11 @@ type Configuration struct {
 	PubPort int
 	// LogLevel ignorecase log level
 	LogLevel string
-	// MetricsRefreshRate how frequently should be metrics updated
+	// MetricsContinuous determines if metrics should start from last state
+	MetricsContinuous bool
+	// MetricsRefreshRate how frequently should metrics be updated
 	MetricsRefreshRate time.Duration
-	// MetricsOutput filename of metrics persisted
+	// MetricsOutput determines into which filename should metrics write
 	MetricsOutput string
 }
 
