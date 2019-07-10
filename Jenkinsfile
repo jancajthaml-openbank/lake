@@ -27,6 +27,13 @@ pipeline {
         timestamps()
     }
 
+    pre {
+        always {
+            echo 'Start'
+            cleanWs()
+        }
+    }
+
     stages {
 
         stage('Setup') {
@@ -83,11 +90,11 @@ pipeline {
         }
     }
 
-
     post {
         always {
             echo 'End'
             deleteDir()
+            cleanWs()
         }
         success {
             echo 'Success'
