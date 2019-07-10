@@ -40,76 +40,77 @@ def safeNode(label=null, Closure body) {
     }
 }
 
-safeNode {
 
-    pipeline {
 
-        agent {
+pipeline {
+
+    agent {
+        safeNode {
             label 'master'
         }
+    }
 
-        options {
-            ansiColor('xterm')
-            buildDiscarder(logRotator(numToKeepStr: '10'))
-            disableConcurrentBuilds()
-            disableResume()
-            timeout(time: 5, unit: 'MINUTES')
-        }
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        disableConcurrentBuilds()
+        disableResume()
+        timeout(time: 5, unit: 'MINUTES')
+    }
 
-        stages {
+    stages {
 
-            stage('Setup') {
-                steps {
-                    script {
-                        env.RFC3339_DATETIME = sh(
-                            script: 'date --rfc-3339=ns',
-                            returnStdout: true
-                        ).trim()
-                        env.LICENSE = "Apache-2.0"                     // fixme read from sources
-                        env.PROJECT_NAME = "Lake"                      // fixme read from sources
-                        env.PROJECT_DESCRIPTION = "Lake message relay" // fixme read from sources
-                        env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
-                        env.PATH="${GOPATH}/bin:$PATH"
-                    }
-                }
-            }
-
-            stage('Sync Dependencies') {
-                agent {
-                    docker {
-                        image 'jancajthaml/go:latest'
-                        reuseNode true
-                    }
-                }
-                steps {
-                    echo sh(
-                        script: 'pwd',
+        stage('Setup') {
+            steps {
+                script {
+                    env.RFC3339_DATETIME = sh(
+                        script: 'date --rfc-3339=ns',
                         returnStdout: true
                     ).trim()
-                    echo sh(
-                        script: 'ls -la',
-                        returnStdout: true
-                    ).trim()
-
-                    //sh "mkdir -p /go/src/github.com/jancajthaml-openbank"
-                    //sh "ln -s ./services/lake /go/src/github.com/jancajthaml-openbank/lake"
-                    //sh "rm go.sum"
-                    //sh "go mod vendor"
+                    env.LICENSE = "Apache-2.0"                     // fixme read from sources
+                    env.PROJECT_NAME = "Lake"                      // fixme read from sources
+                    env.PROJECT_DESCRIPTION = "Lake message relay" // fixme read from sources
+                    env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
+                    env.PATH="${GOPATH}/bin:$PATH"
                 }
             }
         }
 
+        stage('Sync Dependencies') {
+            agent {
+                docker {
+                    image 'jancajthaml/go:latest'
+                    reuseNode true
+                }
+            }
+            steps {
+                echo sh(
+                    script: 'pwd',
+                    returnStdout: true
+                ).trim()
+                echo sh(
+                    script: 'ls -la',
+                    returnStdout: true
+                ).trim()
 
-        post {
-            always {
-                echo 'End'
+                //sh "mkdir -p /go/src/github.com/jancajthaml-openbank"
+                //sh "ln -s ./services/lake /go/src/github.com/jancajthaml-openbank/lake"
+                //sh "rm go.sum"
+                //sh "go mod vendor"
             }
-            success {
-                echo 'Success'
-            }
-            failure {
-                echo 'Failure'
-            }
+        }
+    }
+
+
+    post {
+        always {
+            echo 'End'
+        }
+        success {
+            echo 'Success'
+        }
+        failure {
+            echo 'Failure'
         }
     }
 }
