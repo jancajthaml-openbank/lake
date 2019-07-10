@@ -66,6 +66,7 @@ services:
 
   test:
     extends: go
+    working_dir: /go/src/github.com/jancajthaml-openbank/lake
     entrypoint: ["/project/dev/lifecycle/test"]
 
   # -------------------------------------------------------------------------- #

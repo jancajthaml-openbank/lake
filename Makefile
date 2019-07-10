@@ -54,7 +54,7 @@ sync:
 
 .PHONY: test
 test:
-	@docker-compose run --rm test --pkg lake
+	@docker-compose run --rm test --pkg lake --output $$(pwd)/reports
 
 .PHONY: release
 release:
