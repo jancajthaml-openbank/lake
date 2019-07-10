@@ -52,15 +52,14 @@ pipeline {
                 }
             }
             steps {
-                echo sh(
-                    script: 'echo "[${GOPATH}]"',
-                    returnStdout: true
-                ).trim()
-
                 //sh "mkdir -p /go/src/github.com/jancajthaml-openbank"
                 //sh "ln -s ./services/lake /go/src/github.com/jancajthaml-openbank/lake"
-                //sh "rm go.sum"
-                //sh "go mod vendor"
+                dir("services/lake") {
+                    sh "rm go.sum"
+                    sh "go mod vendor"
+                }
+
+                //
             }
         }
     }
