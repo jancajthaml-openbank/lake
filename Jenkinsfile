@@ -32,6 +32,7 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
+                    sh "test -n "${WORKSPACE}" && rm -rf ${WORKSPACE}/*"
                     env.RFC3339_DATETIME = sh(
                         script: 'date --rfc-3339=ns',
                         returnStdout: true
