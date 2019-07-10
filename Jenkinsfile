@@ -35,7 +35,7 @@ pipeline {
                     githubNotify(status: 'PENDING', description: 'Setup')
 
                     env.RFC3339_DATETIME = sh(
-                        script: 'date --rfc-3339=ns'
+                        script: 'date --rfc-3339=ns',
                         returnStdout: true
                     ).trim()
                     env.LICENSE = "Apache-2.0"                     // fixme read from sources
