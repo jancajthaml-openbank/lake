@@ -1,7 +1,7 @@
 pipeline {
 
     agent {
-        label 'docker-18.09.6'
+        label 'master'
     }
 
     options {
