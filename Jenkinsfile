@@ -28,44 +28,49 @@ pipeline {
 
     stages {
 
-        stage('Setup') {
-            steps {
-                script {
-                    env.RFC3339_DATETIME = sh(
-                        script: 'date --rfc-3339=ns',
-                        returnStdout: true
-                    ).trim()
-                    env.LICENSE = "Apache-2.0"                     // fixme read from sources
-                    env.PROJECT_NAME = "Lake"                      // fixme read from sources
-                    env.PROJECT_DESCRIPTION = "Lake message relay" // fixme read from sources
-                    env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
+        ws("${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_ID}/") {
+            withEnv(["GOPATH=${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_ID}"]) {
+
+                stage('Setup') {
+                    steps {
+                        script {
+                            env.RFC3339_DATETIME = sh(
+                                script: 'date --rfc-3339=ns',
+                                returnStdout: true
+                            ).trim()
+                            env.LICENSE = "Apache-2.0"                     // fixme read from sources
+                            env.PROJECT_NAME = "Lake"                      // fixme read from sources
+                            env.PROJECT_DESCRIPTION = "Lake message relay" // fixme read from sources
+                            env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
+                            env.PATH="${GOPATH}/bin:$PATH"
+                        }
+                    }
                 }
-            }
-        }
 
-        stage('Sync Dependencies') {
-            agent {
-                docker {
-                    image 'jancajthaml/go:latest'
-                    args '-v ${WORKSPACE}:/go/src/github.com/jancajthaml-openbank -w /go/src/github.com/jancajthaml-openbank'
-                    reuseNode true
+                stage('Sync Dependencies') {
+                    agent {
+                        docker {
+                            image 'jancajthaml/go:latest'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        echo sh(
+                            script: 'pwd',
+                            returnStdout: true
+                        ).trim()
+
+                        echo sh(
+                            script: 'ls -la',
+                            returnStdout: true
+                        ).trim()
+
+                        //sh "mkdir -p /go/src/github.com/jancajthaml-openbank"
+                        //sh "ln -s ./services/lake /go/src/github.com/jancajthaml-openbank/lake"
+                        //sh "rm go.sum"
+                        //sh "go mod vendor"
+                    }
                 }
-            }
-            steps {
-                echo sh(
-                    script: 'pwd',
-                    returnStdout: true
-                ).trim()
-
-                echo sh(
-                    script: 'ls -la',
-                    returnStdout: true
-                ).trim()
-
-                //sh "mkdir -p /go/src/github.com/jancajthaml-openbank"
-                //sh "ln -s ./services/lake /go/src/github.com/jancajthaml-openbank/lake"
-                //sh "rm go.sum"
-                //sh "go mod vendor"
             }
         }
     }
