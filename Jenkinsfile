@@ -24,6 +24,7 @@ pipeline {
         disableConcurrentBuilds()
         disableResume()
         timeout(time: 5, unit: 'MINUTES')
+        timestamps()
     }
 
     stages {
@@ -68,6 +69,8 @@ pipeline {
                 }
             }
             steps {
+                sh "ln -s ${env.HOME}/services/lake github.com/jancajthaml-openbank/lake"
+
                 dir("services/lake") {
                     sh "${env.HOME}/dev/lifecycle/test --pkg lake --output ${env.HOME}/reports"
                     echo sh(
