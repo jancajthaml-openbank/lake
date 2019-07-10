@@ -45,8 +45,11 @@ pipeline {
         }
 
         stage('Test') {
+            agent {
+                docker { image 'jancajthaml/go' }
+            }
             steps {
-                sh "docker-compose run --rm test --pkg lake"
+                sh "/project/dev/lifecycle/test"
             }
         }
     }
