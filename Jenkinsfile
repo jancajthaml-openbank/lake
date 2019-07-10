@@ -69,7 +69,7 @@ pipeline {
             }
             steps {
                 dir("services/lake") {
-                    sh "../../dev-env/lifecycle/test --pkg lake --output ${env.HOME}/reports"
+                    sh "${env.HOME}/dev/lifecycle/test --pkg lake --output ${env.HOME}/reports"
                     echo sh(
                         script: 'ls -la reports',
                         returnStdout: true
