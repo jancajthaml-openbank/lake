@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.1.9+performance-tests
+Version: 1.1.9+perf-proper-median
 Section: misc
 Priority: extra
 Architecture: amd64

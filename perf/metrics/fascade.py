@@ -5,6 +5,7 @@ import json
 import os
 import re
 from collections import OrderedDict
+import numpy
 
 class Metrics():
 
@@ -76,14 +77,17 @@ class Metrics():
       dic = list(filter(lambda x:(x >= a and x <= b), timestamps))
 
       stash = {
-        'messageIngress': 0,
-        'messageEgress': 0
+        'messageIngress': [0],
+        'messageEgress': [0]
       }
 
       for di in dic:
         item = dataset[str(int(di))]
-        stash['messageIngress'] = (item['messageIngress'] + stash['messageIngress']) / 2
-        stash['messageEgress'] = (item['messageEgress'] + stash['messageEgress']) / 2
+        stash['messageIngress'].append(item['messageIngress'])
+        stash['messageEgress'].append(item['messageEgress'])
+
+      stash['messageEgress'] = numpy.median(stash['messageEgress'])
+      stash['messageIngress'] = numpy.median(stash['messageIngress'])
 
       materialised_dataset[str(second)] = OrderedDict(stash)
 

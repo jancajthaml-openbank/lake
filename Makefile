@@ -11,7 +11,7 @@ VERSION := $(shell git fetch --tags --force 2> /dev/null; tags=($$(git tag --sor
 .PHONY: armhf
 
 .PHONY: all
-all: bootstrap sync test package bbtest
+all: bootstrap sync test package bbtest perf
 
 .PHONY: package
 package:

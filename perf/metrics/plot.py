@@ -67,7 +67,7 @@ class Graph(object):
         y3 = [y3[0]] + y3
 
     ysmoothed = gaussian_filter1d(y1, sigma=2)
-
+    ymedian = numpy.median(y3)
 
     x_interval = list(reversed(range(duration-1, -1, min(-1, -int(duration/4)))))
     x_interval[0] = 0
@@ -83,14 +83,14 @@ class Graph(object):
     ax1.fill_between(x1, ysmoothed, 0, alpha=0.3, interpolate=False)
     ax1.fill_between(x1, y2, 0, interpolate=False)
 
-    ax2.plot(x1, [(max(y3)+min(y3)) / 2 if len(y3) else 0]*len(x1), linewidth=1, linestyle='--', antialiased=False, color='black')
+    ax2.plot(x1, [ymedian if len(y3) else 0]*len(x1), linewidth=1, linestyle='--', antialiased=False, color='black')
 
     ax2.plot(x1, y3, linewidth=1, antialiased=True)
 
     ax2.set_xlim(xmin=0, xmax=max(x1))
     ax2.set_ylim(ymin=0, ymax=max(y3) * 2)
 
-    ax2.set_yticks([0, (max(y3)+min(y3)) / 2])
+    ax2.set_yticks([0, ymedian])
     ax2.set_yticklabels([human_readable_count(x) for x in ax2.get_yticks()])
 
     plt.title(name)
