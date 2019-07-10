@@ -40,6 +40,7 @@ pipeline {
                     env.PROJECT_DESCRIPTION = "Lake message relay" // fixme read from sources
                     env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
                     env.GOPATH = "${WORKSPACE}"
+                    env.HOME = "${WORKSPACE}"
                 }
             }
         }
@@ -52,9 +53,16 @@ pipeline {
                 }
             }
             steps {
+
                 //sh "mkdir -p /go/src/github.com/jancajthaml-openbank"
                 //sh "ln -s ./services/lake /go/src/github.com/jancajthaml-openbank/lake"
                 dir("services/lake") {
+
+                    echo sh(
+                        script: 'pwd',
+                        returnStdout: true
+                    ).trim()
+
                     sh "rm go.sum"
                     sh "go mod vendor"
                 }
