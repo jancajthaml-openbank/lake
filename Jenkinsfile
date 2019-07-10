@@ -62,7 +62,6 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    new File("go.sum").delete()
                     sh "go mod vendor"
                 }
             }
