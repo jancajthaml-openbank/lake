@@ -1,3 +1,17 @@
+
+def dockerOptions() {
+    String options = "--pull "
+    options += "--label 'org.opencontainers.image.source=${env.GIT_URL}' "
+    options += "--label 'org.opencontainers.image.created=${env.RFC3339_DATETIME}' "
+    options += "--label 'org.opencontainers.image.revision=${env.GIT_COMMIT}' "
+    options += "--label 'org.opencontainers.image.licenses=${env.LICENSE}' "
+    options += "--label 'org.opencontainers.image.authors=${env.PROJECT_AUTHOR}' "
+    options += "--label 'org.opencontainers.image.title=${env.PROJECT_TITLE}' "
+    options += "--label 'org.opencontainers.image.description=${env.PROJECT_DESCRIPTION}' "
+    options += "."
+    return options
+}
+
 pipeline {
 
     agent {
@@ -14,19 +28,29 @@ pipeline {
     }
 
     stages {
-        stage('Build') {
+
+        stage('Setup') {
             steps {
-                echo 'Build Stage'
+                script {
+                    githubNotify(status: 'PENDING', description: 'Setup')
+
+                    env.RFC3339_DATETIME = sh(
+                        script: 'date --rfc-3339=ns'
+                        returnStdout: true
+                    ).trim()
+                    env.LICENSE = "Apache-2.0"                     // fixme read from sources
+                    env.PROJECT_NAME = "Lake"                      // fixme read from sources
+                    env.PROJECT_DESCRIPTION = "Lake message relay" // fixme read from sources
+                    env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
+                }
             }
         }
+
         stage('Test') {
             steps {
-                echo 'Test Stage'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Deploy Stage '
+                githubNotify(status: 'PENDING', description: 'Test')
+
+                sh "docker-compose run --rm test --pkg lake"
             }
         }
     }
