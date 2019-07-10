@@ -32,8 +32,6 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    githubNotify(status: 'PENDING', description: 'Setup')
-
                     env.RFC3339_DATETIME = sh(
                         script: 'date --rfc-3339=ns',
                         returnStdout: true
@@ -48,8 +46,6 @@ pipeline {
 
         stage('Test') {
             steps {
-                githubNotify(status: 'PENDING', description: 'Test')
-
                 sh "docker-compose run --rm test --pkg lake"
             }
         }
