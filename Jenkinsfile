@@ -51,6 +51,10 @@ pipeline {
                 }
             }
             steps {
+                dir(path: '/go/src/github.com/jancajthaml-openbank') {
+                }
+
+
                 echo sh(
                     script: 'pwd',
                     returnStdout: true
