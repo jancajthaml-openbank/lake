@@ -55,11 +55,6 @@ pipeline {
             }
             steps {
                 dir("services/lake") {
-                    echo sh(
-                        script: 'pwd',
-                        returnStdout: true
-                    ).trim()
-
                     sh "go mod vendor"
                 }
             }
@@ -74,7 +69,7 @@ pipeline {
             }
             steps {
                 dir("services/lake") {
-                    sh "../../dev-env/lifecycle/test --pkg lake --output ${env.HOME}/${reports}"
+                    sh "../../dev-env/lifecycle/test --pkg lake --output ${env.HOME}/reports"
                     echo sh(
                         script: 'ls -la reports',
                         returnStdout: true
