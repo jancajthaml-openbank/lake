@@ -39,7 +39,7 @@ pipeline {
                     env.PROJECT_NAME = "Lake"                      // fixme read from sources
                     env.PROJECT_DESCRIPTION = "Lake message relay" // fixme read from sources
                     env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
-                    echo "${WORKSPACE}"
+                    env.GOPATH = "${WORKSPACE}"
                 }
             }
         }
@@ -48,17 +48,12 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    customWorkspace '/go/src/github.com/jancajthaml-openbank'
                     reuseNode true
                 }
             }
             steps {
                 echo sh(
-                    script: 'pwd',
-                    returnStdout: true
-                ).trim()
-                echo sh(
-                    script: 'ls -la',
+                    script: 'echo "[${GOPATH}]"',
                     returnStdout: true
                 ).trim()
 
