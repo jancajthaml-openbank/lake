@@ -24,7 +24,6 @@ pipeline {
         disableConcurrentBuilds()
         disableResume()
         timeout(time: 5, unit: 'MINUTES')
-        timestamps()
     }
 
     stages {
