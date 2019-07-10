@@ -27,13 +27,6 @@ pipeline {
         timestamps()
     }
 
-    pre {
-        always {
-            echo 'Start'
-            cleanWs()
-        }
-    }
-
     stages {
 
         stage('Setup') {
