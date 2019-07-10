@@ -15,32 +15,7 @@ def dockerOptions() {
 pipeline {
 
     agent {
-        node {
-            label 'master'
-            def path = pwd()
-            def branchName = env.BRANCH_NAME
-            if (branchName) {
-                path = path.split('/')
-                def workspaceRoot = path[0..<-1].join('/')
-                def currentWs = path[-1]
-                // Here is where we make branch names safe for directories -
-                // the most common bad character is '/' in 'feature/add_widget'
-                // which gets replaced with '%2f', so JOB_NAME will be
-                // ${PROJECT_NAME}%2f${BRANCH_NAME}
-                def newWorkspace = env.JOB_NAME.replace('/','-')
-                newWorkspace = newWorkspace.replace('%2f', '-')
-                newWorkspace = newWorkspace.replace('%2F', '-')
-
-                // Add on the '@n' suffix if it was there
-                if (currentWs =~ '@') {
-                    newWorkspace = "${newWorkspace}@${currentWs.split('@')[-1]}"
-                }
-                path = "${workspaceRoot}/${newWorkspace}"
-            }
-            ws(path) {
-                body()
-            }
-        }
+        label 'master'
     }
 
     options {
@@ -73,6 +48,7 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
+                    ws '/go/src/github.com/jancajthaml-openbank'
                     reuseNode true
                 }
             }
