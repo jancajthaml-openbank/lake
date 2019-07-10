@@ -69,7 +69,7 @@ pipeline {
                 }
             }
             steps {
-                sh "ln -s ${env.HOME}/services/lake github.com/jancajthaml-openbank/lake"
+                sh "ln -s ${env.HOME}/services/lake ${env.HOME}/github.com/jancajthaml-openbank/lake"
 
                 dir("services/lake") {
                     sh "${env.HOME}/dev/lifecycle/test --pkg lake --output ${env.HOME}/reports"
