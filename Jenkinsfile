@@ -1,5 +1,17 @@
 pipeline {
-    agent any
+
+    agent {
+        label 'docker-18.09.6'
+    }
+
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        disableConcurrentBuilds()
+        disableResume()
+        timeout(time: 5, unit: 'MINUTES')
+        timestamps()
+    }
 
     stages {
         stage('Build') {
@@ -16,6 +28,18 @@ pipeline {
             steps {
                 echo 'Deploy Stage '
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'End'
+        }
+        success {
+            echo 'Success'
+        }
+        failure {
+            echo 'Failure'
         }
     }
 }
