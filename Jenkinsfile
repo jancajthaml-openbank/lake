@@ -40,7 +40,7 @@ pipeline {
                     env.PROJECT_DESCRIPTION = "Lake message relay" // fixme read from sources
                     env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
                     env.GOPATH = "${WORKSPACE}"
-                    env.HOME = "${WORKSPACE}"
+                    env.XDG_CACHE_HOME = "${WORKSPACE}/.cache"
                 }
             }
         }
