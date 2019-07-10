@@ -48,6 +48,15 @@ pipeline {
                 docker { image 'jancajthaml/go' }
             }
             steps {
+                echo 'List'
+                echo sh(
+                    script: 'pwd',
+                    returnStdout: true
+                ).trim()
+                echo sh(
+                    script: 'ls -la',
+                    returnStdout: true
+                ).trim()
                 sh "/project/dev/lifecycle/test"
             }
         }
