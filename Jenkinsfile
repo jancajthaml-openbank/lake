@@ -43,6 +43,9 @@ pipeline {
                     env.GOPATH = "${WORKSPACE}"
                     env.HOME = "${WORKSPACE}"
                     env.XDG_CACHE_HOME = "${WORKSPACE}/.cache"
+
+                    sh "mkdir -p ${env.HOME}/github.com/jancajthaml-openbank"
+                    sh "ln -s ${env.HOME}/services/lake ${env.HOME}/github.com/jancajthaml-openbank/lake"
                 }
             }
         }
@@ -69,8 +72,6 @@ pipeline {
                 }
             }
             steps {
-                sh "ln -s ${env.HOME}/services/lake ${env.HOME}/github.com/jancajthaml-openbank/lake"
-
                 dir("services/lake") {
                     sh "${env.HOME}/dev/lifecycle/test --pkg lake --output ${env.HOME}/reports"
                     echo sh(
