@@ -39,7 +39,6 @@ pipeline {
                     env.PROJECT_NAME = "Lake"                      // fixme read from sources
                     env.PROJECT_DESCRIPTION = "Lake message relay" // fixme read from sources
                     env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
-                    env.PATH="${GOPATH}/bin:$PATH"
                 }
             }
         }
