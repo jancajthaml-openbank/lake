@@ -45,13 +45,26 @@ pipeline {
 
         stage('Sync Dependencies') {
             agent {
-                docker { image 'jancajthaml/go:latest' }
+                docker {
+                    image 'jancajthaml/go:latest'
+                    args '-v $HOME:/go/src/github.com/jancajthaml-openbank'
+                }
             }
             steps {
-                sh "mkdir -p /go/src/github.com/jancajthaml-openbank"
-                sh "ln -s ./services/lake /go/src/github.com/jancajthaml-openbank/lake"
-                sh "rm go.sum"
-                sh "go mod vendor"
+                echo sh(
+                    script: 'pwd',
+                    returnStdout: true
+                ).trim()
+
+                echo sh(
+                    script: 'ls -la',
+                    returnStdout: true
+                ).trim()
+
+                //sh "mkdir -p /go/src/github.com/jancajthaml-openbank"
+                //sh "ln -s ./services/lake /go/src/github.com/jancajthaml-openbank/lake"
+                //sh "rm go.sum"
+                //sh "go mod vendor"
             }
         }
     }
