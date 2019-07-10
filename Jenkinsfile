@@ -47,7 +47,8 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    args '-v $HOME:/go/src/github.com/jancajthaml-openbank'
+                    args '-v ${PWD}:/go/src/github.com/jancajthaml-openbank -w /go/src/github.com/jancajthaml-openbank'
+                    reuseNode true
                 }
             }
             steps {
@@ -60,18 +61,6 @@ pipeline {
                     script: 'ls -la',
                     returnStdout: true
                 ).trim()
-
-                dir(path: '/go/src/github.com/jancajthaml-openbank') {
-                    echo sh(
-                        script: 'pwd',
-                        returnStdout: true
-                    ).trim()
-
-                    echo sh(
-                        script: 'ls -la',
-                        returnStdout: true
-                    ).trim()
-                }
 
                 //sh "mkdir -p /go/src/github.com/jancajthaml-openbank"
                 //sh "ln -s ./services/lake /go/src/github.com/jancajthaml-openbank/lake"
