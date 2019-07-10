@@ -15,7 +15,8 @@ def dockerOptions() {
 pipeline {
 
     agent {
-        node('master') {
+        node {
+            label 'master'
             def path = pwd()
             def branchName = env.BRANCH_NAME
             if (branchName) {
