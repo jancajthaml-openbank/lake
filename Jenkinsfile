@@ -45,7 +45,7 @@ def safeNode(label=null, Closure body) {
 pipeline {
 
     agent {
-        safeNode {
+        node {
             label 'master'
         }
     }
