@@ -48,7 +48,7 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    ws '/go/src/github.com/jancajthaml-openbank'
+                    customWorkspace '/go/src/github.com/jancajthaml-openbank'
                     reuseNode true
                 }
             }
