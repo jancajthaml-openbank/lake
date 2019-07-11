@@ -160,9 +160,6 @@ workflows:
             - debian-amd64
             - debian-armhf
             - debian-arm64
-      - perf-amd64:
-          requires:
-            - publish
       - bbtest-amd64:
           requires:
             - publish
@@ -543,8 +540,8 @@ jobs:
                 --cap-add SYS_ADMIN \
                 -e UNIT_VERSION="${VERSION}" \
                 -e UNIT_ARCH=amd64 \
-                -e NUMBER_OF_WORKERS=50 \
-                -e MAX_MESSAGES_PER_WORKER=200000 \
+                -e NUMBER_OF_WORKERS=10 \
+                -e MAX_MESSAGES_PER_WORKER=10000000 \
                 -e NO_TTY=1 \
                 -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
                 -v /var/run/docker.sock:/var/run/docker.sock \
