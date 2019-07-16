@@ -7,12 +7,12 @@ Feature: Metrics test
       METRICS_REFRESHRATE=1s
     """
 
-    Then metrics file /reports/bbtest/metrics.json should have following keys:
+    Then metrics file /tmp/reports/metrics.json should have following keys:
     """
       messageEgress
       messageIngress
     """
-    And metrics file /reports/bbtest/metrics.json has permissions -rw-r--r--
+    And metrics file /tmp/reports/metrics.json has permissions -rw-r--r--
 
   Scenario: metrics can remembers previous values after reboot
     Given lake is reconfigured with
@@ -20,21 +20,21 @@ Feature: Metrics test
       METRICS_REFRESHRATE=1s
     """
 
-    Then metrics file /reports/bbtest/metrics.json reports:
+    Then metrics file /tmp/reports/metrics.json reports:
     """
       messageEgress 0
       messageIngress 0
     """
 
     When lake recieves "A B"
-    Then metrics file /reports/bbtest/metrics.json reports:
+    Then metrics file /tmp/reports/metrics.json reports:
     """
       messageEgress 1
       messageIngress 1
     """
 
     When lake is restarted
-    Then metrics file /reports/bbtest/metrics.json reports:
+    Then metrics file /tmp/reports/metrics.json reports:
     """
       messageEgress 1
       messageIngress 1

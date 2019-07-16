@@ -4,6 +4,7 @@ set -eu
 trap exit INT TERM
 
 VERSION=""
+SOURCE=""
 TARGET_ARCHITECTURE=""
 
 while [ $# -gt 0 ] ; do
@@ -11,13 +12,19 @@ key="$1"
 
 case $key in
 
+  --source)
+    SOURCE="$2"
+    shift
+    shift
+  ;;
+
   --arch)
     TARGET_ARCHITECTURE="$2"
     shift
     shift
   ;;
 
-  -v|--version)
+  --version)
     VERSION="$2"
     shift
     shift
@@ -30,15 +37,39 @@ case $key in
 esac
 done
 
-if [ ! "${VERSION}" ] ; then
+if [ -z "${VERSION}" ] ; then
   (>&2 echo "version not provided")
   exit 1
 fi
 
-if [ ! "${TARGET_ARCHITECTURE}" ] ; then
+if [ -z "${SOURCE}" ] ; then
+  (>&2 echo "source not provided")
+  exit 1
+fi
+
+if [ -z "${TARGET_ARCHITECTURE}" ] ; then
   (>&2 echo "target architecture not provided (use e.g. --arch amd64)")
   exit 1
 fi
+
+DEB_SOURCES="${SOURCE}/debian_${TARGET_ARCHITECTURE}"
+BIN_SOURCES="${SOURCE}/bin"
+
+if [ ! -d "${DEB_SOURCES}" ] ; then
+  (>&2 echo "packaging for ${TARGET_ARCHITECTURE} is not supported")
+  exit 1
+fi
+
+if [ ! -f "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" ] ; then
+  (>&2 echo "did not found binary to package at ${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}")
+  exit 1
+fi
+
+mkdir -p ${DEB_SOURCES}/usr/bin
+if [ -f "${DEB_SOURCES}/usr/bin/lake" ] ; then
+  rm -f ${DEB_SOURCES}/usr/bin/lake
+fi
+
 
 generate_manpage() {
   mkdir -p ${DEB_SOURCES}/usr/share/man/man8
@@ -148,25 +179,6 @@ check_files() {
 }
 
 ################################################################################
-
-PKGS="$(pwd)/packaging"
-DEB_SOURCES="${PKGS}/debian_${TARGET_ARCHITECTURE}"
-BIN_SOURCES="${PKGS}/bin"
-
-if [ ! -d "${DEB_SOURCES}" ] ; then
-  (>&2 echo "packaging for ${TARGET_ARCHITECTURE} is not supported")
-  exit 1
-fi
-
-if [ ! -f "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" ] ; then
-  (>&2 echo "did not found binary to package at ${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}")
-  exit 1
-fi
-
-mkdir -p ${DEB_SOURCES}/usr/bin
-if [ -f "${DEB_SOURCES}/usr/bin/lake" ] ; then
-  rm -f ${DEB_SOURCES}/usr/bin/lake
-fi
 
 case ${TARGET_ARCHITECTURE} in
 

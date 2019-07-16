@@ -56,17 +56,15 @@ class Graph(object):
 
     x1 = list(range(0, duration, 1))
     y1 = [item['messageIngress'] for item in metrics.series.values()]
-    y2 = [(item['messageIngress']-item['messageEgress']) for item in metrics.series.values()]
     y3 = [item['messageIngress'] for item in metrics.fps.values()]
 
     if duration == 1:
         duration += 1
         x1 = [0] + [x + 1 for x in x1]
         y1 = [0] + y1
-        y2 = [0] + y2
         y3 = [y3[0]] + y3
 
-    ysmoothed = gaussian_filter1d(y1, sigma=2)
+    fps = gaussian_filter1d(y3, sigma=2)
     ymedian = numpy.median(y3)
 
     x_interval = list(reversed(range(duration-1, -1, min(-1, -int(duration/4)))))
@@ -80,12 +78,10 @@ class Graph(object):
     ax1.set_yticks([0, max(y1)])
     ax1.set_yticklabels([human_readable_count(x) for x in ax1.get_yticks()])
 
-    ax1.fill_between(x1, ysmoothed, 0, alpha=0.3, interpolate=False)
-    ax1.fill_between(x1, y2, 0, interpolate=False)
+    ax1.fill_between(x1, y1, 0, alpha=0.3, interpolate=False)
 
     ax2.plot(x1, [ymedian if len(y3) else 0]*len(x1), linewidth=1, linestyle='--', antialiased=False, color='black')
-
-    ax2.plot(x1, y3, linewidth=1, antialiased=True)
+    ax2.plot(x1, fps, linewidth=1, antialiased=True)
 
     ax2.set_xlim(xmin=0, xmax=max(x1))
     ax2.set_ylim(ymin=0, ymax=max(y3) * 2)
@@ -93,7 +89,6 @@ class Graph(object):
     ax2.set_yticks([0, ymedian])
     ax2.set_yticklabels([human_readable_count(x) for x in ax2.get_yticks()])
 
-    plt.title(name)
     plt.tight_layout()
-    fig.savefig('/reports/perf/{}'.format(self.name), bbox_inches='tight', dpi=300, pad_inches=0)
+    fig.savefig('/tmp/reports/{}'.format(self.name), bbox_inches='tight', dpi=300, pad_inches=0)
     plt.close(fig)

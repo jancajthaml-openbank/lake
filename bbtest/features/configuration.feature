@@ -1,6 +1,6 @@
 Feature: Service can be configured
 
-  Scenario: configure log level
+  Scenario: configure log level to DEBUG
     Given lake is reconfigured with
     """
       LOG_LEVEL=DEBUG
@@ -10,6 +10,7 @@ Feature: Service can be configured
       Log level set to DEBUG
     """
 
+  Scenario: configure log level to ERROR
     Given lake is reconfigured with
     """
       LOG_LEVEL=ERROR
@@ -19,6 +20,7 @@ Feature: Service can be configured
       Log level set to ERROR
     """
 
+  Scenario: configure log level to INFO
     Given lake is reconfigured with
     """
       LOG_LEVEL=INFO

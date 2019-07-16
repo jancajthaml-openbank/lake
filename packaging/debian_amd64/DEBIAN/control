@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.1.9+perf-proper-median
+Version: 1.1.9+jenkins-pipeline
 Section: misc
 Priority: extra
 Architecture: amd64

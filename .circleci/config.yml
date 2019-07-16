@@ -304,7 +304,10 @@ jobs:
       - run:
           name: Package binaries
           command: |
-            /home/circleci/project/dev/lifecycle/package --arch linux/amd64 --pkg lake
+            /home/circleci/project/dev/lifecycle/package \
+              --arch linux/amd64 \
+              --pkg lake \
+              --output /home/circleci/project/packaging/bin
           no_output_timeout: 5m
       - save_cache:
           key: binaries-amd64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -327,7 +330,10 @@ jobs:
       - run:
           name: Package binaries
           command: |
-            /home/circleci/project/dev/lifecycle/package --arch linux/armhf --pkg lake
+            /home/circleci/project/dev/lifecycle/package \
+              --arch linux/armhf \
+              --pkg lake \
+              --output /home/circleci/project/packaging/bin
           no_output_timeout: 5m
       - save_cache:
           key: binaries-armhf-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -350,7 +356,10 @@ jobs:
       - run:
           name: Package binaries
           command: |
-            /home/circleci/project/dev/lifecycle/package --arch linux/arm64 --pkg lake
+            /home/circleci/project/dev/lifecycle/package \
+              --arch linux/arm64 \
+              --pkg lake \
+              --output /home/circleci/project/packaging/bin
           no_output_timeout: 5m
       - save_cache:
           key: binaries-arm64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -374,7 +383,10 @@ jobs:
           name: Package for debian
           command: |
             VERSION=$(cat /home/circleci/project/DEBIAN_VERSION)
-            /home/circleci/project/dev/lifecycle/debian -v ${VERSION} --arch amd64 --pkg lake
+            /home/circleci/project/dev/lifecycle/debian \
+              --arch amd64 \
+              --version ${VERSION} \
+              --source /home/circleci/project/packaging
           no_output_timeout: 5m
       - save_cache:
           key: debian-amd64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -400,7 +412,10 @@ jobs:
           name: Package for debian
           command: |
             VERSION=$(cat /home/circleci/project/DEBIAN_VERSION)
-            /home/circleci/project/dev/lifecycle/debian -v ${VERSION} --arch armhf --pkg lake
+            /home/circleci/project/dev/lifecycle/debian \
+              --arch armhf \
+              --version ${VERSION} \
+              --source /home/circleci/project/packaging
           no_output_timeout: 5m
       - save_cache:
           key: debian-armhf-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -426,7 +441,10 @@ jobs:
           name: Package for debian
           command: |
             VERSION=$(cat /home/circleci/project/DEBIAN_VERSION)
-            /home/circleci/project/dev/lifecycle/debian -v ${VERSION} --arch arm64 --pkg lake
+            /home/circleci/project/dev/lifecycle/debian \
+              --arch arm64 \
+              --version ${VERSION} \
+              --source /home/circleci/project/packaging
           no_output_timeout: 5m
       - save_cache:
           key: debian-arm64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -477,7 +495,10 @@ jobs:
           key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Unit test
-          command: /home/circleci/project/dev/lifecycle/test --pkg lake
+          command: |
+            /home/circleci/project/dev/lifecycle/test \
+              --pkg lake \
+              --output /home/circleci/project/reports
           no_output_timeout: 5m
       - store_test_results:
           path: /home/circleci/project/reports/unit-tests-lake
@@ -496,17 +517,22 @@ jobs:
       - run:
           name: Run blackbox tests
           command: |
-            VERSION=$(cat /home/circleci/project/DOCKER_VERSION)
+            IMAGE_VERSION=$(cat /home/circleci/project/DOCKER_VERSION)
+            UNIT_VERSION=$(cat /home/circleci/project/DEBIAN_VERSION)
+
             docker exec -it $(\
-              docker run -d -ti \
+              docker run -d -t \
                 --cap-add SYS_ADMIN \
-                -e UNIT_VERSION="${VERSION}" \
+                -e IMAGE_VERSION="${IMAGE_VERSION}" \
+                -e UNIT_VERSION="${UNIT_VERSION}" \
                 -e UNIT_ARCH=amd64 \
+                -v /tmp/reports:/reports/bbtest \
                 -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
                 -v /var/run/docker.sock:/var/run/docker.sock \
                 -v /var/lib/docker/containers:/var/lib/docker/containers \
                 -v /home/circleci/project/bbtest:/opt/bbtest \
                 -v /home/circleci/project/reports:/reports \
+                -w /opt/bbtest \
               jancajthaml/bbtest:amd64 \
             ) rspec --require /opt/bbtest/spec.rb \
               --format documentation \
@@ -534,11 +560,14 @@ jobs:
       - run:
           name: Run perf tests
           command: |
-            VERSION=$(cat /home/circleci/project/DOCKER_VERSION)
+            IMAGE_VERSION=$(cat /home/circleci/project/DOCKER_VERSION)
+            UNIT_VERSION=$(cat /home/circleci/project/DEBIAN_VERSION)
+
             docker exec -it $(\
-              docker run -d -ti \
+              docker run -d -t \
                 --cap-add SYS_ADMIN \
-                -e UNIT_VERSION="${VERSION}" \
+                -e IMAGE_VERSION="${IMAGE_VERSION}" \
+                -e UNIT_VERSION="${UNIT_VERSION}" \
                 -e UNIT_ARCH=amd64 \
                 -e NUMBER_OF_WORKERS=10 \
                 -e MAX_MESSAGES_PER_WORKER=10000000 \

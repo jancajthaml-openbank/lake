@@ -80,12 +80,12 @@ func TestHydrate(t *testing.T) {
 		require.Nil(t, err)
 		defer os.Remove(tmpfile.Name())
 
-		egress_old := uint64(10)
-		ingress_old := uint64(20)
+		egressOld := uint64(10)
+		ingressOld := uint64(20)
 
 		old := Metrics{
-			messageEgress:  &egress_old,
-			messageIngress: &ingress_old,
+			messageEgress:  &egressOld,
+			messageIngress: &ingressOld,
 		}
 
 		data, err := old.MarshalJSON()

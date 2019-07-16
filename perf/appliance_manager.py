@@ -42,16 +42,15 @@ class ApplianceManager(object):
         raise
       pass
 
-    image_version = os.environ.get('UNIT_VERSION', '')
-    if image_version.startswith('v'):
-      image_version = image_version[1:]
+    self.image_version = os.environ.get('IMAGE_VERSION', '')
+    self.debian_version = os.environ.get('UNIT_VERSION', '')
 
-    self.image_version = image_version
-    self.debian_version = image_version.replace('-', '+', 1)
+    if self.debian_version.startswith('v'):
+      self.debian_version = self.debian_version[1:]
 
     scratch_docker_cmd = ['FROM alpine']
 
-    image = 'openbank/lake:v{}'.format(self.image_version)
+    image = 'openbank/lake:{}'.format(self.image_version)
     package = 'lake_{}_{}'.format(self.debian_version, self.arch)
     scratch_docker_cmd.append('COPY --from={} /opt/artifacts/{}.deb /opt/artifacts/lake.deb'.format(image, package))
 

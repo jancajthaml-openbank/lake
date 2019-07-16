@@ -19,7 +19,7 @@ import time
 def main():
   info("prepare")
 
-  clear_dir("/reports/perf")
+  clear_dir("/tmp/reports")
 
   manager = ApplianceManager()
   manager.bootstrap()
@@ -27,7 +27,7 @@ def main():
   info("run tests")
 
   parallelism = int(os.environ.get('NUMBER_OF_WORKERS', '5'))
-  max_messages_per_worker = int(os.environ.get('MAX_MESSAGES_PER_WORKER', '200000'))
+  max_messages_per_worker = int(os.environ.get('MAX_MESSAGES_PER_WORKER', '20000'))
 
   dataset = []
   i = 1
@@ -50,7 +50,7 @@ def main():
         pool.join()
 
     with timeit('{:,.0f} graph'.format(label)):
-      Graph(Metrics('/reports/perf/metrics.count_{}.json'.format(label)))
+      Graph(Metrics('/tmp/reports/metrics.count_{}.json'.format(label)))
 
   manager.teardown()
   info("terminated")

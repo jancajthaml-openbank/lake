@@ -27,7 +27,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const KILL_MESSAGE = "K"
+const killMessage = "K"
 
 // Relay fascade
 type Relay struct {
@@ -85,7 +85,7 @@ func (relay Relay) Start() {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer recover()
-	defer relay.MarkDone()
+
 	defer func() { relay.killConfirmed <- nil }()
 
 	alive := true
@@ -103,6 +103,7 @@ func (relay Relay) Start() {
 				select {
 				case <-relay.killConfirmed:
 					log.Info("Stop relay daemon")
+					relay.MarkDone()
 					return
 				case <-ticker.C:
 					relay.killRequest <- nil
@@ -190,7 +191,7 @@ zmqKillChannelConnect:
 		case <-relay.killRequest:
 			for {
 				if killChannel != nil {
-					_, err = killChannel.Send(KILL_MESSAGE, 0)
+					_, err = killChannel.Send(killMessage, 0)
 					if err == nil {
 						return
 					}
@@ -206,7 +207,7 @@ mainLoop:
 	chunk, err = receiver.Recv(0)
 	switch err {
 	case nil:
-		if chunk == KILL_MESSAGE {
+		if chunk == killMessage {
 			err = nil
 			log.Info("Relay killed")
 			return
