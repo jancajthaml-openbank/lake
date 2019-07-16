@@ -43,8 +43,6 @@ fi
 coverage_out=$(tempfile)
 test_out=$(tempfile)
 
-echo "home is set to $(cd ~ && pwd)"
-
 mkdir -p ${OUTPUT} ${OUTPUT}/unit-tests-${TARGET_PACKAGE}
 cd ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
 
