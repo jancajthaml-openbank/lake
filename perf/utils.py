@@ -41,29 +41,29 @@ def interrupt_stdout() -> None:
 
 def info(msg) -> None:
   this.__progress_running = False
-  sys.stdout.write('\033[92m  [+] {0}\033[0m\033[K\n'.format(msg))
+  sys.stdout.write('\033[32m  [+] {0}\033[0m  \n'.format(msg))
   sys.stdout.flush()
 
 def print_daemon(msg) -> None:
   this.__progress_running = False
-  sys.stdout.write('\033[90m   |  {0}\033[0m\033[K\n'.format(msg))
+  sys.stdout.write('\033[0m   |  {0}\033[0m  \n'.format(msg))
   sys.stdout.flush()
 
 def progress(msg) -> None:
   if not __TTY:
     return
   this.__progress_running = True
-  sys.stdout.write('\033[97m   |  {0}\033[K\r'.format(msg.rstrip()))
+  sys.stdout.write('\033[37m   |  {0}\033[0m\r'.format(msg.rstrip()))
   sys.stdout.flush()
 
 def error(msg) -> None:
   this.__progress_running = False
-  sys.stdout.write('\033[91m  [+] {0}\033[0m[K\n'.format(msg))
+  sys.stdout.write('\033[31m  [+] {0}\033[0m  \n'.format(msg))
   sys.stdout.flush()
 
 def warn(msg) -> None:
   this.__progress_running = False
-  sys.stdout.write('\033[93m  [+] {0}\033[0m\033[K\n'.format(msg))
+  sys.stdout.write('\033[33m  [+] {0}\033[0m  \n'.format(msg))
   sys.stdout.flush()
 
 class timeit():

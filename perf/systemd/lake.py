@@ -16,7 +16,7 @@ class Lake(object):
   def __init__(self):
     self.reconfigure({
       'METRICS_REFRESHRATE': '1000ms',
-      'METRICS_CONTINOUS': 'false',
+      'METRICS_CONTINUOUS': 'false',
     })
     self.stop()
 
@@ -30,7 +30,7 @@ class Lake(object):
         'journalctl', '-o', 'short-precise', '-u', '{}.service'.format(unit), '--no-pager'
       ])
       if code == 0:
-        with open('/reports/perf/{}.log'.format(unit), 'w') as f:
+        with open('/tmp/reports/perf-{}.log'.format(unit), 'w') as f:
           f.write(result)
 
   def restart(self) -> bool:

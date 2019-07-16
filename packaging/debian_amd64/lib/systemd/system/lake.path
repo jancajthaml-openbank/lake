@@ -5,6 +5,8 @@ ConditionPathExists=/etc/init/lake.conf
 
 [Path]
 PathChanged=/etc/init/lake.conf
+PathModified=/etc/init/lake.conf
+Unit=lake.service
 
 [Install]
 WantedBy=lake.service

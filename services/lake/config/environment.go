@@ -26,7 +26,7 @@ import (
 
 func loadConfFromEnv() Configuration {
 	metricsOutput := getEnvFilename("LAKE_METRICS_OUTPUT", "/tmp")
-	metricsContinuous := getEnvBoolean("LAKE_METRICS_CONTINOUS", true)
+	metricsContinuous := getEnvBoolean("LAKE_METRICS_CONTINUOUS", true)
 	metricsRefreshRate := getEnvDuration("LAKE_METRICS_REFRESHRATE", time.Second)
 	logLevel := strings.ToUpper(getEnvString("LAKE_LOG_LEVEL", "DEBUG"))
 	portPub := getEnvInteger("LAKE_PORT_PUB", 5561)
