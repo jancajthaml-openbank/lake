@@ -20,14 +20,14 @@ case "$1" in
 
   configure)
     if [ -f /etc/init/lake.conf ] ; then
-
       enable lake.path
       enable lake.service
       enable lake-relay.service
 
       if [ ${SYSTEMD_AVAIL} ] ; then
-        (systemctl daemon-reload || :)
-        (systemctl start lake.service >/dev/null || :)
+        systemctl daemon-reload
+        systemctl start lake.service
+        systemctl start lake.path
       fi
 
     else
