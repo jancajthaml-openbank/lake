@@ -536,7 +536,7 @@ jobs:
               jancajthaml/bbtest:amd64 \
             ) rspec --require /opt/bbtest/spec.rb \
               --format documentation \
-              --format RspecJunitFormatter \
+              --format RSpec::JUnit \
               --out junit.xml \
               --pattern /opt/bbtest/features/*.feature
           no_output_timeout: 5m

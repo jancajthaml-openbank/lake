@@ -1,4 +1,6 @@
+require 'rspec/junit'
 require 'turnip/rspec'
+require 'time'
 require 'json'
 require 'thread'
 

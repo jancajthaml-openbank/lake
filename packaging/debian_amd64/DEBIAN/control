@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.1.9+jenkins-pipeline
+Version: 1.1.9+upgrade-bbtest-reporter
 Section: misc
 Priority: extra
 Architecture: amd64

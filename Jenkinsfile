@@ -210,8 +210,8 @@ pipeline {
                             --tty \
                             --require ${HOME}/bbtest/spec.rb \
                             --format documentation \
-                            --format RspecJunitFormatter \
-                            --out ${HOME}/reports/bbtest-junit.xml \
+                            --format RSpec::JUnit \
+                            --out ${HOME}/reports/blackbox-tests/results.xml \
                             --pattern ${HOME}/bbtest/features/\\*.feature
                         """
                     }
@@ -219,7 +219,7 @@ pipeline {
                         allowEmptyArchive: true,
                         artifacts: 'reports/bbtest-*.log'
                     )
-                    junit 'reports/bbtest-junit.xml'
+                    junit 'reports/blackbox-tests/results.xml'
                 }
             }
         }
