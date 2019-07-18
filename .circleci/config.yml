@@ -501,7 +501,7 @@ jobs:
               --output /home/circleci/project/reports
           no_output_timeout: 5m
       - store_test_results:
-          path: /home/circleci/project/reports/unit-tests-lake
+          path: /home/circleci/project/reports/unit-tests
 
   # -------------------------------------------------------------------------- #
 
