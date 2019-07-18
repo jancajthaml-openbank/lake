@@ -268,11 +268,11 @@ pipeline {
                     allowMissing: true,
                     alwaysLinkToLastBuild: false,
                     keepAll: true,
-                    reportDir: 'reports/unit-tests-lake',
-                    reportFiles: 'coverage.html',
+                    reportDir: 'reports/unit-tests',
+                    reportFiles: 'lake-coverage.html',
                     reportName: 'Lake | Unit Test Coverage'
                 ])
-                junit 'reports/unit-tests-lake/results.xml'
+                junit 'reports/unit-tests/lake-results.xml'
                 junit 'reports/blackbox-tests/results.xml'
             }
             cleanWs()
