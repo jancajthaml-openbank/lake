@@ -147,15 +147,6 @@ pipeline {
                         --output ${HOME}/reports
                     """
                 }
-                publishHTML(target: [
-                    allowMissing: true,
-                    alwaysLinkToLastBuild: false,
-                    keepAll: true,
-                    reportDir: 'reports/unit-tests-lake',
-                    reportFiles: 'coverage.html',
-                    reportName: 'Unit Test Coverage'
-                ])
-                junit 'reports/unit-tests-lake/results.xml'
             }
         }
 
@@ -184,10 +175,6 @@ pipeline {
                         --source ${HOME}/packaging
                     """
                 }
-                archiveArtifacts(
-                    allowEmptyArchive: true,
-                    artifacts: 'packaging/bin/*'
-                )
             }
         }
 
@@ -215,11 +202,6 @@ pipeline {
                             --pattern ${HOME}/bbtest/features/\\*.feature
                         """
                     }
-                    archiveArtifacts(
-                        allowEmptyArchive: true,
-                        artifacts: 'reports/bbtest-*.log'
-                    )
-                    junit 'reports/blackbox-tests/results.xml'
                 }
             }
         }
@@ -234,14 +216,6 @@ pipeline {
                             ${HOME}/perf/main.py
                         """
                     }
-                    archiveArtifacts(
-                        allowEmptyArchive: true,
-                        artifacts: 'reports/graph_metrics.count_*.png'
-                    )
-                    archiveArtifacts(
-                        allowEmptyArchive: true,
-                        artifacts: 'reports/perf-*.log'
-                    )
                 }
             }
         }
@@ -259,7 +233,6 @@ pipeline {
 
     post {
         always {
-            cleanWs()
             script {
                 sh "docker rmi -f registry.hub.docker.com/openbank/lake:amd64-${env.VERSION_MAIN}-${env.VERSION_META} || :"
                 sh "docker rmi -f lake:amd64-${env.GIT_COMMIT} || :"
@@ -274,6 +247,35 @@ pipeline {
                     """
                 sh "docker system prune"
             }
+            script {
+                archiveArtifacts(
+                    allowEmptyArchive: true,
+                    artifacts: 'reports/graph_metrics.count_*.png'
+                )
+                archiveArtifacts(
+                    allowEmptyArchive: true,
+                    artifacts: 'reports/perf-*.log'
+                )
+                archiveArtifacts(
+                    allowEmptyArchive: true,
+                    artifacts: 'reports/bbtest-*.log'
+                )
+                archiveArtifacts(
+                    allowEmptyArchive: true,
+                    artifacts: 'packaging/bin/*'
+                )
+                publishHTML(target: [
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'reports/unit-tests-lake',
+                    reportFiles: 'coverage.html',
+                    reportName: 'Unit Test Coverage'
+                ])
+                junit 'reports/unit-tests-lake/results.xml'
+                junit 'reports/blackbox-tests/results.xml'
+            }
+            cleanWs()
         }
         success {
             echo 'Success'
