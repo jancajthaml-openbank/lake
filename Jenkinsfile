@@ -70,10 +70,10 @@ pipeline {
                         script: 'git rev-parse --abbrev-ref HEAD 2> /dev/null | sed \'s:.*/::\'',
                         returnStdout: true
                     ).trim()
-
+									
                     env.LICENSE = "Apache-2.0"                     // fixme read from sources
-                    env.PROJECT_NAME = "Lake"                      // fixme read from sources
-                    env.PROJECT_DESCRIPTION = "Lake message relay" // fixme read from sources
+                    env.PROJECT_NAME = "openbank lake"                      // fixme read from sources
+                    env.PROJECT_DESCRIPTION = "OpenBanking lake service" // fixme read from sources
                     env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
                     env.HOME = "${WORKSPACE}"
                     env.GOPATH = "${WORKSPACE}/go"
