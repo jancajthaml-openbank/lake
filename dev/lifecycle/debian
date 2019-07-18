@@ -70,7 +70,6 @@ if [ -f "${DEB_SOURCES}/usr/bin/lake" ] ; then
   rm -f ${DEB_SOURCES}/usr/bin/lake
 fi
 
-
 generate_manpage() {
   mkdir -p ${DEB_SOURCES}/usr/share/man/man8
 
