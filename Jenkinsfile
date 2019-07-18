@@ -243,7 +243,7 @@ pipeline {
                     grep '<none>' | \
                     grep 'hours\\|days\\|weeks\\|months' | \
                     awk '{ print \$1 }' | \
-                    xargs --no-run-if-empty docker rmi
+                    xargs --no-run-if-empty docker rmi -f
                     """
                 sh "docker system prune"
             }
@@ -270,7 +270,7 @@ pipeline {
                     keepAll: true,
                     reportDir: 'reports/unit-tests-lake',
                     reportFiles: 'coverage.html',
-                    reportName: 'Unit Test Coverage'
+                    reportName: 'Lake | Unit Test Coverage'
                 ])
                 junit 'reports/unit-tests-lake/results.xml'
                 junit 'reports/blackbox-tests/results.xml'
