@@ -70,7 +70,7 @@ pipeline {
                         script: 'git rev-parse --abbrev-ref HEAD 2> /dev/null | sed \'s:.*/::\'',
                         returnStdout: true
                     ).trim()
-									
+                                    
                     env.LICENSE = "Apache-2.0"                     // fixme read from sources
                     env.PROJECT_NAME = "openbank lake"                      // fixme read from sources
                     env.PROJECT_DESCRIPTION = "OpenBanking lake service" // fixme read from sources
@@ -271,9 +271,15 @@ pipeline {
                     reportDir: 'reports/unit-tests',
                     reportFiles: 'lake-coverage.html',
                     reportName: 'Lake | Unit Test Coverage'
-                ])
-                junit 'reports/unit-tests/lake-results.xml'
-                junit 'reports/blackbox-tests/results.xml'
+                ])           
+                junit(
+                    allowEmptyResults: true,
+                    testResults: 'reports/unit-tests/lake-results.xml'
+                )
+                junit(
+                    allowEmptyResults: true,
+                    testResults: 'reports/blackbox-tests/results.xml'
+                )
             }
             cleanWs()
         }
