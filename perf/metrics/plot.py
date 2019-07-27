@@ -90,5 +90,5 @@ class Graph(object):
     ax2.set_yticklabels([human_readable_count(x) for x in ax2.get_yticks()])
 
     plt.tight_layout()
-    fig.savefig('/tmp/reports/{}'.format(self.name), bbox_inches='tight', dpi=300, pad_inches=0)
+    fig.savefig('/tmp/reports/perf-tests/graphs/{}'.format(self.name), bbox_inches='tight', dpi=300, pad_inches=0)
     plt.close(fig)

@@ -72,18 +72,11 @@ bbtest:
 			-v /var/run/docker.sock:/var/run/docker.sock:rw \
 			-v /var/lib/docker/containers:/var/lib/docker/containers:rw \
 			-v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-			-v $$(pwd)/bbtest:/opt/bbtest \
+			-v $$(pwd)/bbtest:/opt/app \
 			-v $$(pwd)/reports:/tmp/reports \
-			-w /opt/bbtest \
+			-w /opt/app \
 		jancajthaml/bbtest:amd64 \
-	) rspec \
-		--colour \
-		--tty \
-		--require /opt/bbtest/spec.rb \
-		--format documentation \
-		--format RSpec::JUnit \
-		--out /tmp/reports/blackbox-tests/results.xml \
-		--pattern /opt/bbtest/features/*.feature
+	) python3 /opt/app/main.py
 	@(docker rm -f $$(docker ps -a --filter="name=lake_bbtest_amd64" -q) &> /dev/null || :)
 
 .PHONY: perf
