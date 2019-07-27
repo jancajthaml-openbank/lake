@@ -6,7 +6,7 @@ import json
 import glob
 from functools import partial
 from collections import OrderedDict
-from utils import warn, info, interrupt_stdout, clear_dir, timeit
+from utils import warn, info, interrupt_stdout, timeit
 from metrics.decorator import metrics
 from metrics.fascade import Metrics
 from metrics.plot import Graph
@@ -19,7 +19,8 @@ import time
 def main():
   info("prepare")
 
-  clear_dir("/tmp/reports")
+  os.system('mkdir -p /tmp/reports /tmp/reports/perf-tests /tmp/reports/perf-tests/logs /tmp/reports/perf-tests/graphs /tmp/reports/perf-tests/metrics')
+  os.system('rm -rf /tmp/reports/perf-tests/metrics/*.json /tmp/reports/perf-tests/logs/*.log /tmp/reports/perf-tests/graphs/*.png')
 
   manager = ApplianceManager()
   manager.bootstrap()
@@ -50,7 +51,7 @@ def main():
         pool.join()
 
     with timeit('{:,.0f} graph'.format(label)):
-      Graph(Metrics('/tmp/reports/metrics.count_{}.json'.format(label)))
+      Graph(Metrics('/tmp/reports/perf-tests/metrics/metrics.count_{}.json'.format(label)))
 
   manager.teardown()
   info("terminated")

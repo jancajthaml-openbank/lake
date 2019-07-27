@@ -128,38 +128,3 @@ def human_readable_duration(ms):
     s=str(s) + " s " if s > 0 else '',
     ms=str(ms) + " ms " if ms > 0 else ''
   ).strip().split(" ")[:4])
-
-# fixme move under os_utils module
-def clear_dir(path_) -> None:
-  if not os.path.exists(path_):
-    os.makedirs(path_)
-    return
-
-  def __remove_readonly(fn, p, excinfo):
-    if fn is os.rmdir:
-      os.chmod(p, stat.S_IWRITE)
-      os.rmdir(p)
-    elif fn is os.remove:
-      os.lchmod(p, stat.S_IWRITE)
-      os.remove(p)
-
-  def __is_regular(p):
-    try:
-      mode = os.lstat(p).st_mode
-    except os.error:
-      mode = 0
-    return stat.S_ISDIR(mode)
-
-  if __is_regular(path_):
-    for name in os.listdir(path_):
-      fullpath = os.path.join(path_, name)
-      if __is_regular(fullpath):
-        shutil.rmtree(fullpath, onerror=__remove_readonly)
-      else:
-        try:
-          os.remove(fullpath)
-        except OSError:
-          os.lchmod(fullpath, stat.S_IWRITE)
-          os.remove(fullpath)
-  else:
-    raise OSError("Cannot call clear via symbolic link to a directory")

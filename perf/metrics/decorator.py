@@ -41,6 +41,6 @@ class metrics():
     self.__persist()
 
   def __persist(self) -> None:
-    with open('/tmp/reports/metrics.{0}.json'.format(self.__label), mode='w', encoding='ascii') as fd:
+    with open('/tmp/reports/perf-tests/metrics/metrics.{0}.json'.format(self.__label), mode='w', encoding='ascii') as fd:
       store = self.__metrics.get_metrics()
       json.dump(store, fd, indent=4, sort_keys=True)

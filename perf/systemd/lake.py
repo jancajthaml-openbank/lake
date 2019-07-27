@@ -30,7 +30,7 @@ class Lake(object):
         'journalctl', '-o', 'short-precise', '-u', '{}.service'.format(unit), '--no-pager'
       ])
       if code == 0:
-        with open('/tmp/reports/perf-{}.log'.format(unit), 'w') as f:
+        with open('/tmp/reports/perf-tests/logs/{}.log'.format(unit), 'w') as f:
           f.write(result)
 
   def restart(self) -> bool:
