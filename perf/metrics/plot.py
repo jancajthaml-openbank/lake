@@ -20,7 +20,6 @@ mpl.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
 import matplotlib.style
-from scipy.ndimage.filters import gaussian_filter1d
 import numpy
 
 mpl.style.use('seaborn-notebook')
