@@ -17,13 +17,16 @@ package relay
 import (
 	"context"
 	"fmt"
-	"runtime"
-	"time"
 
 	"github.com/jancajthaml-openbank/lake/metrics"
 	"github.com/jancajthaml-openbank/lake/utils"
 
-	zmq "github.com/pebbe/zmq4"
+	mangos "nanomsg.org/go/mangos/v2"
+	"nanomsg.org/go/mangos/v2/protocol/pub"
+	"nanomsg.org/go/mangos/v2/protocol/pull"
+
+	_ "nanomsg.org/go/mangos/v2/transport/all"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,32 +42,48 @@ type Relay struct {
 func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) Relay {
 	return Relay{
 		DaemonSupport: utils.NewDaemonSupport(ctx, "relay"),
-		pullPort:      fmt.Sprintf("tcp://*:%d", pull),
-		pubPort:       fmt.Sprintf("tcp://*:%d", pub),
+		pullPort:      fmt.Sprintf("tcp://127.0.0.1:%d", pull),
+		pubPort:       fmt.Sprintf("tcp://127.0.0.1:%d", pub),
 		metrics:       metrics,
+	}
+}
+
+func worker(relay *Relay, receiver mangos.Socket, sender mangos.Socket) {
+	defer relay.Stop()
+
+	var (
+		chunk []byte
+		err   error
+	)
+
+loop:
+	chunk, err = receiver.Recv()
+	switch err {
+	case nil:
+		relay.metrics.MessageIngress()
+		err = sender.Send(chunk)
+		if err != nil {
+			log.Warnf("Unable to send message error: %+v", err)
+		} else {
+			relay.metrics.MessageEgress()
+		}
+		goto loop
+	case mangos.ErrClosed:
+		return
+	default:
+		log.Errorf("%+v", err)
+		goto loop
 	}
 }
 
 // Start handles everything needed to start relay
 func (relay Relay) Start() {
 	var (
-		chunk    string
-		receiver *zmq.Socket
-		sender   *zmq.Socket
+		receiver mangos.Socket
+		sender   mangos.Socket
+		err      error
 		alive    bool = true
 	)
-
-	runtime.LockOSThread()
-	defer func() {
-		recover()
-		runtime.UnlockOSThread()
-	}()
-
-	ctx, err := zmq.NewContext()
-	if err != nil {
-		log.Warnf("Unable to create ZMQ context %+v", err)
-		return
-	}
 
 	go func() {
 		for {
@@ -74,54 +93,36 @@ func (relay Relay) Start() {
 					return
 				}
 				alive = false
-				relay.MarkDone()
-				ctx.Term()
+				if receiver != nil {
+					receiver.Close()
+				}
+				if sender != nil {
+					sender.Close()
+				}
 				log.Info("Stop relay daemon")
+				relay.MarkDone()
+				return
 			}
 		}
 	}()
 
-	receiver, err = ctx.NewSocket(zmq.PULL)
+	receiver, err = pull.NewSocket()
 	if err != nil {
-		log.Warnf("Unable create ZMQ PULL %v", err)
 		return
 	}
 
-	receiver.SetConflate(false)
-	receiver.SetImmediate(true)
-	receiver.SetLinger(-1)
-	receiver.SetRcvhwm(0)
-	defer receiver.Close()
-
-	sender, err = ctx.NewSocket(zmq.PUB)
+	sender, err = pub.NewSocket()
 	if err != nil {
-		log.Warnf("Unable create ZMQ PUB %v", err)
 		return
 	}
 
-	sender.SetConflate(false)
-	sender.SetImmediate(true)
-	sender.SetLinger(0)
-	sender.SetSndhwm(0)
-	defer sender.Close()
-
-	for {
-		if receiver.Bind(relay.pullPort) == nil {
-			break
-		}
-		err = fmt.Errorf("unable create bind ZMQ PULL")
-		time.Sleep(10 * time.Millisecond)
+	if receiver.Listen(relay.pullPort) != nil {
+		return
 	}
-	defer receiver.Unbind(relay.pullPort)
 
-	for {
-		if sender.Bind(relay.pubPort) == nil {
-			break
-		}
-		err = fmt.Errorf("unable create bind ZMQ PUB")
-		time.Sleep(10 * time.Millisecond)
+	if sender.Listen(relay.pubPort) != nil {
+		return
 	}
-	defer sender.Unbind(relay.pubPort)
 
 	relay.MarkReady()
 
@@ -129,43 +130,14 @@ func (relay Relay) Start() {
 	case <-relay.CanStart:
 		break
 	case <-relay.Done():
-		goto eos
+		return
 	}
 
 	log.Info("Start relay daemon")
 
-loop:
-	chunk, err = receiver.Recv(0)
-	switch err {
-	case nil:
-		relay.metrics.MessageIngress()
-		_, err = sender.Send(chunk, 0)
-		if err != nil {
-			if isFatalError(err) {
-				log.Warnf("Relay stopping main loop with %+v", err)
-				goto eos
-			}
-			log.Warnf("Unable to send message error: %+v", err)
-		} else {
-			relay.metrics.MessageEgress()
-		}
-		goto loop
-	default:
-		if isFatalError(err) {
-			log.Warnf("Relay stopping main loop with %+v", err)
-			goto eos
-		}
-		log.Warnf("Unable to receive message error: %+v", err)
-		goto loop
+	for id := 0; id < 32; id++ {
+		go worker(&relay, receiver, sender)
 	}
 
-eos:
-	relay.Stop()
 	<-relay.IsDone
-	return
-}
-
-func isFatalError(err error) bool {
-	return err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed ||
-		zmq.AsErrno(err) == zmq.ETERM
 }

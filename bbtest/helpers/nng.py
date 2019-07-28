@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import zmq
+import pynng
 import threading
 import time
 
-class ZMQHelper(threading.Thread):
+
+class NNGHelper(threading.Thread):
 
   def __init__(self):
     threading.Thread.__init__(self)
@@ -14,25 +15,20 @@ class ZMQHelper(threading.Thread):
     self.backlog = []
 
   def start(self):
-    ctx = zmq.Context.instance()
+    push_url = 'tcp://127.0.0.1:5562'
+    sub_url = 'tcp://127.0.0.1:5561'
 
-    self.__push_url = 'tcp://127.0.0.1:5562'
-    self.__sub_url = 'tcp://127.0.0.1:5561'
+    self.__sub = pynng.Sub0(dial=sub_url, recv_timeout=100)
+    self.__sub.subscribe(b'')
 
-    self.__sub = ctx.socket(zmq.SUB)
-    self.__sub.connect(self.__sub_url)
-    self.__sub.setsockopt(zmq.SUBSCRIBE, ''.encode())
-    self.__sub.set_hwm(0)
-
-    self.__push = ctx.socket(zmq.PUSH)
-    self.__push.connect(self.__push_url)
+    self.__push = pynng.Push0(dial=push_url)
 
     threading.Thread.start(self)
 
   def run(self):
     while not self.__cancel.is_set():
       try:
-        data = self.__sub.recv(zmq.NOBLOCK)
+        data = self.__sub.recv()
         self.__mutex.acquire()
         self.backlog.append(data)
         self.__mutex.release()
@@ -57,6 +53,6 @@ class ZMQHelper(threading.Thread):
       self.join()
     except:
       pass
-    self.__push.disconnect(self.__push_url)
-    self.__sub.disconnect(self.__sub_url)
+    self.__push.close()
+    self.__sub.close()
 

@@ -579,7 +579,7 @@ jobs:
                 -e IMAGE_VERSION="${IMAGE_VERSION}" \
                 -e UNIT_VERSION="${UNIT_VERSION}" \
                 -e UNIT_ARCH=amd64 \
-                -e MESSAGES_PUSHED=10000000 \
+                -e MESSAGES_PUSHED=1000000 \
                 -e NO_TTY=1 \
                 -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
                 -v /var/run/docker.sock:/var/run/docker.sock \

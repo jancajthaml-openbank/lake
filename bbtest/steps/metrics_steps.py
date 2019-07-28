@@ -1,5 +1,4 @@
 from behave import *
-
 import os
 import stat
 import json

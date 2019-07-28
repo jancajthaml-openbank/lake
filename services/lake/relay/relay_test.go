@@ -5,14 +5,19 @@ import (
 	"fmt"
 	"io/ioutil"
 	"runtime"
+	"sort"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/jancajthaml-openbank/lake/metrics"
 
-	zmq "github.com/pebbe/zmq4"
 	log "github.com/sirupsen/logrus"
+	mangos "nanomsg.org/go/mangos/v2"
+	"nanomsg.org/go/mangos/v2/protocol/push"
+	"nanomsg.org/go/mangos/v2/protocol/sub"
+	_ "nanomsg.org/go/mangos/v2/transport/all"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,19 +25,19 @@ func init() {
 	log.SetOutput(ioutil.Discard)
 }
 
-func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
+func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan []byte, port int) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
 
 	var (
-		chunk   string
-		channel *zmq.Socket
+		chunk   []byte
+		channel mangos.Socket
 		err     error
 	)
 
 	for {
-		channel, err = zmq.NewSocket(zmq.SUB)
+		channel, err = sub.NewSocket()
 		if err == nil {
 			break
 		}
@@ -47,7 +52,7 @@ func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan st
 	defer channel.Close()
 
 	for {
-		err = channel.Connect(fmt.Sprintf("tcp://0.0.0.0:%d", port))
+		err = channel.Dial(fmt.Sprintf("tcp://127.0.0.1:%d", port))
 		if err == nil {
 			break
 		}
@@ -55,37 +60,37 @@ func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan st
 		time.Sleep(time.Millisecond)
 	}
 
-	if err = channel.SetSubscribe(""); err != nil {
+	if err = channel.SetOption(mangos.OptionSubscribe, []byte("")); err != nil {
 		fmt.Printf("Test : Subscription failed %+v\n", err)
 		return
 	}
 
 	for ctx.Err() == nil {
-		chunk, err = channel.Recv(0)
+		chunk, err = channel.Recv()
 		if err != nil {
-			if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
-				fmt.Printf("Test : ZMQ connection closed %+v\n", err)
+			if err == mangos.ErrClosed {
+				fmt.Printf("Test : connection closed %+v\n", err)
 				return
 			}
-			fmt.Printf("Test : Error while receiving ZMQ message %+v\n", err)
+			fmt.Printf("Test : Error while receiving message %+v\n", err)
 			continue
 		}
 		callback <- chunk
 	}
 }
 
-func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan string, port int) {
+func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan []byte, port int) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
 
 	var (
-		channel *zmq.Socket
+		channel mangos.Socket
 		err     error
 	)
 
 	for {
-		channel, err = zmq.NewSocket(zmq.PUSH)
+		channel, err = push.NewSocket()
 		if err == nil {
 			break
 		}
@@ -100,7 +105,7 @@ func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan strin
 	defer channel.Close()
 
 	for {
-		err = channel.Connect(fmt.Sprintf("tcp://0.0.0.0:%d", port))
+		err = channel.Dial(fmt.Sprintf("tcp://127.0.0.1:%d", port))
 		if err == nil {
 			break
 		}
@@ -109,11 +114,10 @@ func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan strin
 	}
 
 	for ctx.Err() == nil {
-		channel.Send(<-data, 0)
+		channel.Send(<-data)
 	}
 }
 
-/*
 func TestStartStop(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -146,9 +150,8 @@ func TestStopOnContextCancel(t *testing.T) {
 		<-relay.IsDone
 	}
 }
-*/
 
-func TestRelayInOrder(t *testing.T) {
+func TestRelay(t *testing.T) {
 	masterCtx, masterCancel := context.WithCancel(context.Background())
 	defer masterCancel()
 
@@ -167,8 +170,8 @@ func TestRelayInOrder(t *testing.T) {
 			"F",
 		}
 
-		pushChannel := make(chan string, len(expectedData))
-		subChannel := make(chan string, len(expectedData))
+		pushChannel := make(chan []byte, len(expectedData))
+		subChannel := make(chan []byte, len(expectedData))
 
 		var wg sync.WaitGroup
 		ctx, cancel := context.WithCancel(context.Background())
@@ -189,10 +192,12 @@ func TestRelayInOrder(t *testing.T) {
 			}()
 
 			for {
-				accumulatedData = append(accumulatedData, <-subChannel)
+				accumulatedData = append(accumulatedData, string(<-subChannel))
 				if ctx.Err() == nil && len(expectedData) != len(accumulatedData) {
 					continue
 				}
+				sort.Strings(expectedData)
+				sort.Strings(accumulatedData)
 				assert.Equal(t, expectedData, accumulatedData)
 				return
 			}
@@ -200,9 +205,8 @@ func TestRelayInOrder(t *testing.T) {
 
 		time.Sleep(time.Second)
 		for _, msg := range expectedData {
-			pushChannel <- msg
+			pushChannel <- []byte(msg)
 		}
-
 		wg.Wait()
 	}
 }
