@@ -14,7 +14,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
+func init() {
+	//log.SetOutput(ioutil.Discard)
+}
+
+func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -34,7 +38,7 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, p
 			fmt.Println("Test : Resources unavailable in connect")
 			time.Sleep(time.Millisecond)
 		} else {
-			fmt.Printf("Test : Unable to connect ZMQ socket %+v\n", err)
+			fmt.Printf("Test : Unable to connect SUB socket %+v\n", err)
 			return
 		}
 	}
@@ -45,7 +49,7 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, p
 		if err == nil {
 			break
 		}
-		fmt.Printf("Test : Unable to connect to ZMQ address %+v\n", err)
+		fmt.Printf("Test : Unable to connect SUB address %+v\n", err)
 		time.Sleep(time.Millisecond)
 	}
 
@@ -68,7 +72,7 @@ func sub(ctx context.Context, cancel context.CancelFunc, callback chan string, p
 	}
 }
 
-func push(ctx context.Context, cancel context.CancelFunc, data chan string, port int) {
+func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan string, port int) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer cancel()
@@ -87,7 +91,7 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string, port
 			fmt.Println("Test : Resources unavailable in connect")
 			time.Sleep(time.Millisecond)
 		} else {
-			fmt.Printf("Test : Unable to connect ZMQ socket %+v\n", err)
+			fmt.Printf("Test : Unable to connect PUSH socket %+v\n", err)
 			return
 		}
 	}
@@ -98,7 +102,7 @@ func push(ctx context.Context, cancel context.CancelFunc, data chan string, port
 		if err == nil {
 			break
 		}
-		fmt.Printf("Test : Unable to connect to ZMQ address %+v\n", err)
+		fmt.Printf("Test : Unable to connect PUSH address %+v\n", err)
 		time.Sleep(time.Millisecond)
 	}
 
@@ -141,8 +145,8 @@ func TestRelayInOrder(t *testing.T) {
 
 		relay.GreenLight()
 
-		go push(ctx, cancel, pushChannel, 5562)
-		go sub(ctx, cancel, subChannel, 5561)
+		go pushRoutine(ctx, cancel, pushChannel, 5562)
+		go subRoutine(ctx, cancel, subChannel, 5561)
 
 		wg.Add(1)
 		go func() {

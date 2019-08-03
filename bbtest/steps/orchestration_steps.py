@@ -1,6 +1,6 @@
 from behave import *
-import os
 from helpers.shell import execute
+import os
 
 
 @given('package {package} is {operation}')

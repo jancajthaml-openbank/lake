@@ -1,10 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import docker
 
 from utils import progress, info, print_daemon
 
+from shell.process import execute_shell
 from systemd.lake import Lake
 
 import platform
@@ -12,7 +12,7 @@ import tarfile
 import tempfile
 import errno
 import os
-import subprocess
+
 
 class ApplianceManager(object):
 
@@ -32,8 +32,6 @@ class ApplianceManager(object):
     self.units = {}
     self.services = []
     self.docker = docker.APIClient(base_url='unix://var/run/docker.sock')
-
-    DEVNULL = open(os.devnull, 'w')
 
     try:
       os.mkdir("/opt/artifacts")
@@ -83,10 +81,12 @@ class ApplianceManager(object):
       archive.extract('lake.deb', '/opt/artifacts')
       os.remove(tar_name)
 
-      try:
-        contents = subprocess.check_output(["dpkg", "-c", "/opt/artifacts/{}.deb".format('lake')], stderr=subprocess.STDOUT).decode("utf-8").strip()
-      except subprocess.CalledProcessError as e:
-        raise Exception(e.output.decode("utf-8").strip())
+      (code, result, error) = execute_shell([
+        'dpkg', '-c', '/opt/artifacts/lake.deb'
+      ])
+
+      if code != 0:
+        raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
 
       self.docker.remove_container(scratch['Id'])
     finally:
@@ -94,13 +94,22 @@ class ApplianceManager(object):
       self.docker.remove_image('perf_artifacts-scratch', force=True)
 
     progress('installing lake {}'.format(self.image_version))
-    subprocess.check_call(["apt-get", "-y", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", '/opt/artifacts/lake.deb'], stdout=DEVNULL, stderr=subprocess.STDOUT)
-    info('installed lake {}'.format(self.image_version))
 
-    DEVNULL.close()
+    (code, result, error) = execute_shell([
+      "apt-get", "-y", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", '/opt/artifacts/lake.deb'
+    ])
 
-    installed = subprocess.check_output(["systemctl", "-t", "service", "--no-legend"], stderr=subprocess.STDOUT).decode("utf-8").strip()
-    self.services = set([x.split(' ')[0].split('@')[0].split('.service')[0] for x in installed.splitlines()])
+    if code != 0:
+      raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
+
+    (code, result, error) = execute_shell([
+      "systemctl", "-t", "service", "--no-legend"
+    ])
+
+    if code != 0:
+      raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
+
+    self.services = set([x.split(' ')[0].split('@')[0].split('.service')[0] for x in result.splitlines()])
 
   def __len__(self):
     return sum([len(x) for x in self.units.values()])

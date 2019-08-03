@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import collections
 import threading
@@ -31,6 +30,7 @@ __TTY = sys.stdout.isatty() and (int(os.environ.get('NO_TTY', 0)) == 0)
 
 if not __TTY:
   print()
+
 
 def interrupt_stdout() -> None:
   termios.tcsetattr(fd, termios.TCSAFLUSH, old)

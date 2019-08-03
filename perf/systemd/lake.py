@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-#from systemd.common import Unit
+
 from shell.process import execute_shell
 
 import subprocess
@@ -10,6 +10,7 @@ import threading
 import signal
 import time
 import os
+
 
 class Lake(object):
 
@@ -28,7 +29,7 @@ class Lake(object):
       execute_shell(['systemctl', 'stop', unit])
       (code, result, error) = execute_shell([
         'journalctl', '-o', 'short-precise', '-u', '{}.service'.format(unit), '--no-pager'
-      ])
+      ], True)
       if code == 0:
         with open('/tmp/reports/perf-tests/logs/{}.log'.format(unit), 'w') as f:
           f.write(result)

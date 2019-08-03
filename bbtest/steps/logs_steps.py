@@ -1,5 +1,4 @@
 from behave import *
-
 from helpers.shell import execute
 from helpers.eventually import eventually
 

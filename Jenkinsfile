@@ -20,8 +20,7 @@ def bbtestOptions() {
     options += "-e IMAGE_VERSION=${env.GIT_COMMIT} "
     options += "-e UNIT_VERSION=${env.VERSION_MAIN}+${env.VERSION_META} "
     options += "-e UNIT_ARCH=amd64 "
-    options += "-e NUMBER_OF_WORKERS=10 "
-    options += "-e MAX_MESSAGES_PER_WORKER=100000 "
+    options += "-e MESSAGES_PUSHED=100000000 "
     options += "-e NO_TTY=1 "
     options += "-v ${HOME}@tmp:/tmp "
     options += "-v ${HOME}/reports:/tmp/reports "
@@ -45,7 +44,7 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         disableResume()
-        timeout(time: 10, unit: 'MINUTES')
+        timeout(time: 4, unit: 'HOURS')
         timestamps()
     }
 
