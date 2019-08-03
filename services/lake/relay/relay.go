@@ -27,10 +27,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// FIXME find a way to delete kill message
-// FIXME use alive ?
-//const killMessage = "K"
-
 // Relay fascade
 type Relay struct {
 	utils.DaemonSupport
