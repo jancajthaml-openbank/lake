@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import docker
-
 from helpers.shell import execute
-
 import platform
 import tarfile
 import tempfile

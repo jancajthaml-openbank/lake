@@ -27,17 +27,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const killMessage = "K"
+// FIXME find a way to delete kill message
+// FIXME use alive ?
+//const killMessage = "K"
 
 // Relay fascade
 type Relay struct {
 	utils.DaemonSupport
 	pullPort      string
 	pubPort       string
-	killPort      string
 	metrics       *metrics.Metrics
 	killConfirmed chan interface{}
-	killRequest   chan interface{}
 }
 
 // NewRelay returns new instance of Relay
@@ -46,9 +46,7 @@ func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) 
 		DaemonSupport: utils.NewDaemonSupport(ctx),
 		pullPort:      fmt.Sprintf("tcp://*:%d", pull),
 		pubPort:       fmt.Sprintf("tcp://*:%d", pub),
-		killPort:      fmt.Sprintf("tcp://127.0.0.1:%d", pull),
 		metrics:       metrics,
-		killRequest:   make(chan interface{}),
 		killConfirmed: make(chan interface{}),
 	}
 }
@@ -85,39 +83,7 @@ func (relay Relay) Start() {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	defer recover()
-
 	defer func() { relay.killConfirmed <- nil }()
-
-	alive := true
-
-	go func() {
-		select {
-		case <-relay.Done():
-			if !alive {
-				return
-			}
-			alive = false
-			ticker := time.NewTicker(100 * time.Millisecond)
-			defer ticker.Stop()
-			for {
-				select {
-				case <-relay.killConfirmed:
-					log.Info("Stop relay daemon")
-					relay.MarkDone()
-					return
-				case <-ticker.C:
-					relay.killRequest <- nil
-				}
-			}
-		}
-	}()
-
-	var (
-		chunk       string
-		receiver    *zmq.Socket
-		sender      *zmq.Socket
-		killChannel *zmq.Socket
-	)
 
 zmqContextNew:
 	ctx, err := zmq.NewContext()
@@ -127,6 +93,32 @@ zmqContextNew:
 		goto zmqContextNew
 	}
 
+	go func() {
+		alive := true
+		select {
+		case <-relay.Done():
+			if !alive {
+				return
+			}
+			alive = false
+			ctx.Term()
+			for {
+				select {
+				case <-relay.killConfirmed:
+					log.Info("Stop relay daemon")
+					relay.MarkDone()
+					return
+				}
+			}
+		}
+	}()
+
+	var (
+		chunk    string
+		receiver *zmq.Socket
+		sender   *zmq.Socket
+	)
+
 zmqPullNew:
 	receiver, err = ctx.NewSocket(zmq.PULL)
 	if err != nil {
@@ -134,6 +126,10 @@ zmqPullNew:
 		time.Sleep(10 * time.Millisecond)
 		goto zmqPullNew
 	}
+	receiver.SetConflate(false)
+	receiver.SetImmediate(true)
+	receiver.SetLinger(-1)
+	receiver.SetRcvhwm(0)
 	defer receiver.Close()
 
 zmqPubNew:
@@ -143,16 +139,11 @@ zmqPubNew:
 		time.Sleep(10 * time.Millisecond)
 		goto zmqPubNew
 	}
+	sender.SetConflate(false)
+	sender.SetImmediate(true)
+	sender.SetLinger(0)
+	sender.SetSndhwm(0)
 	defer sender.Close()
-
-zmqKillChannelNew:
-	killChannel, err = zmq.NewSocket(zmq.PUSH)
-	if err != nil {
-		log.Warnf("Unable create create ZMQ PUSH %v", err)
-		time.Sleep(10 * time.Millisecond)
-		goto zmqKillChannelNew
-	}
-	defer killChannel.Close()
 
 zmqPullBind:
 	if receiver.Bind(relay.pullPort) != nil {
@@ -170,13 +161,6 @@ zmqPubBind:
 	}
 	defer sender.Unbind(relay.pubPort)
 
-zmqKillChannelConnect:
-	if killChannel.Connect(relay.killPort) != nil {
-		err = fmt.Errorf("unable to connect kill channel")
-		time.Sleep(10 * time.Millisecond)
-		goto zmqKillChannelConnect
-	}
-
 	relay.MarkReady()
 
 	select {
@@ -186,36 +170,19 @@ zmqKillChannelConnect:
 		return
 	}
 
-	go func() {
-		select {
-		case <-relay.killRequest:
-			for {
-				if killChannel != nil {
-					_, err = killChannel.Send(killMessage, 0)
-					if err == nil {
-						return
-					}
-				}
-				time.Sleep(10 * time.Millisecond)
-			}
-		}
-	}()
-
 	log.Info("Start relay daemon")
 
 mainLoop:
 	chunk, err = receiver.Recv(0)
 	switch err {
 	case nil:
-		if chunk == killMessage {
-			err = nil
-			log.Info("Relay killed")
-			return
-		}
 		relay.metrics.MessageIngress()
-
 		_, err = sender.Send(chunk, 0)
 		if err != nil {
+			if isFatalError(err) {
+				log.Warnf("Relay stopping main loop with %+v", err)
+				return
+			}
 			log.Warnf("Unable to send message error: %+v", err)
 		} else {
 			relay.metrics.MessageEgress()
@@ -223,7 +190,7 @@ mainLoop:
 		goto mainLoop
 	default:
 		if isFatalError(err) {
-			log.Warnf("Relay crashed in main loop with %+v", err)
+			log.Warnf("Relay stopping main loop with %+v", err)
 			return
 		}
 		goto mainLoop
@@ -231,7 +198,6 @@ mainLoop:
 }
 
 func isFatalError(err error) bool {
-	return err == zmq.ErrorSocketClosed ||
-		err == zmq.ErrorContextClosed ||
+	return err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed ||
 		zmq.AsErrno(err) == zmq.ETERM
 }

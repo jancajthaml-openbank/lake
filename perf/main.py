@@ -1,7 +1,7 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import os
+import sys
 import json
 import glob
 from functools import partial
@@ -12,49 +12,65 @@ from metrics.fascade import Metrics
 from metrics.plot import Graph
 from appliance_manager import ApplianceManager
 from messaging.publisher import Publisher
+from logs.collector import LogsCollector
 import multiprocessing
 import traceback
 import time
 
-def main():
-  info("prepare")
 
-  os.system('mkdir -p /tmp/reports /tmp/reports/perf-tests /tmp/reports/perf-tests/logs /tmp/reports/perf-tests/graphs /tmp/reports/perf-tests/metrics')
-  os.system('rm -rf /tmp/reports/perf-tests/metrics/*.json /tmp/reports/perf-tests/logs/*.log /tmp/reports/perf-tests/graphs/*.png')
+def main():
+  info("starting")
+
+  for folder in [
+    '/tmp/reports',
+    '/tmp/reports/perf-tests',
+    '/tmp/reports/perf-tests/logs',
+    '/tmp/reports/perf-tests/graphs',
+    '/tmp/reports/perf-tests/metrics'
+  ]:
+    os.system('mkdir -p {}'.format(folder))
+
+  for folder in [
+    '/tmp/reports/perf-tests/metrics/*.json',
+    '/tmp/reports/perf-tests/logs/*.log',
+    '/tmp/reports/perf-tests/graphs/*.png'
+  ]:
+    os.system('rm -rf {}'.format(folder))
+
+  info("setup")
+
+  logs_collector = LogsCollector()
 
   manager = ApplianceManager()
   manager.bootstrap()
 
-  info("run tests")
+  logs_collector.start()
 
-  parallelism = int(os.environ.get('NUMBER_OF_WORKERS', '5'))
-  max_messages_per_worker = int(os.environ.get('MAX_MESSAGES_PER_WORKER', '20000'))
+  info("start")
 
-  dataset = []
+  messages_to_push = int(os.environ.get('MESSAGES_PUSHED', '100000'))
+
   i = 1
+  while i <= messages_to_push:
+    info('pushing {:,.0f} messages throught ZMQ'.format(i))
+    with timeit('{:,.0f} messages'.format(i)):
+      with metrics(manager, 'count_{}'.format(i)):
+        Publisher(i)
 
-  while i <= max_messages_per_worker:
-    dataset.append(i)
+    info('generating graph for {:,.0f} messages'.format(i))
+    with timeit('{:,.0f} graph'.format(i)):
+      Graph(Metrics('/tmp/reports/perf-tests/metrics/metrics.count_{}.json'.format(i)))
+
     i *= 10
 
-  dataset = [int(max_messages_per_worker/dataset[len(dataset)-x-1]) for x in range(len(dataset))]
+  info("stopping")
 
-  for messages_per_worker in dataset:
-    label = parallelism * messages_per_worker
-
-    with timeit('{:,.0f} messages'.format(label)):
-      with metrics(manager, 'count_{}'.format(label)):
-        info('pushing {:,.0f} messages'.format(label))
-        pool = multiprocessing.Pool(processes=parallelism)
-        pool.map(Publisher, [(i, messages_per_worker) for i in range(parallelism)])
-        pool.close()
-        pool.join()
-
-    with timeit('{:,.0f} graph'.format(label)):
-      Graph(Metrics('/tmp/reports/perf-tests/metrics/metrics.count_{}.json'.format(label)))
-
+  logs_collector.stop()
   manager.teardown()
-  info("terminated")
+
+  info("stop")
+
+  sys.exit(0)
 
 ################################################################################
 

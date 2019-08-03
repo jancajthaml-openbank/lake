@@ -1,32 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import subprocess
-import threading
-import signal
-import time
 import os
+import subprocess
 from utils import print_daemon
+import gc
 
-class Deadline(threading.Thread):
-
-  def __init__(self, timeout, callback):
-    super().__init__(daemon=True)
-    self.__timeout = timeout
-    self.__callback = callback
-    self.__cancelled = threading.Event()
-
-  def run(self) -> None:
-    deadline = time.monotonic() + self.__timeout
-    while not self.__cancelled.wait(deadline - time.monotonic()):
-      if not self.__cancelled.is_set() and deadline <= time.monotonic():
-        return self.__callback()
-
-  def cancel(self) -> None:
-    self.__cancelled.set()
-    self.join()
-
-def execute_shell(command, timeout=2) -> None:
-  print_daemon(' '.join(command))
+def execute_shell(command, silent=False) -> None:
+  if not silent:
+    print_daemon(' '.join(command))
 
   try:
     p = subprocess.Popen(
@@ -38,23 +19,16 @@ def execute_shell(command, timeout=2) -> None:
       close_fds=True
     )
 
-    def kill() -> None:
-      for sig in [signal.SIGTERM, signal.SIGQUIT, signal.SIGKILL, signal.SIGKILL]:
-        if p.poll():
-          break
-        try:
-          os.kill(p.pid, sig)
-        except OSError:
-          break
-
-    deadline = Deadline(timeout, callback=kill)
-    deadline.start()
     (result, error) = p.communicate()
-    deadline.cancel()
+    p.wait()
 
     result = result.decode('utf-8').strip() if result else None
     error = error.decode('utf-8').strip() if error else None
     code = 1 if error else p.returncode
+
+    del p
+
+    gc.collect()
 
     return (code, result, error)
   except subprocess.CalledProcessError:

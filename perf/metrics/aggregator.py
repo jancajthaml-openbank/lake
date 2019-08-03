@@ -1,17 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import json
 import time
 import os
-from collections import OrderedDict
-from threading import Thread, Event
+import threading
 
-class MetricsAggregator(Thread):
+
+class MetricsAggregator(threading.Thread):
 
   def __init__(self, path):
     super(MetricsAggregator, self).__init__()
-    self._stop_event = Event()
-    self.__store = {}
+    self._stop_event = threading.Event()
+    self.__store = dict()
     self.__path = path
 
   def stop(self) -> None:
@@ -23,13 +23,16 @@ class MetricsAggregator(Thread):
     if not os.path.isfile(self.__path):
       return
     try:
-      with open(self.__path, mode='r', encoding="ascii") as f:
-        self.__store[str(int(time.time()*1000))] = json.load(f)
+      with open(self.__path, mode='r', encoding='ascii') as fd:
+        data = json.load(fd)
+        (i, e) = data['messageIngress'], data['messageEgress']
+        del data
+        self.__store[str(int(time.time()*1000))] = '{}/{}'.format(i, e)
     except:
       pass
 
   def get_metrics(self) -> dict:
-    return OrderedDict(sorted(self.__store.items()))
+    return self.__store
 
   def run(self) -> None:
     while not self._stop_event.is_set():
