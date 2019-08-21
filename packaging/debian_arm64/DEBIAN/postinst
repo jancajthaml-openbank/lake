@@ -2,7 +2,7 @@
 
 set -e
 
-if [ "$(ps -o comm -p 1 --no-headers | tr -d ' ')" = "systemd" ] ; then
+if [ "$(ps -o comm -p 1 --no-headers | tr -d ' ')" -eq "systemd" -a $(systemclt &> /dev/null) ] ; then
   SYSTEMD_AVAIL=true
 else
   SYSTEMD_AVAIL=false
