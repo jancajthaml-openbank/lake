@@ -55,7 +55,7 @@ case "$1" in
 
   upgrade|deconfigure)
     if [ ${SYSTEMD_AVAIL} ] ; then
-      systemctl stop lake 2> /dev/null || :
+      (systemctl stop lake 2> /dev/null || :)
     fi
   ;;
 

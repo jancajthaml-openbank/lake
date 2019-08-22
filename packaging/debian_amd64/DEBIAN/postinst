@@ -2,7 +2,7 @@
 
 set -e
 
-if [ "$(ps -o comm -p 1 --no-headers | tr -d ' ')" = "systemd" -a "$(systemclt &> /dev/null); echo $?" = "0" ] ; then
+if [ "$(ps -o comm -p 1 --no-headers | tr -d ' ')" = "systemd" ] ; then
   SYSTEMD_AVAIL=true
 else
   SYSTEMD_AVAIL=false
@@ -25,9 +25,9 @@ case "$1" in
       enable lake-relay.service
 
       if [ ${SYSTEMD_AVAIL} ] ; then
-        systemctl daemon-reload
-        systemctl start lake.service
-        systemctl start lake.path
+        (systemctl daemon-reload 2> /dev/null || :)
+        (systemctl start lake.service 2> /dev/null || :)
+        (systemctl start lake.path 2> /dev/null || :)
       fi
 
     else
