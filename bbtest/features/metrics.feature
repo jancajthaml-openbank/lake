@@ -6,9 +6,10 @@ Feature: Metrics test
       | METRICS_REFRESHRATE |    1s |
 
     Then metrics file /tmp/reports/blackbox-tests/metrics/metrics.json should have following keys:
-      | key            |
-      | messageEgress  |
-      | messageIngress |
+      | key             |
+      | messageEgress   |
+      | messageIngress  |
+      | memoryAllocated |
     And metrics file /tmp/reports/blackbox-tests/metrics/metrics.json has permissions -rw-r--r--
 
   Scenario: metrics can remembers previous values after reboot
