@@ -25,9 +25,9 @@ class MetricsAggregator(threading.Thread):
     try:
       with open(self.__path, mode='r', encoding='ascii') as fd:
         data = json.load(fd)
-        (i, e) = data['messageIngress'], data['messageEgress']
+        (i, e, m) = data['messageIngress'], data['messageEgress'], data['memoryAllocated']
         del data
-        self.__store[str(int(time.time()*1000))] = '{}/{}'.format(i, e)
+        self.__store[str(int(time.time()*1000))] = '{}/{}/{}'.format(i, e, m)
     except:
       pass
 

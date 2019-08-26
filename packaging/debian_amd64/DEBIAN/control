@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.1.9+improve-perf-tests
+Version: 1.2.2+metrics-memory
 Section: misc
 Priority: extra
 Architecture: amd64
