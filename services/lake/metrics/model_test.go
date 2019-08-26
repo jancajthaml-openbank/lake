@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,12 +35,17 @@ func TestMarshalJSON(t *testing.T) {
 		}
 
 		actual, err := entity.MarshalJSON()
-
 		require.Nil(t, err)
 
-		data := []byte("{\"messageEgress\":10,\"messageIngress\":20}")
+		aux := &struct {
+			MessageEgress  uint64 `json:"messageEgress"`
+			MessageIngress uint64 `json:"messageIngress"`
+		}{}
 
-		assert.Equal(t, data, actual)
+		require.Nil(t, json.Unmarshal(actual, &aux))
+
+		assert.Equal(t, egress, aux.MessageEgress)
+		assert.Equal(t, ingress, aux.MessageIngress)
 	}
 }
 

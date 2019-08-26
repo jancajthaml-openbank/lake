@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"runtime"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -60,12 +61,17 @@ func (metrics *Metrics) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("cannot marshall nil references")
 	}
 
+	var stats = new(runtime.MemStats)
+	runtime.ReadMemStats(stats)
+
 	var buffer bytes.Buffer
 
 	buffer.WriteString("{\"messageEgress\":")
 	buffer.WriteString(strconv.FormatUint(*metrics.messageEgress, 10))
 	buffer.WriteString(",\"messageIngress\":")
 	buffer.WriteString(strconv.FormatUint(*metrics.messageIngress, 10))
+	buffer.WriteString(",\"memoryAllocated\":")
+	buffer.WriteString(strconv.FormatUint(stats.Sys, 10))
 	buffer.WriteString("}")
 
 	return buffer.Bytes(), nil

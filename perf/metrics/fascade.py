@@ -50,7 +50,7 @@ class Metrics():
 
       stash = {
         'messageEgress': 0,
-        'messageIngress': 0
+        'messageIngress': 0,
       }
 
       for di in list(filter(lambda x:(x >= a and x <= b), timestamps)):
@@ -74,16 +74,19 @@ class Metrics():
 
       stash = {
         'messageIngress': [0],
-        'messageEgress': [0]
+        'messageEgress': [0],
+        'memoryAllocated': [0]
       }
 
       for di in list(filter(lambda x:(x >= a and x <= b), timestamps)):
-        (i, e) = dataset[str(int(di))].split('/')
+        (i, e, m) = dataset[str(int(di))].split('/')
         stash['messageIngress'].append(int(i))
         stash['messageEgress'].append(int(e))
+        stash['memoryAllocated'].append(int(m))
 
       stash['messageEgress'] = numpy.median(stash['messageEgress'])
       stash['messageIngress'] = numpy.median(stash['messageIngress'])
+      stash['memoryAllocated'] = max(stash['memoryAllocated'])
 
       materialised_dataset[str(second)] = collections.OrderedDict(stash)
 
@@ -92,6 +95,7 @@ class Metrics():
     materialised_dataset[(list(materialised_dataset.keys()))[-1]] = {
       'messageIngress': int(last.split('/')[0]),
       'messageEgress': int(last.split('/')[1]),
+      'memoryAllocated': int(last.split('/')[2]),
     }
 
     return materialised_dataset
