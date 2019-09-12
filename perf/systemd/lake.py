@@ -15,11 +15,7 @@ import os
 class Lake(object):
 
   def __init__(self):
-    self.reconfigure({
-      'METRICS_REFRESHRATE': '1000ms',
-      'METRICS_CONTINUOUS': 'false',
-    })
-    self.stop()
+    self.start()
 
   def __repr__(self):
     return 'Lake()'
@@ -52,24 +48,6 @@ class Lake(object):
       raise RuntimeError("Failed to start lake-relay, stdout: {}, stderr: {}".format(result, error))
     if not self.is_healthy:
       raise RuntimeError("Failed to start lake-relay, stdout: {}, stderr: {}".format(result, error))
-
-  def reconfigure(self, params) -> None:
-    d = {}
-
-    with open('/etc/init/lake.conf', 'r') as f:
-      for line in f:
-        (key, val) = line.rstrip().split('=')
-        d[key] = val
-
-    for k, v in params.items():
-      key = 'LAKE_{}'.format(k)
-      if key in d:
-        d[key] = v
-
-    with open('/etc/init/lake.conf', 'w') as f:
-      f.write('\n'.join("{}={}".format(key, val) for (key,val) in d.items()))
-
-    self.restart()
 
   @property
   def is_healthy(self) -> bool:

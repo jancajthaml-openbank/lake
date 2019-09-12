@@ -24,6 +24,7 @@ class ApplianceManager(object):
     }.get(platform.uname().machine, 'amd64')
 
   def __init__(self):
+    self.configure()
     self.arch = self.get_arch()
 
     self.store = {}
@@ -130,22 +131,26 @@ class ApplianceManager(object):
 
     del self.units[str(key)]
 
+  def configure(self) -> None:
+    options = {
+      'LOG_LEVEL': 'INFO',
+      'PORT_PULL': '5562',
+      'PORT_PUB': '5561',
+      'METRICS_OUTPUT': '/opt/lake/metrics',
+      'METRICS_REFRESHRATE': '1000ms',
+      'METRICS_CONTINUOUS': 'false',
+    }
+
+    with open('/etc/init/lake.conf', 'w') as fd:
+      for k, v in sorted(options.items()):
+        fd.write('LAKE_{}={}\n'.format(k, v))
+
   # fixme __iter__
   def items(self) -> list:
     return self.units.items()
 
   def values(self) -> list:
     return self.units.values()
-
-  def reconfigure(self, params, key=None) -> None:
-    if not key:
-      for name in list(self.units):
-        for node in self[name]:
-          node.reconfigure(params)
-      return
-
-    for node in self[key]:
-      node.reconfigure(params)
 
   def start(self, key=None) -> None:
     if not key:

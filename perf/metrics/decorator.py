@@ -3,6 +3,7 @@
 import os
 import json
 from metrics.aggregator import MetricsAggregator
+import time
 
 
 class metrics():

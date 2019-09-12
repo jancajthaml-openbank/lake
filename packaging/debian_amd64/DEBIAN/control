@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.2.2+metrics-memory
+Version: 1.2.2+master
 Section: misc
 Priority: extra
 Architecture: amd64
