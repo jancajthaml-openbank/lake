@@ -51,8 +51,10 @@ class Graph(object):
     loc = plticker.MultipleLocator(base=1.0)
     ax1.xaxis.set_major_locator(loc)
 
-
     duration = len(metrics.series)
+
+    if duration == 0:
+        return
 
     x1 = list(range(0, duration, 1))
     y1 = [item['messageIngress'] for item in metrics.series.values()]
