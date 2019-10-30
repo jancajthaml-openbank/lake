@@ -12,7 +12,6 @@ import time
 from utils import human_readable_count, human_readable_duration
 
 import urllib.request
-from collections import OrderedDict
 import itertools
 import functools
 import matplotlib as mpl
