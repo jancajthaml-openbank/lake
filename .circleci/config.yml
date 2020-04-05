@@ -499,6 +499,7 @@ jobs:
 
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
             docker push docker.io/openbank/lake:${DOCKER_VERSION}
+
   # -------------------------------------------------------------------------- #
 
   test:
