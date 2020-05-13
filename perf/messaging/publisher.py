@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import time
 import zmq
 import itertools
 
@@ -37,6 +38,8 @@ def Publisher(number_of_messages):
       sub.recv(zmq.NOBLOCK)
     except:
       pass
+
+  time.sleep(1)
 
   push.disconnect(push_url)
   sub.disconnect(sub_url)
