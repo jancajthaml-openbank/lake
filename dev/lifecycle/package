@@ -33,7 +33,7 @@ package_service() {
       CGO_ENABLED=1 \
       CC=arm-linux-gnueabihf-gcc \
       \
-      go build -ldflags -linkmode=external -a -o ${output} || {
+      go build -ldflags -a -o ${output} || {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
         exit 1
       }
@@ -47,7 +47,7 @@ package_service() {
       CGO_ENABLED=1 \
       CC=aarch64-linux-gnu-gcc \
       \
-      go build -ldflags -linkmode=external -a -o ${output} || {
+      go build -ldflags -a -o ${output} || {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
         exit 1
       }
@@ -61,7 +61,7 @@ package_service() {
       CGO_ENABLED=1 \
       CC=gcc \
       \
-      go build -ldflags -linkmode=external -a -o ${output} || {
+      go build -ldflags -a -o ${output} || {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
         exit 1
       }
