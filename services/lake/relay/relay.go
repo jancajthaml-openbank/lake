@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019, Jan Cajthaml <jan.cajthaml@gmail.com>
+// Copyright (c) 2016-2020, Jan Cajthaml <jan.cajthaml@gmail.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,130 +30,96 @@ import (
 // Relay fascade
 type Relay struct {
 	utils.DaemonSupport
-	pullPort      string
-	pubPort       string
-	metrics       *metrics.Metrics
-	killConfirmed chan interface{}
+	pullPort string
+	pubPort  string
+	metrics  *metrics.Metrics
 }
 
 // NewRelay returns new instance of Relay
 func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) Relay {
 	return Relay{
-		DaemonSupport: utils.NewDaemonSupport(ctx),
+		DaemonSupport: utils.NewDaemonSupport(ctx, "relay"),
 		pullPort:      fmt.Sprintf("tcp://*:%d", pull),
 		pubPort:       fmt.Sprintf("tcp://*:%d", pub),
 		metrics:       metrics,
-		killConfirmed: make(chan interface{}),
-	}
-}
-
-// WaitReady wait for relay to be ready
-func (relay Relay) WaitReady(deadline time.Duration) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			switch x := e.(type) {
-			case string:
-				err = fmt.Errorf(x)
-			case error:
-				err = x
-			default:
-				err = fmt.Errorf("unknown panic")
-			}
-		}
-	}()
-
-	ticker := time.NewTicker(deadline)
-	select {
-	case <-relay.IsReady:
-		ticker.Stop()
-		err = nil
-		return
-	case <-ticker.C:
-		err = fmt.Errorf("relay-daemon was not ready within %v seconds", deadline)
-		return
 	}
 }
 
 // Start handles everything needed to start relay
 func (relay Relay) Start() {
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-	defer recover()
-	defer func() { relay.killConfirmed <- nil }()
-
-zmqContextNew:
-	ctx, err := zmq.NewContext()
-	if err != nil {
-		log.Warnf("Unable to create ZMQ context %+v", err)
-		time.Sleep(10 * time.Millisecond)
-		goto zmqContextNew
-	}
-
-	go func() {
-		alive := true
-		select {
-		case <-relay.Done():
-			if !alive {
-				return
-			}
-			alive = false
-			ctx.Term()
-			for {
-				select {
-				case <-relay.killConfirmed:
-					log.Info("Stop relay daemon")
-					relay.MarkDone()
-					return
-				}
-			}
-		}
-	}()
-
 	var (
 		chunk    string
 		receiver *zmq.Socket
 		sender   *zmq.Socket
+		alive    bool = true
 	)
 
-zmqPullNew:
+	runtime.LockOSThread()
+	defer func() {
+		recover()
+		runtime.UnlockOSThread()
+	}()
+
+	ctx, err := zmq.NewContext()
+	if err != nil {
+		log.Warnf("Unable to create ZMQ context %+v", err)
+		return
+	}
+
+	go func() {
+		for {
+			select {
+			case <-relay.Done():
+				if !alive {
+					return
+				}
+				alive = false
+				relay.MarkDone()
+				ctx.Term()
+				log.Info("Stop relay daemon")
+			}
+		}
+	}()
+
 	receiver, err = ctx.NewSocket(zmq.PULL)
 	if err != nil {
 		log.Warnf("Unable create ZMQ PULL %v", err)
-		time.Sleep(10 * time.Millisecond)
-		goto zmqPullNew
+		return
 	}
+
 	receiver.SetConflate(false)
 	receiver.SetImmediate(true)
 	receiver.SetLinger(-1)
 	receiver.SetRcvhwm(0)
 	defer receiver.Close()
 
-zmqPubNew:
 	sender, err = ctx.NewSocket(zmq.PUB)
 	if err != nil {
 		log.Warnf("Unable create ZMQ PUB %v", err)
-		time.Sleep(10 * time.Millisecond)
-		goto zmqPubNew
+		return
 	}
+
 	sender.SetConflate(false)
 	sender.SetImmediate(true)
 	sender.SetLinger(0)
 	sender.SetSndhwm(0)
 	defer sender.Close()
 
-zmqPullBind:
-	if receiver.Bind(relay.pullPort) != nil {
+	for {
+		if receiver.Bind(relay.pullPort) == nil {
+			break
+		}
 		err = fmt.Errorf("unable create bind ZMQ PULL")
 		time.Sleep(10 * time.Millisecond)
-		goto zmqPullBind
 	}
 	defer receiver.Unbind(relay.pullPort)
 
-zmqPubBind:
-	if sender.Bind(relay.pubPort) != nil {
+	for {
+		if sender.Bind(relay.pubPort) == nil {
+			break
+		}
 		err = fmt.Errorf("unable create bind ZMQ PUB")
 		time.Sleep(10 * time.Millisecond)
-		goto zmqPubBind
 	}
 	defer sender.Unbind(relay.pubPort)
 
@@ -163,12 +129,12 @@ zmqPubBind:
 	case <-relay.CanStart:
 		break
 	case <-relay.Done():
-		return
+		goto eos
 	}
 
 	log.Info("Start relay daemon")
 
-mainLoop:
+loop:
 	chunk, err = receiver.Recv(0)
 	switch err {
 	case nil:
@@ -177,20 +143,26 @@ mainLoop:
 		if err != nil {
 			if isFatalError(err) {
 				log.Warnf("Relay stopping main loop with %+v", err)
-				return
+				goto eos
 			}
 			log.Warnf("Unable to send message error: %+v", err)
 		} else {
 			relay.metrics.MessageEgress()
 		}
-		goto mainLoop
+		goto loop
 	default:
 		if isFatalError(err) {
 			log.Warnf("Relay stopping main loop with %+v", err)
-			return
+			goto eos
 		}
-		goto mainLoop
+		log.Warnf("Unable to receive message error: %+v", err)
+		goto loop
 	}
+
+eos:
+	relay.Stop()
+	<-relay.IsDone
+	return
 }
 
 func isFatalError(err error) bool {

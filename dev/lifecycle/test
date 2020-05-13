@@ -53,7 +53,7 @@ cd ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
   -v ./... \
   -coverprofile=${coverage_out} \
   -coverpkg=./... \
-  -timeout=20s | tee ${test_out}
+  -timeout=10s | tee ${test_out}
 
 # remove anscii colors from file
 sed -i 's/\x1b\[[0-9;]*m//g' ${test_out}
