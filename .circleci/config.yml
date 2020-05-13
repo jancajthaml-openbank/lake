@@ -163,6 +163,9 @@ workflows:
       - bbtest-amd64:
           requires:
             - publish
+      - perf-amd64:
+          requires:
+            - publish
 
   rolling_test:
     triggers:
@@ -259,11 +262,7 @@ jobs:
 
   deps:
     docker:
-      - image: circleci/golang:1.11
-        environment:
-          - LANG: C.UTF-8
-          - GOOS: linux
-          - GO111MODULE: "on"
+      - image: jancajthaml/go:latest
     working_directory: /home/circleci/project
     steps:
       - checkout
@@ -277,9 +276,8 @@ jobs:
       - run:
           name: Sync dependencies
           command: |
-            cd /go/src/github.com/jancajthaml-openbank/lake
-            rm go.sum
-            go mod vendor
+            /home/circleci/project/dev/lifecycle/sync \
+              --pkg lake
       - run:
           name: Move vendor folder to project
           command: |
@@ -581,7 +579,7 @@ jobs:
                 -e IMAGE_VERSION="${IMAGE_VERSION}" \
                 -e UNIT_VERSION="${UNIT_VERSION}" \
                 -e UNIT_ARCH=amd64 \
-                -e MESSAGES_PUSHED=1000000000 \
+                -e MESSAGES_PUSHED=100000 \
                 -e NO_TTY=1 \
                 -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
                 -v /var/run/docker.sock:/var/run/docker.sock \
