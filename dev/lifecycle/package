@@ -31,6 +31,7 @@ package_service() {
       GOARM=7 \
       GOARCH=arm \
       CGO_ENABLED=1 \
+      CC=arm-linux-gnueabihf-gcc \
       \
       go build -a -o ${output} || {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
@@ -44,6 +45,7 @@ package_service() {
       GOOS=${platform} \
       GOARCH=arm64 \
       CGO_ENABLED=1 \
+      CC=aarch64-linux-gnu-gcc \
       \
       go build -a -o ${output} || {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
@@ -57,6 +59,7 @@ package_service() {
       GOOS=${platform} \
       GOARCH=amd64 \
       CGO_ENABLED=1 \
+      CC=gcc \
       \
       go build -a -o ${output} || {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
