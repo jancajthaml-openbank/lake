@@ -26,7 +26,11 @@ jobs:
         GO111MODULE=on go mod vendor
 
     - name: Test
-      run: go test -v ./... -timeout=10s
+      run:  |
+        cd services/lake
+        go test -v ./... -timeout=10s
 
     - name: Benchmark
-      run: go test -v -run=^$ -bench=. -benchmem -timeout=1m
+      run:  |
+        cd services/lake
+        go test -v -run=^$ -bench=. -benchmem -timeout=1m
