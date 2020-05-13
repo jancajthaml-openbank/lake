@@ -1,5 +1,7 @@
 module github.com/jancajthaml-openbank/lake
 
+go 1.14
+
 require (
 	github.com/json-iterator/go v1.1.9
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
