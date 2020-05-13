@@ -3,6 +3,7 @@ package relay
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"runtime"
 	"sync"
 	"testing"
@@ -11,11 +12,12 @@ import (
 	"github.com/jancajthaml-openbank/lake/metrics"
 
 	zmq "github.com/pebbe/zmq4"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func init() {
-	//log.SetOutput(ioutil.Discard)
+	log.SetOutput(ioutil.Discard)
 }
 
 func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
@@ -111,12 +113,47 @@ func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan strin
 	}
 }
 
-func TestRelayInOrder(t *testing.T) {
+/*
+func TestStartStop(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	metrics := metrics.NewMetrics(ctx, false, "", time.Hour)
 	relay := NewRelay(ctx, 5562, 5561, &metrics)
+
+	t.Log("by daemon support ( Start -> Stop )")
+	{
+		go relay.Start()
+		<-relay.IsReady
+		relay.GreenLight()
+		relay.Stop()
+		<-relay.IsDone
+	}
+}
+
+func TestStopOnContextCancel(t *testing.T) {
+	t.Log("stop with cancelation of context")
+	{
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+
+		metrics := metrics.NewMetrics(ctx, false, "", time.Hour)
+		relay := NewRelay(ctx, 5562, 5561, &metrics)
+
+		go relay.Start()
+		<-relay.IsReady
+		relay.GreenLight()
+		cancel()
+		<-relay.IsDone
+	}
+}
+*/
+
+func TestRelayInOrder(t *testing.T) {
+	masterCtx, masterCancel := context.WithCancel(context.Background())
+	defer masterCancel()
+
+	metrics := metrics.NewMetrics(masterCtx, false, "", time.Hour)
+	relay := NewRelay(masterCtx, 5562, 5561, &metrics)
 
 	t.Log("Relays message")
 	{
@@ -137,12 +174,7 @@ func TestRelayInOrder(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 
 		go relay.Start()
-
-		select {
-		case <-relay.IsReady:
-			break
-		}
-
+		<-relay.IsReady
 		relay.GreenLight()
 
 		go pushRoutine(ctx, cancel, pushChannel, 5562)
@@ -152,6 +184,7 @@ func TestRelayInOrder(t *testing.T) {
 		go func() {
 			defer func() {
 				relay.Stop()
+				<-relay.IsDone
 				wg.Done()
 			}()
 
@@ -171,47 +204,5 @@ func TestRelayInOrder(t *testing.T) {
 		}
 
 		wg.Wait()
-	}
-}
-
-func TestStartStop(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	metrics := metrics.NewMetrics(ctx, false, "", time.Hour)
-	relay := NewRelay(ctx, 5562, 5561, &metrics)
-
-	t.Log("by daemon support ( Start -> Stop )")
-	{
-		go relay.Start()
-
-		select {
-		case <-relay.IsReady:
-			break
-		}
-		relay.GreenLight()
-
-		relay.Stop()
-	}
-}
-
-func TestStopOnContextCancel(t *testing.T) {
-	t.Log("stop with cancelation of context")
-	{
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-
-		metrics := metrics.NewMetrics(ctx, false, "", time.Hour)
-		relay := NewRelay(ctx, 5562, 5561, &metrics)
-
-		go relay.Start()
-
-		select {
-		case <-relay.IsReady:
-			break
-		}
-
-		relay.GreenLight()
-
-		cancel()
 	}
 }

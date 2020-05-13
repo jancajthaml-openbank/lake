@@ -13,6 +13,7 @@ class MetricsAggregator(threading.Thread):
     self._stop_event = threading.Event()
     self.__store = dict()
     self.__path = path
+    self.__last_value = None
 
   def stop(self) -> None:
     self._stop_event.set()
@@ -28,7 +29,11 @@ class MetricsAggregator(threading.Thread):
         data = json.load(fd)
         (i, e, m) = data['messageIngress'], data['messageEgress'], data['memoryAllocated']
         del data
-        self.__store[str(int(time.time()*1000))] = '{}/{}/{}'.format(i, e, m)
+        value = '{}/{}/{}'.format(i, e, m)
+        if value != self.__last_value:
+          self.__store[str(int(time.time()*1000))] = value
+          self.__last_value = value
+
     except:
       pass
 

@@ -20,7 +20,7 @@ class Metrics():
     if self.max_ts is None or self.min_ts is None:
       self.duration = 0
     else:
-      self.duration = self.max_ts-self.min_ts+1
+      self.duration = self.max_ts - self.min_ts + 1
 
   def __compute_ts_boundaries(self, dataset):
     if not dataset:
@@ -42,8 +42,12 @@ class Metrics():
     keys = list(dataset.keys())
     values = list(dataset.values())
 
-    ingress = [(keys[i], int(y.split('/')[0]) - int(x.split('/')[0])) for i, (x,y) in enumerate(zip(values, values[1:]))]
-    egress = [(keys[i], int(y.split('/')[1]) - int(x.split('/')[1])) for i, (x,y) in enumerate(zip(values, values[1:]))]
+    if len(values) == 1:
+      ingress = [(keys[0], int(values[0].split('/')[0]))]
+      egress = [(keys[0], int(values[0].split('/')[1]))]
+    else:
+      ingress = [(keys[i], int(y.split('/')[0]) - int(x.split('/')[0])) for i, (x,y) in enumerate(zip(values, values[1:]))]
+      egress = [(keys[i], int(y.split('/')[1]) - int(x.split('/')[1])) for i, (x,y) in enumerate(zip(values, values[1:]))]
 
     ingress = dict(ingress + [(keys[-1], ingress[-1][1])])
     egress = dict(egress + [(keys[-1], egress[-1][1])])
