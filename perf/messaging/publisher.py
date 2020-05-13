@@ -19,12 +19,12 @@ def Publisher(number_of_messages):
   sub.dial(sub_url, block=True)
   sub.subscribe(topic)
 
-  push = pynng.Push0(send_timeout=1000)
-  push.dial(push_url, block=True)
+  push = pynng.Push0(send_timeout=10)
+  push.dial(push_url, block=False)
 
   number_of_messages = int(number_of_messages)
 
-  for _ in itertools.repeat(None, number_of_messages+1):
+  for _ in itertools.repeat(None, number_of_messages):
     try:
       push.send(msg)
     except:
