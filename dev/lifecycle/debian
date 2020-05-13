@@ -142,7 +142,6 @@ generate_changelog() {
     commits=$(echo "$(git log --no-merges --pretty=oneline --pretty=format:%s ^${tag_from} ${tag_to})" | sed '/^[[:space:]]*$/d' | uniq)
 
     if [[ -n "${commits// }" ]] ; then
-
       echo "lake (${tag_to#v}) unstable; urgency=medium" >> ${target}
       echo "" >> ${target}
 
@@ -175,43 +174,14 @@ check_files() {
   chmod 0755 "${DEB_SOURCES}/DEBIAN/postinst"
   chmod 0755 "${DEB_SOURCES}/DEBIAN/postrm"
   chmod 0755 "${DEB_SOURCES}/DEBIAN/preinst"
+  chmod 0755 "${DEB_SOURCES}/usr/bin/lake"
 }
 
 ################################################################################
 
-case ${TARGET_ARCHITECTURE} in
-
-  armhf)
-    arm-linux-gnueabihf-objcopy \
-      --strip-debug \
-      --strip-unneeded \
-      "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
-      "${DEB_SOURCES}/usr/bin/lake"
-  ;;
-
-  arm64)
-    aarch64-linux-gnu-objcopy \
-      --strip-debug \
-      --strip-unneeded \
-      "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
-      "${DEB_SOURCES}/usr/bin/lake"
-  ;;
-
-  amd64)
-    objcopy \
-      --strip-debug \
-      --strip-unneeded \
-      "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
-      "${DEB_SOURCES}/usr/bin/lake"
-  ;;
-
-  *)
-    cp \
-      "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
-      "${DEB_SOURCES}/usr/bin/lake"
-  ;;
-
-esac
+cp \
+  "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
+  "${DEB_SOURCES}/usr/bin/lake"
 
 generate_changelog
 generate_manpage

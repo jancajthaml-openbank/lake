@@ -27,12 +27,12 @@ def Publisher(number_of_messages):
   number_of_messages = int(number_of_messages)
 
   for _ in itertools.repeat(None, number_of_messages+1):
-    for _ in itertools.repeat(None, 100):
-      try:
-        push.send(msg, zmq.NOBLOCK)
-        break
-      except:
-        pass
+    try:
+      push.send(msg, zmq.NOBLOCK)
+    except:
+      pass
+
+  for _ in itertools.repeat(None, number_of_messages+1):
     try:
       sub.recv(zmq.NOBLOCK)
     except:

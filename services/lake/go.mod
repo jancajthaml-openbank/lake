@@ -1,4 +1,6 @@
-module github.com/jancajthaml-openbank/lake/services/lake
+module github.com/jancajthaml-openbank/lake
+
+go 1.14
 
 require (
 	github.com/json-iterator/go v1.1.9
