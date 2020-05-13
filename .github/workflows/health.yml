@@ -1,9 +1,11 @@
-name: Gating
+name: Health Check
 
 on:
   push:
     branches:
       - master
+  schedule:
+    - cron:  '*/30 * * * *'
 
 jobs:
 
@@ -38,8 +40,3 @@ jobs:
       run:  |
         cd services/lake
         go test -v ./... -timeout=10s
-
-    - name: Benchmark
-      run:  |
-        cd services/lake
-        go test -v -run=^$ -bench=. -benchmem -timeout=1m
