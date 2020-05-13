@@ -1,10 +1,6 @@
 name: Go
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 jobs:
 
@@ -24,7 +20,13 @@ jobs:
 
     - name: Get dependencies
       run: |
-        go get -v -t -d ./...
+        cd services/lake
+        GO111MODULE=on go mod verify
+        GO111MODULE=on go mod tidy
+        GO111MODULE=on go mod vendor
 
     - name: Test
-      run: go test -v .
+      run: go test -v ./... -timeout=10s
+
+    - name: Benchmark
+      run: go test -v -run=^$ -bench=. -benchmem -timeout=1m
