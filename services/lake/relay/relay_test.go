@@ -12,12 +12,12 @@ import (
 
 	"github.com/jancajthaml-openbank/lake/metrics"
 
-	log "github.com/sirupsen/logrus"
-	mangos "nanomsg.org/go/mangos/v2"
-	"nanomsg.org/go/mangos/v2/protocol/push"
-	"nanomsg.org/go/mangos/v2/protocol/sub"
-	_ "nanomsg.org/go/mangos/v2/transport/all"
+	mangos "go.nanomsg.org/mangos/v3"
+	"go.nanomsg.org/mangos/v3/protocol/push"
+	"go.nanomsg.org/mangos/v3/protocol/sub"
+	_ "go.nanomsg.org/mangos/v3/transport/all"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -119,6 +119,7 @@ func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan []byt
 }
 
 func TestStartStop(t *testing.T) {
+	// FIXME
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

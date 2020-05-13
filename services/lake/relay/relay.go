@@ -21,11 +21,11 @@ import (
 	"github.com/jancajthaml-openbank/lake/metrics"
 	"github.com/jancajthaml-openbank/lake/utils"
 
-	mangos "nanomsg.org/go/mangos/v2"
-	"nanomsg.org/go/mangos/v2/protocol/pub"
-	"nanomsg.org/go/mangos/v2/protocol/pull"
+	mangos "go.nanomsg.org/mangos/v3"
+	"go.nanomsg.org/mangos/v3/protocol/pub"
+	"go.nanomsg.org/mangos/v3/protocol/pull"
 
-	_ "nanomsg.org/go/mangos/v2/transport/all"
+	_ "go.nanomsg.org/mangos/v3/transport/all"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -123,6 +123,8 @@ func (relay Relay) Start() {
 	if sender.Listen(relay.pubPort) != nil {
 		return
 	}
+
+	log.Info("Start relay daemon")
 
 	relay.MarkReady()
 

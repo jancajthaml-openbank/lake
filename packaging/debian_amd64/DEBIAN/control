@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.2.2+HEAD
+Version: 1.2.2+nanomsg
 Section: misc
 Priority: extra
 Architecture: amd64
