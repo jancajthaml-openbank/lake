@@ -39,8 +39,8 @@ type Relay struct {
 func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) Relay {
 	return Relay{
 		DaemonSupport: utils.NewDaemonSupport(ctx, "relay"),
-		pullPort:      fmt.Sprintf("tcp://*:%d", pull),
-		pubPort:       fmt.Sprintf("tcp://*:%d", pub),
+		pullPort:      fmt.Sprintf("tcp://127.0.0.1:%d", pull),
+		pubPort:       fmt.Sprintf("tcp://127.0.0.1:%d", pub),
 		metrics:       metrics,
 	}
 }
@@ -142,7 +142,7 @@ loop:
 		_, err = sender.Send(chunk, 0)
 		if err != nil {
 			if isFatalError(err) {
-				log.Warnf("Relay stopping main loop with %+v", err)
+				log.Warnf("Relay stopping with %+v", err)
 				goto eos
 			}
 			log.Warnf("Unable to send message error: %+v", err)
@@ -152,7 +152,7 @@ loop:
 		goto loop
 	default:
 		if isFatalError(err) {
-			log.Warnf("Relay stopping main loop with %+v", err)
+			log.Warnf("Relay stopping with %+v", err)
 			goto eos
 		}
 		log.Warnf("Unable to receive message error: %+v", err)

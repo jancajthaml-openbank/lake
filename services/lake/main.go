@@ -21,19 +21,13 @@ import (
 	"github.com/jancajthaml-openbank/lake/utils"
 )
 
-func exit(program *boot.Program) {
-	program.Stop()
-	log.Info(">>> Stop <<<")
-}
-
-func start() boot.Program {
+func main() {
 	log.SetFormatter(new(utils.LogFormat))
 	log.Info(">>> Start <<<")
-	return boot.Initialize()
-}
-
-func main() {
-	program := start()
-	defer exit(&program)
-	program.Run()
+	program := boot.Initialize()
+	defer func() {
+		program.Stop()
+		log.Info(">>> Stop <<<")
+	}()
+	program.Start()
 }

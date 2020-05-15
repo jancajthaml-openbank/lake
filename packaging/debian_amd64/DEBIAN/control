@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.2.2+improve-service-lifecycle
+Version: 1.2.3+master
 Section: misc
 Priority: extra
 Architecture: amd64
