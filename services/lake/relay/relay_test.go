@@ -47,7 +47,7 @@ func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan st
 	defer channel.Close()
 
 	for {
-		err = channel.Connect(fmt.Sprintf("tcp://0.0.0.0:%d", port))
+		err = channel.Connect(fmt.Sprintf("tcp://127.0.0.1:%d", port))
 		if err == nil {
 			break
 		}
@@ -100,7 +100,7 @@ func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan strin
 	defer channel.Close()
 
 	for {
-		err = channel.Connect(fmt.Sprintf("tcp://0.0.0.0:%d", port))
+		err = channel.Connect(fmt.Sprintf("tcp://127.0.0.1:%d", port))
 		if err == nil {
 			break
 		}
@@ -113,7 +113,6 @@ func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan strin
 	}
 }
 
-/*
 func TestStartStop(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -146,7 +145,6 @@ func TestStopOnContextCancel(t *testing.T) {
 		<-relay.IsDone
 	}
 }
-*/
 
 func TestRelayInOrder(t *testing.T) {
 	masterCtx, masterCancel := context.WithCancel(context.Background())
