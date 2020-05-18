@@ -15,36 +15,83 @@
 package metrics
 
 import (
+	"bytes"
 	"fmt"
-	"io"
-	"os"
-
 	"github.com/jancajthaml-openbank/lake/utils"
+	"os"
+	"runtime"
+	"strconv"
+	"sync/atomic"
 )
+
+// MarshalJSON serialises Metrics as json bytes
+func (metrics *Metrics) MarshalJSON() ([]byte, error) {
+	if metrics == nil {
+		return nil, fmt.Errorf("cannot marshall nil")
+	}
+
+	if metrics.messageEgress == nil || metrics.messageIngress == nil {
+		return nil, fmt.Errorf("cannot marshall nil references")
+	}
+
+	var stats = new(runtime.MemStats)
+	runtime.ReadMemStats(stats)
+
+	var buffer bytes.Buffer
+
+	buffer.WriteString("{\"messageEgress\":")
+	buffer.WriteString(strconv.FormatUint(*metrics.messageEgress, 10))
+	buffer.WriteString(",\"messageIngress\":")
+	buffer.WriteString(strconv.FormatUint(*metrics.messageIngress, 10))
+	buffer.WriteString(",\"memoryAllocated\":")
+	buffer.WriteString(strconv.FormatUint(stats.Sys, 10))
+	buffer.WriteString("}")
+
+	return buffer.Bytes(), nil
+}
+
+// UnmarshalJSON deserializes Metrics from json bytes
+func (metrics *Metrics) UnmarshalJSON(data []byte) error {
+	if metrics == nil {
+		return fmt.Errorf("cannot unmarshall to nil")
+	}
+
+	if metrics.messageEgress == nil || metrics.messageIngress == nil {
+		return fmt.Errorf("cannot unmarshall to nil references")
+	}
+
+	aux := &struct {
+		MessageEgress  uint64 `json:"messageEgress"`
+		MessageIngress uint64 `json:"messageIngress"`
+	}{}
+
+	if err := utils.JSON.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	atomic.StoreUint64(metrics.messageEgress, aux.MessageEgress)
+	atomic.StoreUint64(metrics.messageIngress, aux.MessageIngress)
+
+	return nil
+}
 
 // Persist saved metrics state to storage
 func (metrics *Metrics) Persist() error {
 	if metrics == nil {
 		return fmt.Errorf("cannot persist nil reference")
 	}
-	tempFile := metrics.output + "_temp"
 	data, err := utils.JSON.Marshal(metrics)
 	if err != nil {
 		return err
 	}
-	f, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	err = metrics.storage.WriteFile("metrics.json", data)
 	if err != nil {
 		return err
 	}
-
-	defer f.Close()
-	if _, err := f.Write(data); err != nil {
+	err = os.Chmod(metrics.storage.Root+"/metrics.json", 0644)
+	if err != nil {
 		return err
 	}
-	if err := os.Rename(tempFile, metrics.output); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -53,24 +100,11 @@ func (metrics *Metrics) Hydrate() error {
 	if metrics == nil {
 		return fmt.Errorf("cannot hydrate nil reference")
 	}
-	fi, err := os.Stat(metrics.output)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return err
-	}
-	f, err := os.OpenFile(metrics.output, os.O_RDONLY, 0444)
+	data, err := metrics.storage.ReadFileFully("metrics.json")
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	buf := make([]byte, fi.Size())
-	_, err = f.Read(buf)
-	if err != nil && err != io.EOF {
-		return err
-	}
-	err = utils.JSON.Unmarshal(buf, metrics)
+	err = utils.JSON.Unmarshal(data, metrics)
 	if err != nil {
 		return err
 	}

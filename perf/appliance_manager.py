@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 
 import docker
-
 from utils import progress, info, print_daemon
-
 from shell.process import execute_shell
 from systemd.lake import Lake
-
 import platform
 import tarfile
 import tempfile
@@ -122,13 +119,10 @@ class ApplianceManager(object):
     self.units.setdefault(str(key), []).append(value)
 
   def __delitem__(self, key):
-    # fixme add lock here
     if not str(key) in self.units:
       return
-
     for node in self.units[str(key)]:
       node.teardown()
-
     del self.units[str(key)]
 
   def configure(self) -> None:
@@ -168,7 +162,6 @@ class ApplianceManager(object):
         for node in self[name]:
           node.stop()
       return
-
     for node in self[key]:
       node.stop()
 
@@ -178,7 +171,6 @@ class ApplianceManager(object):
         for node in self[name]:
           node.restart()
       return
-
     for node in self[key]:
       node.restart()
 

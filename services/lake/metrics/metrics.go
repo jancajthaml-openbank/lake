@@ -15,11 +15,39 @@
 package metrics
 
 import (
+	"context"
 	"sync/atomic"
 	"time"
 
+	"github.com/jancajthaml-openbank/lake/utils"
+	localfs "github.com/jancajthaml-openbank/local-fs"
 	log "github.com/sirupsen/logrus"
 )
+
+// Metrics holds metrics counters
+type Metrics struct {
+	utils.DaemonSupport
+	storage        localfs.PlaintextStorage
+	continuous     bool
+	refreshRate    time.Duration
+	messageEgress  *uint64
+	messageIngress *uint64
+}
+
+// NewMetrics returns blank metrics holder
+func NewMetrics(ctx context.Context, continuous bool, output string, refreshRate time.Duration) Metrics {
+	egress := uint64(0)
+	ingress := uint64(0)
+
+	return Metrics{
+		DaemonSupport:  utils.NewDaemonSupport(ctx, "metrics"),
+		storage:        localfs.NewPlaintextStorage(output),
+		continuous:     continuous,
+		refreshRate:    refreshRate,
+		messageEgress:  &egress,
+		messageIngress: &ingress,
+	}
+}
 
 // MessageEgress increment number of outcomming messages
 func (metrics *Metrics) MessageEgress() {
@@ -53,7 +81,7 @@ func (metrics Metrics) Start() {
 		return
 	}
 
-	log.Infof("Start metrics daemon, update each %v into %v", metrics.refreshRate, metrics.output)
+	log.Infof("Start metrics daemon, update each %v into %v", metrics.refreshRate, metrics.storage.Root)
 
 	go func() {
 		for {
@@ -68,6 +96,6 @@ func (metrics Metrics) Start() {
 		}
 	}()
 
-	<-metrics.IsDone
+	metrics.WaitStop()
 	log.Info("Stop metrics daemon")
 }

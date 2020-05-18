@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import os
 import subprocess
-from utils import print_daemon
 import gc
+from utils import print_daemon
+
 
 def execute_shell(command, silent=False) -> None:
   if not silent:

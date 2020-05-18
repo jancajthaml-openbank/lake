@@ -1,14 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import docker
-from helpers.shell import execute
 import platform
 import tarfile
 import tempfile
 import errno
 import os
 import subprocess
+from helpers.shell import execute
+
 
 class UnitHelper(object):
 
@@ -104,7 +105,6 @@ class UnitHelper(object):
     options.update(UnitHelper.default_config())
     if params:
       options.update(params)
-
     with open('/etc/init/lake.conf', 'w') as fd:
       for k, v in sorted(options.items()):
         fd.write('LAKE_{}={}\n'.format(k, v))
@@ -122,4 +122,3 @@ class UnitHelper(object):
     for unit in ['lake-relay', 'lake']:
       execute(['systemctl', 'stop', unit])
     self.cleanup()
-

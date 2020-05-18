@@ -24,11 +24,9 @@ func systemNotify(state string) {
 		Name: os.Getenv("NOTIFY_SOCKET"),
 		Net:  "unixgram",
 	}
-
 	if socketAddr.Name == "" {
 		return
 	}
-
 	conn, err := net.DialUnix(socketAddr.Net, nil, socketAddr)
 	if err != nil {
 		return
