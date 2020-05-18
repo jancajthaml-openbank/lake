@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import os
 import json
-from metrics.aggregator import MetricsAggregator
 import time
+from metrics.aggregator import MetricsAggregator
 
 
 class metrics():

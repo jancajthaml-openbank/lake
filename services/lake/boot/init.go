@@ -26,10 +26,9 @@ import (
 
 // Program encapsulate initialized application
 type Program struct {
-	cfg       config.Configuration
 	interrupt chan os.Signal
-	metrics   metrics.Metrics
-	relay     relay.Relay
+	cfg       config.Configuration
+	daemons   []utils.Daemon
 	cancel    context.CancelFunc
 }
 
@@ -44,11 +43,14 @@ func Initialize() Program {
 	metricsDaemon := metrics.NewMetrics(ctx, cfg.MetricsContinuous, cfg.MetricsOutput, cfg.MetricsRefreshRate)
 	relayDaemon := relay.NewRelay(ctx, cfg.PullPort, cfg.PubPort, &metricsDaemon)
 
+	var daemons = make([]utils.Daemon, 0)
+	daemons = append(daemons, metricsDaemon)
+	daemons = append(daemons, relayDaemon)
+
 	return Program{
-		cfg:       cfg,
 		interrupt: make(chan os.Signal, 1),
-		metrics:   metricsDaemon,
-		relay:     relayDaemon,
+		cfg:       cfg,
+		daemons:   daemons,
 		cancel:    cancel,
 	}
 }

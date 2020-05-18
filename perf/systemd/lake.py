@@ -56,5 +56,4 @@ class Lake(object):
       '-c',
       'while [ "$(systemctl show -p SubState lake-relay)" != "SubState=running" ]; do sleep 0.5; done;',
     ])
-
     return code == 0

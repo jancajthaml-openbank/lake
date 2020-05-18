@@ -42,7 +42,7 @@ func loadConfFromEnv() Configuration {
 		LogLevel:           logLevel,
 		MetricsContinuous:  metricsContinuous,
 		MetricsRefreshRate: metricsRefreshRate,
-		MetricsOutput:      metricsOutput + "/metrics.json",
+		MetricsOutput:      metricsOutput,
 	}
 }
 

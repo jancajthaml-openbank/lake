@@ -109,7 +109,6 @@ func (relay Relay) Start() {
 		if receiver.Bind(relay.pullPort) == nil {
 			break
 		}
-		err = fmt.Errorf("unable create bind ZMQ PULL")
 		time.Sleep(10 * time.Millisecond)
 	}
 	defer receiver.Unbind(relay.pullPort)
@@ -118,7 +117,6 @@ func (relay Relay) Start() {
 		if sender.Bind(relay.pubPort) == nil {
 			break
 		}
-		err = fmt.Errorf("unable create bind ZMQ PUB")
 		time.Sleep(10 * time.Millisecond)
 	}
 	defer sender.Unbind(relay.pubPort)
@@ -136,36 +134,27 @@ func (relay Relay) Start() {
 
 loop:
 	chunk, err = receiver.Recv(0)
-	switch err {
-	case nil:
-		relay.metrics.MessageIngress()
-		_, err = sender.Send(chunk, 0)
-		if err != nil {
-			if isFatalError(err) {
-				log.Warnf("Relay stopping with %+v", err)
-				goto eos
-			}
-			log.Warnf("Unable to send message error: %+v", err)
-		} else {
-			relay.metrics.MessageEgress()
-		}
-		goto loop
-	default:
-		if isFatalError(err) {
-			log.Warnf("Relay stopping with %+v", err)
-			goto eos
-		}
+	if err != nil {
 		log.Warnf("Unable to receive message error: %+v", err)
-		goto loop
+		goto fail
 	}
+	relay.metrics.MessageIngress()
+	_, err = sender.Send(chunk, 0)
+	if err != nil {
+		log.Warnf("Unable to send message error: %+v", err)
+		goto fail
+	}
+	goto loop
+
+fail:
+	if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed || zmq.AsErrno(err) == zmq.ETERM {
+		log.Warnf("Relay stopping with %+v", err)
+		goto eos
+	}
+	goto loop
 
 eos:
 	relay.Stop()
-	<-relay.IsDone
+	relay.WaitStop()
 	return
-}
-
-func isFatalError(err error) bool {
-	return err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed ||
-		zmq.AsErrno(err) == zmq.ETERM
 }

@@ -44,9 +44,10 @@ func (prog Program) WaitReady(deadline time.Duration) error {
 		}()
 	}
 
-	wg.Add(2)
-	waitWithDeadline(prog.relay)
-	waitWithDeadline(prog.metrics)
+	wg.Add(len(prog.daemons))
+	for _, daemon := range prog.daemons {
+		waitWithDeadline(daemon)
+	}
 	wg.Wait()
 
 	if len(errors) > 0 {
@@ -58,19 +59,21 @@ func (prog Program) WaitReady(deadline time.Duration) error {
 
 // GreenLight daemons
 func (prog Program) GreenLight() {
-	prog.metrics.GreenLight()
-	prog.relay.GreenLight()
+	for _, daemon := range prog.daemons {
+		daemon.GreenLight()
+	}
+}
+
+// WaitStop wait for daemons to stop
+func (prog Program) WaitStop() {
+	for _, daemon := range prog.daemons {
+		daemon.WaitStop()
+	}
 }
 
 // WaitInterrupt wait for signal
 func (prog Program) WaitInterrupt() {
 	<-prog.interrupt
-}
-
-// WaitStop wait for daemons to stop
-func (prog Program) WaitStop() {
-	<-prog.metrics.IsDone
-	<-prog.relay.IsDone
 }
 
 // Stop stops the application
@@ -80,8 +83,9 @@ func (prog Program) Stop() {
 
 // Start runs the application
 func (prog Program) Start() {
-	go prog.metrics.Start()
-	go prog.relay.Start()
+	for _, daemon := range prog.daemons {
+		go daemon.Start()
+	}
 
 	if err := prog.WaitReady(5 * time.Second); err != nil {
 		log.Errorf("Error when starting daemons: %+v", err)
