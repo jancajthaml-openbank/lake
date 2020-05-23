@@ -11,7 +11,7 @@ fi
 enable() {
   wanted_by=$(cat /lib/systemd/system/${1} | sed -n -e 's/^.*WantedBy=//p')
   mkdir -p /etc/systemd/system/${wanted_by}.wants
-  ln -s \
+  ln -sf \
     "/lib/systemd/system/${1}" \
     "/etc/systemd/system/${wanted_by}.wants/${1}"
 }
