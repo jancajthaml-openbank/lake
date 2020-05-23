@@ -84,7 +84,7 @@ generate_manpage() {
   fi
 
 cat > ${target} <<EOL
-.TH LAKE 8 2019 "Lake" "OpenBank Message Relay"
+.TH LAKE 8 2020 "Lake" "OpenBank Message PUSH to BROADCAST"
 .SH NAME
 lake \- starts openbank message relay
 .SH DESCRIPTION
