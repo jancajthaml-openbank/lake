@@ -112,7 +112,7 @@ class UnitHelper(object):
   def cleanup(self):
     for unit in ['lake-relay', 'lake']:
       (code, result, error) = execute([
-        'journalctl', '-o', 'short-precise', '-u', '{}.service'.format(unit), '--no-pager'
+        'journalctl', '-o', 'short-precise', '-t', unit, '--no-pager'
       ])
       if code == 0:
         with open('/tmp/reports/blackbox-tests/logs/{}.log'.format(unit), 'w') as f:
