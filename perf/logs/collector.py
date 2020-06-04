@@ -13,6 +13,7 @@ class LogsCollector(threading.Thread):
     self.__command = ' '.join([
       'journalctl',
       '-o', 'short-precise',
+      '-t', 'lake-relay',
       '-u', 'lake-relay.service',
       '--no-pager',
       '>', '/tmp/reports/perf-tests/logs/lake-relay.log'
