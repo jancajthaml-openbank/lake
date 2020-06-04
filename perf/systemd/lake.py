@@ -24,11 +24,12 @@ class Lake(object):
     for unit in ['lake-relay', 'lake']:
       execute_shell(['systemctl', 'stop', unit])
       (code, result, error) = execute_shell([
-        'journalctl', '-o', 'short-precise', '-u', '{}.service'.format(unit), '--no-pager'
+        'journalctl', '-o', 'short-precise', '-t', 'lake', '-u', '{}.service'.format(unit), '--no-pager'
       ], True)
-      if code == 0:
-        with open('/tmp/reports/perf-tests/logs/{}.log'.format(unit), 'w') as f:
-          f.write(result)
+      if code != 0:
+        continue
+      with open('/tmp/reports/perf-tests/logs/{}.log'.format(unit), 'w') as f:
+        f.write(result)
 
   def restart(self) -> bool:
     (code, result, error) = execute_shell(['systemctl', 'restart', 'lake-relay'])

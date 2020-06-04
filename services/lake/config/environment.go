@@ -15,13 +15,12 @@
 package config
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+	log "github.com/sirupsen/logrus"
 )
 
 func loadConfFromEnv() Configuration {
@@ -53,7 +52,8 @@ func getEnvBoolean(key string, fallback bool) bool {
 	}
 	cast, err := strconv.ParseBool(value)
 	if err != nil {
-		panic(fmt.Sprintf("invalid value of variable %s", key))
+		log.Errorf("invalid value of variable %s", key)
+		return fallback
 	}
 	return cast
 }
@@ -85,7 +85,8 @@ func getEnvInteger(key string, fallback int) int {
 	}
 	cast, err := strconv.Atoi(value)
 	if err != nil {
-		panic(fmt.Sprintf("invalid value of variable %s", key))
+		log.Errorf("invalid value of variable %s", key)
+		return fallback
 	}
 	return cast
 }
@@ -97,7 +98,8 @@ func getEnvDuration(key string, fallback time.Duration) time.Duration {
 	}
 	cast, err := time.ParseDuration(value)
 	if err != nil {
-		panic(fmt.Sprintf("invalid value of variable %s", key))
+		log.Errorf("invalid value of variable %s", key)
+		return fallback
 	}
 	return cast
 }

@@ -5,7 +5,7 @@ ConditionPathExists=/etc/init/lake.conf
 
 [Service]
 Type=oneshot
-ExecStart=/bin/echo start lake namespace
+ExecStart=/bin/true
 RemainAfterExit=yes
 
 [Install]
