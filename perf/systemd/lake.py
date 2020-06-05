@@ -24,9 +24,9 @@ class Lake(object):
     for unit in ['lake-relay', 'lake']:
       execute_shell(['systemctl', 'stop', unit])
       (code, result, error) = execute_shell([
-        'journalctl', '-o', 'short-precise', '-t', 'lake', '-u', '{}.service'.format(unit), '--no-pager'
+        'journalctl', '-o', 'cat', '-t', 'lake', '-u', '{}.service'.format(unit), '--no-pager'
       ], True)
-      if code != 0:
+      if code != 0 or not result:
         continue
       with open('/tmp/reports/perf-tests/logs/{}.log'.format(unit), 'w') as f:
         f.write(result)

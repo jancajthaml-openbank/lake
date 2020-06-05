@@ -24,7 +24,6 @@ import (
 	"github.com/jancajthaml-openbank/lake/utils"
 
 	zmq "github.com/pebbe/zmq4"
-	log "github.com/sirupsen/logrus"
 )
 
 // Relay fascade
@@ -148,7 +147,6 @@ loop:
 
 fail:
 	if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed || zmq.AsErrno(err) == zmq.ETERM {
-		log.Warnf("Relay stopping with %+v", err)
 		goto eos
 	}
 	goto loop

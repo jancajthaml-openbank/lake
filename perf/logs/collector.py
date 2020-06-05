@@ -12,7 +12,7 @@ class LogsCollector(threading.Thread):
     self._stop_event = threading.Event()
     self.__command = ' '.join([
       'journalctl',
-      '-o', 'short-precise',
+      '-o', 'cat',
       '-t', 'lake-relay',
       '-u', 'lake-relay.service',
       '--no-pager',

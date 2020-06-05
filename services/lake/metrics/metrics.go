@@ -21,7 +21,6 @@ import (
 
 	"github.com/jancajthaml-openbank/lake/utils"
 	localfs "github.com/jancajthaml-openbank/local-fs"
-	log "github.com/sirupsen/logrus"
 )
 
 // Metrics holds metrics counters
@@ -65,9 +64,7 @@ func (metrics Metrics) Start() {
 	defer ticker.Stop()
 
 	if metrics.continuous {
-		if err := metrics.Hydrate(); err != nil {
-			log.Warn(err.Error())
-		}
+		metrics.Hydrate()
 	}
 
 	metrics.Persist()
