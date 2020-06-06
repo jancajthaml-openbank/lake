@@ -20,7 +20,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	log "github.com/sirupsen/logrus"
 )
 
 func loadConfFromEnv() Configuration {
@@ -32,6 +31,7 @@ func loadConfFromEnv() Configuration {
 	portPull := getEnvInteger("LAKE_PORT_PULL", 5562)
 
 	if metricsOutput != "" && os.MkdirAll(filepath.Dir(metricsOutput), os.ModePerm) != nil {
+		// FIXME try without panic
 		log.Fatal("unable to assert metrics output")
 	}
 

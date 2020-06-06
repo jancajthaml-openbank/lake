@@ -22,6 +22,7 @@ import (
 	"github.com/jancajthaml-openbank/lake/metrics"
 	"github.com/jancajthaml-openbank/lake/relay"
 	"github.com/jancajthaml-openbank/lake/utils"
+	"github.com/jancajthaml-openbank/lake/logging"
 )
 
 // Program encapsulate initialized application
@@ -38,10 +39,20 @@ func Initialize() Program {
 
 	cfg := config.GetConfig()
 
-	utils.SetupLogger(cfg.LogLevel)
+	logging.SetupLogger(cfg.LogLevel)
 
-	metricsDaemon := metrics.NewMetrics(ctx, cfg.MetricsContinuous, cfg.MetricsOutput, cfg.MetricsRefreshRate)
-	relayDaemon := relay.NewRelay(ctx, cfg.PullPort, cfg.PubPort, &metricsDaemon)
+	metricsDaemon := metrics.NewMetrics(
+		ctx,
+		cfg.MetricsContinuous,
+		cfg.MetricsOutput,
+		cfg.MetricsRefreshRate,
+	)
+	relayDaemon := relay.NewRelay(
+		ctx,
+		cfg.PullPort,
+		cfg.PubPort,
+		&metricsDaemon,
+	)
 
 	var daemons = make([]utils.Daemon, 0)
 	daemons = append(daemons, metricsDaemon)

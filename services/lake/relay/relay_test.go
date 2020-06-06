@@ -12,12 +12,12 @@ import (
 	"github.com/jancajthaml-openbank/lake/metrics"
 
 	zmq "github.com/pebbe/zmq4"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func init() {
-	log.SetOutput(ioutil.Discard)
+	logrus.SetOutput(ioutil.Discard)
 }
 
 func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
