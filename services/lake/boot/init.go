@@ -41,8 +41,18 @@ func Initialize() Program {
 
 	logging.SetupLogger(cfg.LogLevel)
 
-	metricsDaemon := metrics.NewMetrics(ctx, cfg.MetricsContinuous, cfg.MetricsOutput, cfg.MetricsRefreshRate)
-	relayDaemon := relay.NewRelay(ctx, cfg.PullPort, cfg.PubPort, &metricsDaemon)
+	metricsDaemon := metrics.NewMetrics(
+		ctx,
+		cfg.MetricsContinuous,
+		cfg.MetricsOutput,
+		cfg.MetricsRefreshRate,
+	)
+	relayDaemon := relay.NewRelay(
+		ctx,
+		cfg.PullPort,
+		cfg.PubPort,
+		&metricsDaemon,
+	)
 
 	var daemons = make([]utils.Daemon, 0)
 	daemons = append(daemons, metricsDaemon)

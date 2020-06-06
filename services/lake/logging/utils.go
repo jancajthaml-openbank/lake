@@ -20,6 +20,11 @@ import (
   "github.com/sirupsen/logrus"
 )
 
+// NewLogger returns logger with preset field
+func NewLogger(name string) logrus.FieldLogger {
+  return logrus.WithField("src", name)
+}
+
 // SetupLogger properly sets up logging
 func SetupLogger(level string) {
   if logLevel, err := logrus.ParseLevel(level); err == nil {
@@ -32,7 +37,3 @@ func SetupLogger(level string) {
   logrus.SetOutput(os.Stdout)
 }
 
-// NewLogger returns logger with preset field
-func NewLogger(name string) *logrus.Entry {
-  return logrus.WithField("src", name)
-}
