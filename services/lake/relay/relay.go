@@ -158,9 +158,6 @@ eos:
 }
 
 func isCircuitBreaker(err error) bool {
-  if err == nil {
-    return false
-  }
   if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
   	return true
   }
