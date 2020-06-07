@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/jancajthaml-openbank/lake/metrics"
@@ -75,7 +76,7 @@ func (relay Relay) Start() {
 				alive = false
 				relay.MarkDone()
 				ctx.Term()
-				log.Info("Stop relay daemon")
+				log.Info("Stop relay-daemon")
 			}
 		}
 	}()
@@ -129,30 +130,40 @@ func (relay Relay) Start() {
 		goto eos
 	}
 
-	log.Info("Start relay daemon")
+	log.Info("Start relay-daemon")
 
 loop:
 	chunk, err = receiver.Recv(0)
 	if err != nil {
-		log.Warnf("Unable to receive message error: %+v", err)
 		goto fail
 	}
 	relay.metrics.MessageIngress()
 	_, err = sender.Send(chunk, 0)
 	if err != nil {
-		log.Warnf("Unable to send message error: %+v", err)
 		goto fail
 	}
 	goto loop
 
 fail:
-	if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed || zmq.AsErrno(err) == zmq.ETERM {
+	if isCircuitBreaker(err) {
 		goto eos
 	}
+	log.Warnf("Circuit error %+v", err)
 	goto loop
 
 eos:
 	relay.Stop()
 	relay.WaitStop()
 	return
+}
+
+func isCircuitBreaker(err error) bool {
+  if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
+  	return true
+  }
+  errno := zmq.AsErrno(err)
+  if errno == zmq.ETERM || errno == zmq.Errno(syscall.EINTR) {
+  	return true
+  }
+  return false
 }

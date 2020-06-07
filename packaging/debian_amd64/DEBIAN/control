@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.2.3+improved-logging
+Version: 1.2.3+interupt
 Section: misc
 Priority: extra
 Architecture: amd64
