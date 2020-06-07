@@ -145,7 +145,7 @@ loop:
 	goto loop
 
 fail:
-	if relay.IsCanceled() || isCircuitBreaker(err) {
+	if isCircuitBreaker(err) {
 		goto eos
 	}
 	log.Warnf("Circuit error %+v", err)
