@@ -98,14 +98,6 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - perf-amd64:
-          requires:
-            - publish
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
       - bbtest-amd64:
           requires:
             - publish
@@ -161,9 +153,6 @@ workflows:
             - debian-armhf
             - debian-arm64
       - bbtest-amd64:
-          requires:
-            - publish
-      - perf-amd64:
           requires:
             - publish
 
