@@ -147,7 +147,6 @@ fail:
 	if relay.isCircuitBreaker(err) {
 		goto eos
 	}
-	log.Warnf("%+v", err)
 	goto loop
 
 eos:
