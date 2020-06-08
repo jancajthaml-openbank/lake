@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"runtime"
-	"syscall"
 	"time"
 
 	"github.com/jancajthaml-openbank/lake/metrics"
@@ -145,10 +144,10 @@ loop:
 	goto loop
 
 fail:
-	if isCircuitBreaker(err) {
+	if relay.isCircuitBreaker(err) {
 		goto eos
 	}
-	log.Warnf("Circuit error %+v", err)
+	log.Warnf("%+v", err)
 	goto loop
 
 eos:
@@ -157,12 +156,15 @@ eos:
 	return
 }
 
-func isCircuitBreaker(err error) bool {
+func (relay Relay) isCircuitBreaker(err error) bool {
+	if relay.IsCanceled() {
+		return true
+	}
   if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
   	return true
   }
   errno := zmq.AsErrno(err)
-  if errno == zmq.ETERM || errno == zmq.Errno(syscall.EINTR) {
+  if errno == zmq.ETERM {
   	return true
   }
   return false

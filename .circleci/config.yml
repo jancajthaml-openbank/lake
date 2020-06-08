@@ -167,10 +167,10 @@ workflows:
           requires:
             - publish
 
-  rolling_bbtest:
+  rolling_test:
     triggers:
       - schedule:
-          cron: "0 0,6,12,18 * * *"
+          cron: "0 * * * *"
           filters:
             branches:
               only:
@@ -186,7 +186,7 @@ workflows:
   rolling_performance:
     triggers:
       - schedule:
-          cron: "0 2,10,18 * * *"
+          cron: "0 1,6,12,18 * * *"
           filters:
             branches:
               only:
@@ -579,7 +579,7 @@ jobs:
                 -e IMAGE_VERSION="${IMAGE_VERSION}" \
                 -e UNIT_VERSION="${UNIT_VERSION}" \
                 -e UNIT_ARCH=amd64 \
-                -e MESSAGES_PUSHED=10000000 \
+                -e MESSAGES_PUSHED=100000000 \
                 -e NO_TTY=1 \
                 -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
                 -v /var/run/docker.sock:/var/run/docker.sock \
