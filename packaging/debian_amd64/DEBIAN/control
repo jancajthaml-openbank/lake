@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.2.3+interupt
+Version: 1.2.3+crash
 Section: misc
 Priority: extra
 Architecture: amd64

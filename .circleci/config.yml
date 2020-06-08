@@ -156,10 +156,10 @@ workflows:
           requires:
             - publish
 
-  rolling_bbtest:
+  rolling_test:
     triggers:
       - schedule:
-          cron: "0 0,6,12,18 * * *"
+          cron: "0 * * * *"
           filters:
             branches:
               only:
@@ -168,6 +168,22 @@ workflows:
       - checkout
       - versions
       - bbtest-amd64:
+          requires:
+            - checkout
+            - versions
+
+  rolling_performance:
+    triggers:
+      - schedule:
+          cron: "0 1,6,12,18 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - checkout
+      - versions
+      - perf-amd64:
           requires:
             - checkout
             - versions
@@ -528,6 +544,42 @@ jobs:
           path: /home/circleci/project/reports/blackbox-tests/cucumber
       - store_artifacts:
           path: /home/circleci/project/reports/blackbox-tests
+          destination: reports
+
+  # -------------------------------------------------------------------------- #
+
+  perf-amd64:
+    machine: true
+    working_directory: /home/circleci/project
+    steps:
+      - restore_cache:
+          key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - run: docker pull jancajthaml/bbtest:amd64
+      - run:
+          name: Run perf tests
+          command: |
+            IMAGE_VERSION=$(cat /home/circleci/project/DOCKER_VERSION)
+            UNIT_VERSION=$(cat /home/circleci/project/DEBIAN_VERSION)
+
+            docker exec -it $(\
+              docker run -d -t \
+                -e IMAGE_VERSION="${IMAGE_VERSION}" \
+                -e UNIT_VERSION="${UNIT_VERSION}" \
+                -e UNIT_ARCH=amd64 \
+                -e MESSAGES_PUSHED=100000000 \
+                -e NO_TTY=1 \
+                -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+                -v /var/run/docker.sock:/var/run/docker.sock \
+                -v /var/lib/docker/containers:/var/lib/docker/containers \
+                -v /home/circleci/project/perf:/opt/app \
+                -v /home/circleci/project/reports:/tmp/reports \
+              jancajthaml/bbtest:amd64 \
+            ) python3 /opt/app/main.py
+          no_output_timeout: 5h
+      - store_artifacts:
+          path: /home/circleci/project/reports/perf-tests
           destination: reports
 
   # -------------------------------------------------------------------------- #
