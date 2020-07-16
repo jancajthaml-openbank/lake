@@ -19,4 +19,4 @@ TimeoutStartSec=0
 KillMode=control-group
 
 [Install]
-WantedBy=lake.service
+WantedBy=multi-user.target
