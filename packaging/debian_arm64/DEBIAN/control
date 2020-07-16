@@ -1,7 +1,7 @@
 Package: lake
 Version: 1.1.7+fix-changelog
 Section: misc
-Priority: extra
+Priority: optional
 Architecture: arm64
 Vcs-Git: https://github.com/jancajthaml-openbank/lake.git
 Maintainer: Jan Cajthaml <jan.cajthaml@gmail.com>
