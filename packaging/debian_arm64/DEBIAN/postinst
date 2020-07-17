@@ -19,6 +19,7 @@ case "$1" in
       enable lake-relay.service
       (systemctl daemon-reload >/dev/null 2>&1 || :)
       (systemctl start lake.service >/dev/null 2>&1 || :)
+      (systemctl start lake-relay.service >/dev/null 2>&1 || :)
       (systemctl start lake.path >/dev/null 2>&1 || :)
     else
       (>&2 echo "/etc/init/lake.conf file not found")

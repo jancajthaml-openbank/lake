@@ -10,7 +10,7 @@ import os
 def step_impl(context, package, operation):
   if operation == 'installed':
     (code, result, error) = execute([
-      "apt-get", "-y", "install", "-f", "/tmp/packages/{}.deb".format(package)
+      "apt-get", "-y", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "/tmp/packages/{}.deb".format(package)
     ])
     assert code == 0
     assert os.path.isfile('/etc/init/lake.conf') is True
