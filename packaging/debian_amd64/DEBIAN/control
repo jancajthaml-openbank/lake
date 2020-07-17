@@ -1,5 +1,5 @@
 Package: lake
-Version: 1.2.3+postinst-check
+Version: 1.2.3+debian-install
 Section: misc
 Priority: optional
 Architecture: amd64
