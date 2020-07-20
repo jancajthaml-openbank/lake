@@ -1,0 +1,2 @@
+bin/lake-linux-arm64 usr/bin
+init.conf etc/lake/conf.d

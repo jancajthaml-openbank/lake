@@ -106,8 +106,8 @@ class UnitHelper(object):
     if params:
       options.update(params)
 
-    os.makedirs("/etc/init", exist_ok=True)
-    with open('/etc/init/lake.conf', 'w') as fd:
+    os.makedirs("/etc/lake/conf.d", exist_ok=True)
+    with open('/etc/lake/conf.d/init.conf', 'w') as fd:
       for k, v in sorted(options.items()):
         fd.write('LAKE_{}={}\n'.format(k, v))
 

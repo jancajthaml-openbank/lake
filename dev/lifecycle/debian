@@ -52,61 +52,15 @@ if [ -z "${TARGET_ARCHITECTURE}" ] ; then
   exit 1
 fi
 
-DEB_SOURCES="${SOURCE}/debian_${TARGET_ARCHITECTURE}"
-BIN_SOURCES="${SOURCE}/bin"
+cd ${SOURCE}
 
-if [ ! -d "${DEB_SOURCES}" ] ; then
-  (>&2 echo "packaging for ${TARGET_ARCHITECTURE} is not supported")
-  exit 1
-fi
-
-if [ ! -f "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" ] ; then
-  (>&2 echo "did not found binary to package at ${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}")
-  exit 1
-fi
-
-mkdir -p ${DEB_SOURCES}/usr/bin
-if [ -f "${DEB_SOURCES}/usr/bin/lake" ] ; then
-  rm -f ${DEB_SOURCES}/usr/bin/lake
-fi
-
-generate_manpage() {
-  mkdir -p ${DEB_SOURCES}/usr/share/man/man8
-
-  target="${DEB_SOURCES}/usr/share/man/man8/lake.8"
-
-  if [ -f ${target} ] ; then
-    rm -f ${target}
-  fi
-
-  if [ -f ${target}.gz ] ; then
-    rm -f ${target}.gz
-  fi
-
-cat > ${target} <<EOL
-.TH LAKE 8 2020 "Lake" "OpenBank Message PUSH to BROADCAST"
-.SH NAME
-lake \- starts openbank message relay
-.SH DESCRIPTION
-The lake relay transforms publish messages to pull queue for openbank services.
-.EE
-EOL
-
-  cat ${target} | gzip -n -9 > ${target}.gz
-  rm ${target}
-}
+################################################################################
 
 generate_changelog() {
-  mkdir -p ${DEB_SOURCES}/usr/share/doc/lake
-
-  target="${DEB_SOURCES}/usr/share/doc/lake/changelog"
+  target="${SOURCE}/debian/changelog"
 
   if [ -f ${target} ] ; then
     rm -f ${target}
-  fi
-
-  if [ -f ${target}.Debian.gz ] ; then
-    rm -f ${target}.Debian.gz
   fi
 
   touch ${target}
@@ -142,7 +96,7 @@ generate_changelog() {
     commits=$(echo "$(git log --no-merges --pretty=oneline --pretty=format:%s ^${tag_from} ${tag_to})" | sed '/^[[:space:]]*$/d' | uniq)
 
     if [[ -n "${commits// }" ]] ; then
-      echo "lake (${tag_to#v}) unstable; urgency=medium" >> ${target}
+      echo "lake (${tag_to#v}) stable; urgency=medium" >> ${target}
       echo "" >> ${target}
 
       echo "${commits}" | \
@@ -156,45 +110,17 @@ generate_changelog() {
       echo "" >> ${target}
     fi
   done
-
-  case "${VERSION}" in
-    *+*)
-      cat ${target} | gzip -n -9 > ${target}.Debian.gz
-      ;;
-    *)
-      cat ${target} | gzip -n -9 > ${target}.gz
-      ;;
-  esac
-
-  rm ${target}
-}
-
-check_files() {
-  chmod 0755 "${DEB_SOURCES}/DEBIAN/control"
-  chmod 0755 "${DEB_SOURCES}/DEBIAN/postinst"
-  chmod 0755 "${DEB_SOURCES}/DEBIAN/postrm"
-  chmod 0755 "${DEB_SOURCES}/DEBIAN/preinst"
-  chmod 0755 "${DEB_SOURCES}/usr/bin/lake"
 }
 
 ################################################################################
 
-cp \
-  "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
-  "${DEB_SOURCES}/usr/bin/lake"
+#find "bin" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
+
 
 generate_changelog
-generate_manpage
+dpkg-buildpackage -tc -uc -b -rfakeroot --target-arch ${TARGET_ARCHITECTURE}
+find ".." -name "lake_*_${TARGET_ARCHITECTURE}.*" -exec mv {} bin/ \;
 
-sed -i 's/Version.*/Version: '${VERSION#v}'/' "${DEB_SOURCES}/DEBIAN/control"
-
-find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec rm -f {} \;
-
-check_files
-
-dpkg-deb --build "${DEB_SOURCES}" "${BIN_SOURCES}"
-
-find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
-find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec du -hs {} \;
+find bin -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
 
 exit 0

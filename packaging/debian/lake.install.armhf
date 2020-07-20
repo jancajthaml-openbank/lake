@@ -1,0 +1,2 @@
+bin/lake-linux-armhf usr/bin
+init.conf etc/lake/conf.d

@@ -26,7 +26,7 @@ def execute_shell(command, silent=False) -> None:
 
     result = result.decode('utf-8').strip() if result else None
     error = error.decode('utf-8').strip() if error else None
-    code = 1 if error else p.returncode
+    code = p.returncode
 
     del p
 

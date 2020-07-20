@@ -15,8 +15,7 @@ all: bootstrap sync test package bbtest perf
 
 .PHONY: package
 package:
-	@$(MAKE) bundle-binaries-amd64
-	@$(MAKE) bundle-debian-amd64
+	@$(MAKE) package-amd64
 	@$(MAKE) bundle-docker
 
 .PHONY: package-%

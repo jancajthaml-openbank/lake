@@ -80,7 +80,7 @@ services:
     image: jancajthaml/bbtest:amd64
     environment:
       IMAGE_VERSION: ${VERSION:-latest}-${META:-master}
-      UNIT_VERSION: ${VERSION:-latest}+${META:-master}
+      UNIT_VERSION: ${VERSION:-latest}
       UNIT_ARCH: amd64
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
@@ -96,7 +96,7 @@ services:
     image: jancajthaml/bbtest:amd64
     environment:
       IMAGE_VERSION: ${VERSION:-latest}-${META:-master}
-      UNIT_VERSION: ${VERSION:-latest}+${META:-master}
+      UNIT_VERSION: ${VERSION:-latest}
       UNIT_ARCH: amd64
       MESSAGES_PUSHED: 10000
     volumes:

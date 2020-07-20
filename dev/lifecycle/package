@@ -31,6 +31,7 @@ package_service() {
       GOARM=7 \
       GOARCH=arm \
       CGO_ENABLED=1 \
+      GOFLAGS=-buildmode=pie \
       CC=arm-linux-gnueabihf-gcc \
       \
       go build -a -o ${output} || {
@@ -45,6 +46,7 @@ package_service() {
       GOOS=${platform} \
       GOARCH=arm64 \
       CGO_ENABLED=1 \
+      GOFLAGS=-buildmode=pie \
       CC=aarch64-linux-gnu-gcc \
       \
       go build -a -o ${output} || {
@@ -59,6 +61,7 @@ package_service() {
       GOOS=${platform} \
       GOARCH=amd64 \
       CGO_ENABLED=1 \
+      GOFLAGS=-buildmode=pie \
       CC=gcc \
       \
       go build -a -o ${output} || {
