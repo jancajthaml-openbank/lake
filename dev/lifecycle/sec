@@ -30,8 +30,14 @@ fi
 
 ################################################################################
 
-cd ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
+lifecycle::sec() {
+  local dir="$1"
+  if [ -z ${dir} -o ! -d ${dir} ] ; then
+    return
+  fi
+  gosec -exclude=G104,G302 "${dir}/..."
+}
 
-gosec \
-  -exclude=G104,G302 \
-  ./...
+################################################################################
+
+lifecycle::sec ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}

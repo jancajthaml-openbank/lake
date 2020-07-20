@@ -159,12 +159,12 @@ func (relay Relay) isCircuitBreaker(err error) bool {
 	if relay.IsCanceled() {
 		return true
 	}
-  if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
-  	return true
-  }
-  errno := zmq.AsErrno(err)
-  if errno == zmq.ETERM {
-  	return true
-  }
-  return false
+	if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
+		return true
+	}
+	errno := zmq.AsErrno(err)
+	if errno == zmq.ETERM {
+		return true
+	}
+	return false
 }

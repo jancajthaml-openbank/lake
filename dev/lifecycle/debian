@@ -52,8 +52,6 @@ if [ -z "${TARGET_ARCHITECTURE}" ] ; then
   exit 1
 fi
 
-cd ${SOURCE}
-
 ################################################################################
 
 lifecycle::generate_changelog() {
@@ -90,21 +88,16 @@ lifecycle::generate_changelog() {
   for ((i=${#idx[@]} - 1; i >= 0; i--)) ; do
     tag_from=${PAIRS[idx[i]]%% *}
     tag_to=${PAIRS[idx[i]]#* }
-
     DATE=$(git log -1 --format=%cD ${tag_to})
-
     commits=$(echo "$(git log --no-merges --pretty=oneline --pretty=format:%s ^${tag_from} ${tag_to})" | sed '/^[[:space:]]*$/d' | uniq)
-
     if [[ -n "${commits// }" ]] ; then
       echo "lake (${tag_to#v}) stable; urgency=medium" >> ${target}
       echo "" >> ${target}
-
       echo "${commits}" | \
       while read note ; do
         line="$(tr '[:lower:]' '[:upper:]' <<< ${note:0:1})${note:1}"
         echo "  * ${line:0:75}" >> ${target}
       done
-
       echo "" >> ${target}
       echo " -- Jan Cajthaml <jan.cajthaml@gmail.com>  ${DATE}" >> ${target}
       echo "" >> ${target}
@@ -112,31 +105,20 @@ lifecycle::generate_changelog() {
   done
 }
 
-lifecycle::package() {
+lifecycle::bundle_debian() {
+  local CC=gcc
   case ${TARGET_ARCHITECTURE} in
-
-    armhf)
-      CC=arm-linux-gnueabihf-gcc \
-        dpkg-buildpackage \
-        --host-arch=armhf \
-        -tc -uc -b -rfakeroot
-    ;;
-
-    arm64)
-      CC=aarch64-linux-gnu-gcc \
-        dpkg-buildpackage \
-        --host-arch=arm64 \
-        -tc -uc -b -rfakeroot
-    ;;
-
-    *)
-      CC=gcc \
-        dpkg-buildpackage \
-        --host-arch=amd64 \
-        -tc -uc -b -rfakeroot
-    ;;
-
+    armhf) CC=arm-linux-gnueabihf-gcc ;;
+    arm64) CC=aarch64-linux-gnu-gcc   ;;
+    *)     CC=gcc                     ;;
   esac
+
+  cd ${SOURCE} && \
+  \
+  CC=${CC} \
+    dpkg-buildpackage \
+    --host-arch=${TARGET_ARCHITECTURE} \
+    -tc -uc -b -rfakeroot
 
   find ".." -name "lake_*_${TARGET_ARCHITECTURE}.*" -exec mv {} bin/ \;
 }
@@ -148,7 +130,7 @@ lifecycle::lintian() {
 ################################################################################
 
 lifecycle::generate_changelog
-lifecycle::package
+lifecycle::bundle_debian
 lifecycle::lintian
 
 exit 0
