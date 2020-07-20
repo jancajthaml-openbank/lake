@@ -46,21 +46,8 @@ lifecycle::debian::generate_changelog() {
 
   touch ${target}
 
-  VER="${VERSION}"
-  tag=HEAD
-  ADDS=$(echo ${VER} | sed -e 's/~.*//' | cut -s -d- -f2 | sed '/^[[:space:]]*$/d')
-
-  if [[ -z "${ADDS// }" ]] ; then
-    DATE=$(date '+%a, %-d %b %Y %H:%M:%S %z')
-    echo "lake (${VER}) experimental; urgency=medium" >> ${target}
-    echo "" >> ${target}
-    echo "  * includes non-released commits" >> ${target}
-    echo "" >> ${target}
-    echo " -- Jan Cajthaml <jan.cajthaml@gmail.com>  ${DATE}" >> ${target}
-    echo "" >> ${target}
-  fi
-
   PAIRS=()
+  tag=HEAD
   prev_tag=HEAD
   for tag in $(git tag --sort=-v:refname | awk '{arr[i++]=$0} END {while (i>0) print arr[--i] }') ; do
     PAIRS+=("${prev_tag} ${tag}")
