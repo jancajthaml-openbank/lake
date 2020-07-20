@@ -3,25 +3,18 @@
 set -eu
 trap exit INT TERM
 
-TARGET_PACKAGE=""
+################################################################################
 
+TARGET_PACKAGE=""
 while [ $# -gt 0 ] ; do
 key="$1"
-
 case $key in
-
-  --pkg)
-    TARGET_PACKAGE="$2"
-    shift
-    shift
-  ;;
-
-  *)
-    shift
-  ;;
-
+  --pkg)  TARGET_PACKAGE="$2";  shift; shift; ;;
+  *)                            shift;        ;;
 esac
 done
+
+################################################################################
 
 if [ -z "${TARGET_PACKAGE}" ] ; then
   (>&2 echo "[error] target package not provided")
@@ -30,7 +23,7 @@ fi
 
 ################################################################################
 
-lifecycle::sec() {
+lifecycle::go::sec() {
   local dir="$1"
   if [ -z ${dir} -o ! -d ${dir} ] ; then
     return
@@ -40,4 +33,5 @@ lifecycle::sec() {
 
 ################################################################################
 
-lifecycle::sec ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
+lifecycle::go::sec \
+  ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}

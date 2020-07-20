@@ -3,25 +3,18 @@
 set -eu
 trap exit INT TERM
 
-TARGET_PACKAGE=""
+################################################################################
 
+TARGET_PACKAGE=""
 while [ $# -gt 0 ] ; do
 key="$1"
-
 case $key in
-
-  --pkg)
-    TARGET_PACKAGE="$2"
-    shift
-    shift
-  ;;
-
-  *)
-    shift
-  ;;
-
+  --pkg)  TARGET_PACKAGE="$2";  shift; shift; ;;
+  *)                            shift;        ;;
 esac
 done
+
+################################################################################
 
 if [ -z "${TARGET_PACKAGE}" ] ; then
   (>&2 echo "[error] target package not provided")
@@ -30,22 +23,7 @@ fi
 
 ################################################################################
 
-lifecycle::lint::file() {
-  local file="$1"
-  if [ -z ${file} -o ! -f ${file} ] ; then
-    return
-  fi
-  (gofmt -s -w ${file} || :)
-  (/go/bin/golint -min_confidence 0.5 ${file} || :)
-  (/go/bin/misspell ${file} || :)
-  (/go/bin/prealloc ${file} || :)
-  (/go/bin/gocyclo -over 15 ${file} || :)
-  (/go/bin/prealloc ${file} || :)
-  (/go/bin/goconst ${file} || :)
-  (/go/bin/ineffassign ${file} || :)
-}
-
-lifecycle::lint() {
+lifecycle::go::lint() {
   local dir="$1"
   if [ -z ${dir} -o ! -d ${dir} ] ; then
     return
@@ -56,11 +34,18 @@ lifecycle::lint() {
     -path "*vendor/*" \
   \
   | sort -u \
-  | while read f ; do
-    lifecycle::lint::file ${f}
+  | while read file ; do
+    (gofmt -s -w ${file} || :)
+    (/go/bin/golint -min_confidence 0.5 ${file} || :)
+    (/go/bin/misspell ${file} || :)
+    (/go/bin/prealloc ${file} || :)
+    (/go/bin/gocyclo -over 15 ${file} || :)
+    (/go/bin/prealloc ${file} || :)
+    (/go/bin/goconst ${file} || :)
+    (/go/bin/ineffassign ${file} || :)
   done
 }
 
 ################################################################################
 
-lifecycle::lint ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
+lifecycle::go::lint ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}

@@ -3,39 +3,22 @@
 set -eu
 trap exit INT TERM
 
+################################################################################
+
 VERSION=""
 SOURCE=""
 TARGET_ARCHITECTURE=""
-
 while [ $# -gt 0 ] ; do
 key="$1"
-
 case $key in
-
-  --source)
-    SOURCE="$2"
-    shift
-    shift
-  ;;
-
-  --arch)
-    TARGET_ARCHITECTURE="$2"
-    shift
-    shift
-  ;;
-
-  --version)
-    VERSION="$2"
-    shift
-    shift
-  ;;
-
-  *)
-    shift
-  ;;
-
+  --source)   SOURCE="$2";              shift; shift; ;;
+  --arch)     TARGET_ARCHITECTURE="$2"; shift; shift; ;;
+  --version)  VERSION="$2";             shift; shift; ;;
+  *)                                    shift;        ;;
 esac
 done
+
+################################################################################
 
 if [ -z "${VERSION}" ] ; then
   (>&2 echo "version not provided")
@@ -54,7 +37,7 @@ fi
 
 ################################################################################
 
-lifecycle::generate_changelog() {
+lifecycle::debian::generate_changelog() {
   target="${SOURCE}/debian/changelog"
 
   if [ -f ${target} ] ; then
@@ -105,7 +88,7 @@ lifecycle::generate_changelog() {
   done
 }
 
-lifecycle::bundle_debian() {
+lifecycle::debian::package() {
   local CC=gcc
   case ${TARGET_ARCHITECTURE} in
     armhf) CC=arm-linux-gnueabihf-gcc ;;
@@ -129,8 +112,6 @@ lifecycle::lintian() {
 
 ################################################################################
 
-lifecycle::generate_changelog
-lifecycle::bundle_debian
+lifecycle::debian::generate_changelog
+lifecycle::debian::package
 lifecycle::lintian
-
-exit 0

@@ -3,39 +3,22 @@
 set -eu
 trap exit INT TERM
 
+################################################################################
+
 TARGET_ARCHITECTURE="linux/amd64"
 TARGET_PACKAGE=""
 OUTPUT=""
-
 while [ $# -gt 0 ] ; do
 key="$1"
-
 case $key in
-
-  --arch)
-    TARGET_ARCHITECTURE="$2"
-    shift
-    shift
-  ;;
-
-  --pkg)
-    TARGET_PACKAGE="$2"
-    shift
-    shift
-  ;;
-
-  --output)
-    OUTPUT="$2"
-    shift
-    shift
-  ;;
-
-  *)
-    shift
-  ;;
-
+  --arch)   TARGET_ARCHITECTURE="$2"; shift; shift; ;;
+  --pkg)    TARGET_PACKAGE="$2";      shift; shift; ;;
+  --output) OUTPUT="$2";              shift; shift; ;;
+  *)                                  shift;        ;;
 esac
 done
+
+################################################################################
 
 if [ -z "${TARGET_PACKAGE}" ] ; then
   (>&2 echo "[error] target package not provided")
@@ -49,7 +32,7 @@ fi
 
 ################################################################################
 
-lifecycle::compile() {
+lifecycle::go::build() {
   local working_dir=${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
   local arch=${TARGET_ARCHITECTURE#*/}
   local platform=${TARGET_ARCHITECTURE%%/*}
@@ -123,4 +106,4 @@ lifecycle::compile() {
 
 ################################################################################
 
-lifecycle::compile
+lifecycle::go::build

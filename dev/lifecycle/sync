@@ -3,25 +3,18 @@
 set -eu
 trap exit INT TERM
 
-TARGET_PACKAGE=""
+################################################################################
 
+TARGET_PACKAGE=""
 while [ $# -gt 0 ] ; do
 key="$1"
-
 case $key in
-
-  --pkg)
-    TARGET_PACKAGE="$2"
-    shift
-    shift
-  ;;
-
-  *)
-    shift
-  ;;
-
+  --pkg)  TARGET_PACKAGE="$2";  shift; shift; ;;
+  *)                            shift;        ;;
 esac
 done
+
+################################################################################
 
 if [ -z "${TARGET_PACKAGE}" ] ; then
   (>&2 echo "[error] target package not provided")
@@ -30,21 +23,26 @@ fi
 
 ################################################################################
 
-cd ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
+lifecycle::go::sync() {
+  local dir="$1"
+  if [ -z ${dir} -o ! -d ${dir} ] ; then
+    return
+  fi
 
-if [ -d vendor ] ; then
-  rm -rf vendor
-fi
+  if [ -d ${dir}/vendor ] ; then
+    rm -rf ${dir}/vendor
+  fi
 
-if [ -f go.sum ] ; then
-  rm -f go.sum
-fi
+  if [ -f ${dir}/go.sum ] ; then
+    rm -f ${dir}/go.sum
+  fi
 
-GO111MODULE=on \
-  go mod verify
+  cd ${dir} && GO111MODULE=on go mod verify
+  cd ${dir} && GO111MODULE=on go mod tidy
+  cd ${dir} && GO111MODULE=on go mod vendor
+}
 
-GO111MODULE=on \
-  go mod tidy
+################################################################################
 
-GO111MODULE=on \
-  go mod vendor
+lifecycle::go::sync \
+  ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
