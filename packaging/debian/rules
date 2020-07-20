@@ -1,12 +1,22 @@
 #!/usr/bin/make -f
 
+ifeq (${DEB_HOST_ARCH},amd64)
+  OBJ_STRIP = objcopy
+else ifeq (${DEB_HOST_ARCH},arm64)
+  OBJ_STRIP = aarch64-linux-gnu-objcopy
+else ifeq (${DEB_HOST_ARCH},armhf)
+	OBJ_STRIP = arm-linux-gnueabihf-objcopy
+else
+	OBJ_STRIP = objcopy
+endif
+
 export DH_VERBOSE = 1
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 SUBSTVARS = -Vshlibs:Depends="libzmq5 (>= 4.2.1~), libc6"
 
 %:
-	dh $@ -P debian/target/${DEB_TARGET_ARCH} --with=systemd
+	dh $@ -P debian/target/${DEB_HOST_ARCH} --with=systemd
 
 override_dh_systemd_enable:
 	dh_systemd_enable -plake --name=lake lake.path
@@ -20,7 +30,12 @@ override_dh_systemd_start:
 
 override_dh_installinit:
 	dh_installinit --noscript
-	@mv debian/target/${DEB_TARGET_ARCH}/usr/bin/lake-linux-${DEB_TARGET_ARCH} debian/target/${DEB_TARGET_ARCH}/usr/bin/lake
+	@mv \
+		debian/target/${DEB_HOST_ARCH}/usr/bin/lake-* \
+		debian/target/${DEB_HOST_ARCH}/usr/bin/lake
+
+override_dh_strip:
+	$(OBJ_STRIP) --strip-unneeded debian/target/${DEB_HOST_ARCH}/usr/bin/lake
 
 override_dh_gencontrol:
 	dh_gencontrol -- $(SUBSTVARS)

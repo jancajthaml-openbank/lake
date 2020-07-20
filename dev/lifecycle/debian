@@ -114,11 +114,31 @@ generate_changelog() {
 
 ################################################################################
 
-#find "bin" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
+case ${TARGET_ARCHITECTURE} in
 
+  armhf)
+    CC=arm-linux-gnueabihf-gcc \
+      dpkg-buildpackage \
+      --host-arch=armhf \
+      -tc -uc -b -rfakeroot
+  ;;
 
-generate_changelog
-dpkg-buildpackage -tc -uc -b -rfakeroot --target-arch ${TARGET_ARCHITECTURE}
+  arm64)
+    CC=aarch64-linux-gnu-gcc \
+      dpkg-buildpackage \
+      --host-arch=arm64 \
+      -tc -uc -b -rfakeroot
+  ;;
+
+  *)
+    CC=gcc \
+      dpkg-buildpackage \
+      --host-arch=amd64 \
+      -tc -uc -b -rfakeroot
+  ;;
+
+esac
+
 find ".." -name "lake_*_${TARGET_ARCHITECTURE}.*" -exec mv {} bin/ \;
 
 find bin -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;

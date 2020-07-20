@@ -38,8 +38,6 @@ package_service() {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
         exit 1
       }
-
-      arm-linux-gnueabihf-objcopy --strip-unneeded ${output} ${output}
     ;;
 
     arm64)
@@ -53,8 +51,6 @@ package_service() {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
         exit 1
       }
-
-      aarch64-linux-gnu-objcopy --strip-unneeded ${output} ${output}
     ;;
 
     amd64)
@@ -68,8 +64,6 @@ package_service() {
         (>&2 echo "[error] (${platform}/${arch}) unable to build")
         exit 1
       }
-
-      objcopy --strip-unneeded ${output} ${output}
     ;;
 
     *)
@@ -80,11 +74,6 @@ package_service() {
   esac
 
   chmod +x ${output}
-
-  echo "[info] (${platform}/${arch}) check"
-
-  objdump -p ${output}
-  file ${output}
   du -hs ${output}
 
   echo "[info] (${platform}/${arch}) done"
