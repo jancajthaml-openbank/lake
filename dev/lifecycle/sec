@@ -28,6 +28,8 @@ if [ -z "${TARGET_PACKAGE}" ] ; then
   exit 1
 fi
 
+################################################################################
+
 cd ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
 
 gosec \

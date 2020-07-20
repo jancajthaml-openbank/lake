@@ -40,6 +40,8 @@ if [ -z "${OUTPUT}" ] ; then
   exit 1
 fi
 
+################################################################################
+
 coverage_out=$(tempfile)
 test_out=$(tempfile)
 

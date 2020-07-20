@@ -50,6 +50,8 @@ REPO=${REPO#github.com}
 REPO=${REPO#/}
 REPO=${REPO}
 
+################################################################################
+
 echo "[info] start release of ${REPO}:${VERSION}"
 
 RELEASE_INFO="https://api.github.com/repos/${REPO}/releases/tags/${VERSION}"

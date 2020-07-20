@@ -28,7 +28,9 @@ if [ -z "${TARGET_PACKAGE}" ] ; then
   exit 1
 fi
 
-scan() {
+################################################################################
+
+lifecycle::lint() {
   if [ ! -f ${1} ] ; then
     return
   fi
@@ -42,6 +44,8 @@ scan() {
   (/go/bin/ineffassign ${1} || :)
 }
 
+################################################################################
+
 find ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE} \
   -name "*.go" \
   -not \
@@ -49,5 +53,5 @@ find ${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE} \
 \
 | sort -u \
 | while read f ; do
-  scan ${f}
+  lifecycle::lint ${f}
 done

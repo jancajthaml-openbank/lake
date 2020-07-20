@@ -56,7 +56,7 @@ cd ${SOURCE}
 
 ################################################################################
 
-generate_changelog() {
+lifecycle::generate_changelog() {
   target="${SOURCE}/debian/changelog"
 
   if [ -f ${target} ] ; then
@@ -112,37 +112,43 @@ generate_changelog() {
   done
 }
 
+lifecycle::package() {
+  case ${TARGET_ARCHITECTURE} in
+
+    armhf)
+      CC=arm-linux-gnueabihf-gcc \
+        dpkg-buildpackage \
+        --host-arch=armhf \
+        -tc -uc -b -rfakeroot
+    ;;
+
+    arm64)
+      CC=aarch64-linux-gnu-gcc \
+        dpkg-buildpackage \
+        --host-arch=arm64 \
+        -tc -uc -b -rfakeroot
+    ;;
+
+    *)
+      CC=gcc \
+        dpkg-buildpackage \
+        --host-arch=amd64 \
+        -tc -uc -b -rfakeroot
+    ;;
+
+  esac
+
+  find ".." -name "lake_*_${TARGET_ARCHITECTURE}.*" -exec mv {} bin/ \;
+}
+
+lifecycle::lintian() {
+  find bin -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
+}
+
 ################################################################################
 
-generate_changelog
-
-case ${TARGET_ARCHITECTURE} in
-
-  armhf)
-    CC=arm-linux-gnueabihf-gcc \
-      dpkg-buildpackage \
-      --host-arch=armhf \
-      -tc -uc -b -rfakeroot
-  ;;
-
-  arm64)
-    CC=aarch64-linux-gnu-gcc \
-      dpkg-buildpackage \
-      --host-arch=arm64 \
-      -tc -uc -b -rfakeroot
-  ;;
-
-  *)
-    CC=gcc \
-      dpkg-buildpackage \
-      --host-arch=amd64 \
-      -tc -uc -b -rfakeroot
-  ;;
-
-esac
-
-find ".." -name "lake_*_${TARGET_ARCHITECTURE}.*" -exec mv {} bin/ \;
-
-find bin -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
+lifecycle::generate_changelog
+lifecycle::package
+lifecycle::lintian
 
 exit 0

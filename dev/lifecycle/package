@@ -7,7 +7,49 @@ TARGET_ARCHITECTURE="linux/amd64"
 TARGET_PACKAGE=""
 OUTPUT=""
 
-package_service() {
+while [ $# -gt 0 ] ; do
+key="$1"
+
+case $key in
+
+  --arch)
+    TARGET_ARCHITECTURE="$2"
+    shift
+    shift
+  ;;
+
+  --pkg)
+    TARGET_PACKAGE="$2"
+    shift
+    shift
+  ;;
+
+  --output)
+    OUTPUT="$2"
+    shift
+    shift
+  ;;
+
+  *)
+    shift
+  ;;
+
+esac
+done
+
+if [ -z "${TARGET_PACKAGE}" ] ; then
+  (>&2 echo "[error] target package not provided")
+  exit 1
+fi
+
+if [ -z "${OUTPUT}" ] ; then
+  (>&2 echo "[error] output not provided")
+  exit 1
+fi
+
+################################################################################
+
+lifecycle::compile() {
   local working_dir=${GOPATH}/src/github.com/jancajthaml-openbank/${TARGET_PACKAGE}
   local arch=${TARGET_ARCHITECTURE#*/}
   local platform=${TARGET_ARCHITECTURE%%/*}
@@ -79,44 +121,6 @@ package_service() {
   echo "[info] (${platform}/${arch}) done"
 }
 
-while [ $# -gt 0 ] ; do
-key="$1"
+################################################################################
 
-case $key in
-
-  --arch)
-    TARGET_ARCHITECTURE="$2"
-    shift
-    shift
-  ;;
-
-  --pkg)
-    TARGET_PACKAGE="$2"
-    shift
-    shift
-  ;;
-
-  --output)
-    OUTPUT="$2"
-    shift
-    shift
-  ;;
-
-  *)
-    shift
-  ;;
-
-esac
-done
-
-if [ -z "${TARGET_PACKAGE}" ] ; then
-  (>&2 echo "[error] target package not provided")
-  exit 1
-fi
-
-if [ -z "${OUTPUT}" ] ; then
-  (>&2 echo "[error] output not provided")
-  exit 1
-fi
-
-package_service
+lifecycle::compile
