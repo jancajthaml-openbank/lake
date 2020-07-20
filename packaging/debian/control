@@ -9,5 +9,5 @@ Package: lake
 Architecture: any
 Description: message relay for openbank
  ZMQ backed message relay for OpenBank services.
-Depends: ${shlibs:Depends}
+Depends: libzmq5 (>= 4.2.1~), ${shlibs:Depends}
 

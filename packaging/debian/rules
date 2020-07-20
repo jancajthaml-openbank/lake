@@ -13,7 +13,7 @@ endif
 export DH_VERBOSE = 1
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
-SUBSTVARS = -Vshlibs:Depends="libzmq5 (>= 4.2.1~), libc6"
+SUBSTVARS = -Vshlibs:Depends="libc6"
 
 %:
 	dh $@ -P debian/target/${DEB_HOST_ARCH} --with=systemd
