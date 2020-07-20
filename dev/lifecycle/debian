@@ -101,11 +101,11 @@ generate_changelog() {
 
       echo "${commits}" | \
       while read note ; do
-        echo "  * $(tr '[:lower:]' '[:upper:]' <<< ${note:0:1})${note:1}" >> ${target}
+        line="$(tr '[:lower:]' '[:upper:]' <<< ${note:0:1})${note:1}"
+        echo "  * ${line:0:75}" >> ${target}
       done
 
       echo "" >> ${target}
-
       echo " -- Jan Cajthaml <jan.cajthaml@gmail.com>  ${DATE}" >> ${target}
       echo "" >> ${target}
     fi
@@ -142,6 +142,7 @@ case ${TARGET_ARCHITECTURE} in
 esac
 
 find ".." -name "lake_*_${TARGET_ARCHITECTURE}.*" -exec mv {} bin/ \;
+
 find bin -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
 
 exit 0
