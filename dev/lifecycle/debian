@@ -114,6 +114,8 @@ generate_changelog() {
 
 ################################################################################
 
+generate_changelog
+
 case ${TARGET_ARCHITECTURE} in
 
   armhf)
@@ -140,7 +142,6 @@ case ${TARGET_ARCHITECTURE} in
 esac
 
 find ".." -name "lake_*_${TARGET_ARCHITECTURE}.*" -exec mv {} bin/ \;
-
 find bin -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
 
 exit 0
