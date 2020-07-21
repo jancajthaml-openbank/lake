@@ -4,7 +4,6 @@ Feature: Relay message
     Given lake is configured with
       | property            | value |
       | METRICS_REFRESHRATE | 1s    |
-    And handshake is performed
 
     When lake recieves "A b"
     And  lake recieves "C d"
