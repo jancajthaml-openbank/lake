@@ -40,7 +40,7 @@ def step_impl(context, path):
   actual = dict()
   with open(path, 'r') as fd:
     actual.update(json.loads(fd.read()))
-  @eventually(3)
+  @eventually(5)
   def wait_for_metrics_update():
     for row in context.table:
       assert row['key'] in actual, 'key {} not found in metrics'.format(row['key'])

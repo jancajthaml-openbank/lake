@@ -12,9 +12,9 @@ def lake_recieves(context, data):
 
 @then('lake responds with "{data}"')
 def lake_responds_with(context,  data):
-  @eventually(2)
+  @eventually(5)
   def impl():
-    assert data in context.zmq.backlog
+    assert data in context.zmq.backlog, '"{}" was not found in lake responses {}'.format(data, context.zmq.backlog)
     context.zmq.ack(data)
   impl()
 
