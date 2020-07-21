@@ -141,6 +141,7 @@ loop:
 	if err != nil {
 		goto fail
 	}
+	relay.metrics.MessageEgress()
 	goto loop
 
 fail:

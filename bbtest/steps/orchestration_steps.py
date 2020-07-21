@@ -12,13 +12,13 @@ def step_impl(context, package, operation):
     (code, result, error) = execute([
       "apt-get", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "-o=Dpkg::Options::=--force-confdef", "-o=Dpkg::Options::=--force-confnew", "/tmp/packages/{}.deb".format(package)
     ])
-    assert code == 0
+    assert code == 0, str(result) + ' ' + str(error)
     assert os.path.isfile('/etc/lake/conf.d/init.conf') is True
   elif operation == 'uninstalled':
     (code, result, error) = execute([
       "apt-get", "-y", "remove", package
     ])
-    assert code == 0
+    assert code == 0, str(result) + ' ' + str(error)
     assert os.path.isfile('/etc/lake/conf.d/init.conf') is False
   else:
     assert False
@@ -30,7 +30,7 @@ def step_impl(context):
   (code, result, error) = execute([
     "systemctl", "list-units", "--no-legend"
   ])
-  assert code == 0
+  assert code == 0, str(result) + ' ' + str(error)
   items = []
   for row in context.table:
     items.append(row['name'] + '.' + row['type'])
@@ -45,7 +45,7 @@ def step_impl(context):
   (code, result, error) = execute([
     "systemctl", "list-units", "--no-legend"
   ])
-  assert code == 0
+  assert code == 0, str(result) + ' ' + str(error)
   items = []
   for row in context.table:
     items.append(row['name'] + '.' + row['type'])
@@ -59,7 +59,7 @@ def unit_running(context, unit):
   (code, result, error) = execute([
     "systemctl", "show", "-p", "SubState", unit
   ])
-  assert code == 0
+  assert code == 0, str(result) + ' ' + str(error)
   assert 'SubState=running' in result
 
 
@@ -68,7 +68,7 @@ def unit_not_running(context, unit):
   (code, result, error) = execute([
     "systemctl", "show", "-p", "SubState", unit
   ])
-  assert code == 0
+  assert code == 0, str(result) + ' ' + str(error)
   assert 'SubState=dead' in result
 
 
@@ -77,7 +77,7 @@ def operation_unit(context, operation, unit):
   (code, result, error) = execute([
     "systemctl", operation, unit
   ])
-  assert code == 0
+  assert code == 0, str(result) + ' ' + str(error)
   if operation == 'restart':
     unit_running(context, unit)
 

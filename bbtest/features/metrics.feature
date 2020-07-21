@@ -23,7 +23,8 @@ Feature: Metrics test
       | messageIngress |     0 |
 
     When lake recieves "A B"
-    Then metrics file /tmp/reports/blackbox-tests/metrics/metrics.json reports:
+    Then lake responds with "A B"
+    And metrics file /tmp/reports/blackbox-tests/metrics/metrics.json reports:
       | key            | value |
       | messageEgress  |     1 |
       | messageIngress |     1 |

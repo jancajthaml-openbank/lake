@@ -13,10 +13,10 @@ def step_impl(context, unit):
   @eventually(5)
   def impl():
     (code, result, error) = execute([
-      'journalctl', '-o', 'cat', '-t', 'lake', '-u', unit, '--no-pager'
+      'journalctl', '-o', 'cat', '-u', unit, '--no-pager'
     ])
 
-    assert code == 0
+    assert code == 0, str(result) + ' ' + str(error)
 
     actual_lines_merged = [item.strip() for item in result.split('\n') if len(item.strip())]
     actual_lines = []

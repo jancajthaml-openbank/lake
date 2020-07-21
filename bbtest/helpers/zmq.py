@@ -33,9 +33,7 @@ class ZMQHelper(threading.Thread):
     while not self.__cancel.is_set():
       try:
         data = self.__sub.recv(zmq.NOBLOCK)
-        self.__mutex.acquire()
         self.backlog.append(data)
-        self.__mutex.release()
       except Exception as ex:
         if ex.errno != 11:
           return
@@ -59,4 +57,3 @@ class ZMQHelper(threading.Thread):
       pass
     self.__push.disconnect(self.__push_url)
     self.__sub.disconnect(self.__sub_url)
-
