@@ -7,14 +7,15 @@ from helpers.eventually import eventually
 
 @when('lake recieves "{data}"')
 def lake_recieves(context, data):
-  context.zmq.send(data)
+  context.lake_to_receive = data
 
 
 @then('lake responds with "{data}"')
-def lake_responds_with(context,  data):
+def lake_responds_with(context, data):
   pivot = data.encode('utf-8')
-  @eventually(5)
+  @eventually(2)
   def impl():
+    context.zmq.send(context.lake_to_receive)
     assert pivot in context.zmq.backlog, "{} not found in zmq backlog {}".format(pivot, context.zmq.backlog)
     context.zmq.ack(pivot)
   impl()
@@ -22,5 +23,8 @@ def lake_responds_with(context,  data):
 
 @given('handshake is performed')
 def perform_handshake(context):
-  lake_recieves(context, '!')
-  lake_responds_with(context, '!')
+  @eventually(2)
+  def impl():
+    lake_recieves(context, '!')
+    lake_responds_with(context, '!')
+  impl()
