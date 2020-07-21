@@ -33,8 +33,7 @@ class ZMQHelper(threading.Thread):
     while not self.__cancel.is_set():
       try:
         data = self.__sub.recv(zmq.NOBLOCK)
-        if len(data):
-          self.backlog.append(data)
+        self.backlog.append(data)
       except Exception as ex:
         if ex.errno != 11:
           return
