@@ -10,16 +10,16 @@ import os
 def step_impl(context, package, operation):
   if operation == 'installed':
     (code, result, error) = execute([
-      "apt-get", "-y", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "/tmp/packages/{}.deb".format(package)
+      "apt-get", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "-o=Dpkg::Options::=--force-confdef", "-o=Dpkg::Options::=--force-confnew", "/tmp/packages/{}.deb".format(package)
     ])
     assert code == 0
-    assert os.path.isfile('/etc/init/lake.conf') is True
+    assert os.path.isfile('/etc/lake/conf.d/init.conf') is True
   elif operation == 'uninstalled':
     (code, result, error) = execute([
       "apt-get", "-y", "remove", package
     ])
     assert code == 0
-    assert os.path.isfile('/etc/init/lake.conf') is False
+    assert os.path.isfile('/etc/lake/conf.d/init.conf') is False
   else:
     assert False
 

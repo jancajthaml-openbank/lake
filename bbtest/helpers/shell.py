@@ -6,6 +6,7 @@ import threading
 import signal
 import time
 import os
+import gc
 
 
 class Deadline(threading.Thread):
@@ -27,7 +28,7 @@ class Deadline(threading.Thread):
     self.join()
 
 
-def execute(command, timeout=60) -> None:
+def execute(command, timeout=20) -> None:
   try:
     p = subprocess.Popen(
       command,
@@ -54,7 +55,11 @@ def execute(command, timeout=60) -> None:
 
     result = result.decode('utf-8').strip() if result else None
     error = error.decode('utf-8').strip() if error else None
-    code = 1 if error else p.returncode
+    code = p.returncode
+
+    del p
+
+    gc.collect()
 
     return (code, result, error)
   except subprocess.CalledProcessError:

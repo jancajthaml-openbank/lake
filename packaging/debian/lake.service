@@ -1,0 +1,12 @@
+[Unit]
+Description=openbank lake message relay
+After=inetd.service
+ConditionPathExists=/etc/lake/conf.d/init.conf
+
+[Service]
+Type=oneshot
+ExecStart=/bin/true
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

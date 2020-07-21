@@ -1,0 +1,22 @@
+[Unit]
+Description=openbank lake message relay
+PartOf=lake.service
+After=lake.service
+ConditionPathExists=/etc/lake/conf.d/init.conf
+
+[Service]
+Type=notify
+EnvironmentFile=/etc/lake/conf.d/init.conf
+StartLimitBurst=0
+ExecStart=/usr/bin/lake
+StandardInput=null
+LimitNOFILE=1048576
+LimitNPROC=infinity
+LimitCORE=infinity
+Restart=always
+RestartSec=0
+TimeoutStartSec=0
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target

@@ -18,7 +18,7 @@ if __name__ == "__main__":
     '-o /tmp/reports/blackbox-tests/behave/results.json',
   ]
 
-  if sys.stdout.isatty() and (int(os.environ.get('NO_TTY', 0)) == 0):
+  if sys.stdout.isatty() and (int(os.environ.get('CI', 0)) == 0):
     args.append('-f pretty')
   else:
     args.append('-f progress3')

@@ -3,39 +3,22 @@
 set -eu
 trap exit INT TERM
 
+################################################################################
+
 VERSION=""
 SOURCE=""
 TARGET_ARCHITECTURE=""
-
 while [ $# -gt 0 ] ; do
 key="$1"
-
 case $key in
-
-  --source)
-    SOURCE="$2"
-    shift
-    shift
-  ;;
-
-  --arch)
-    TARGET_ARCHITECTURE="$2"
-    shift
-    shift
-  ;;
-
-  --version)
-    VERSION="$2"
-    shift
-    shift
-  ;;
-
-  *)
-    shift
-  ;;
-
+  --source)   SOURCE="$2";              shift; shift; ;;
+  --arch)     TARGET_ARCHITECTURE="$2"; shift; shift; ;;
+  --version)  VERSION="$2";             shift; shift; ;;
+  *)                                    shift;        ;;
 esac
 done
+
+################################################################################
 
 if [ -z "${VERSION}" ] ; then
   (>&2 echo "version not provided")
@@ -52,80 +35,19 @@ if [ -z "${TARGET_ARCHITECTURE}" ] ; then
   exit 1
 fi
 
-DEB_SOURCES="${SOURCE}/debian_${TARGET_ARCHITECTURE}"
-BIN_SOURCES="${SOURCE}/bin"
+################################################################################
 
-if [ ! -d "${DEB_SOURCES}" ] ; then
-  (>&2 echo "packaging for ${TARGET_ARCHITECTURE} is not supported")
-  exit 1
-fi
-
-if [ ! -f "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" ] ; then
-  (>&2 echo "did not found binary to package at ${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}")
-  exit 1
-fi
-
-mkdir -p ${DEB_SOURCES}/usr/bin
-if [ -f "${DEB_SOURCES}/usr/bin/lake" ] ; then
-  rm -f ${DEB_SOURCES}/usr/bin/lake
-fi
-
-generate_manpage() {
-  mkdir -p ${DEB_SOURCES}/usr/share/man/man8
-
-  target="${DEB_SOURCES}/usr/share/man/man8/lake.8"
+lifecycle::debian::generate_changelog() {
+  target="${SOURCE}/debian/changelog"
 
   if [ -f ${target} ] ; then
     rm -f ${target}
-  fi
-
-  if [ -f ${target}.gz ] ; then
-    rm -f ${target}.gz
-  fi
-
-cat > ${target} <<EOL
-.TH LAKE 8 2020 "Lake" "OpenBank Message PUSH to BROADCAST"
-.SH NAME
-lake \- starts openbank message relay
-.SH DESCRIPTION
-The lake relay transforms publish messages to pull queue for openbank services.
-.EE
-EOL
-
-  cat ${target} | gzip -n -9 > ${target}.gz
-  rm ${target}
-}
-
-generate_changelog() {
-  mkdir -p ${DEB_SOURCES}/usr/share/doc/lake
-
-  target="${DEB_SOURCES}/usr/share/doc/lake/changelog"
-
-  if [ -f ${target} ] ; then
-    rm -f ${target}
-  fi
-
-  if [ -f ${target}.Debian.gz ] ; then
-    rm -f ${target}.Debian.gz
   fi
 
   touch ${target}
 
-  VER="${VERSION}"
-  tag=HEAD
-  ADDS=$(echo ${VER} | sed -e 's/~.*//' | cut -s -d- -f2 | sed '/^[[:space:]]*$/d')
-
-  if [[ -z "${ADDS// }" ]] ; then
-    DATE=$(date '+%a, %-d %b %Y %H:%M:%S %z')
-    echo "lake (${VER}) experimental; urgency=medium" >> ${target}
-    echo "" >> ${target}
-    echo "  * includes non-released commits" >> ${target}
-    echo "" >> ${target}
-    echo " -- Jan Cajthaml <jan.cajthaml@gmail.com>  ${DATE}" >> ${target}
-    echo "" >> ${target}
-  fi
-
   PAIRS=()
+  tag=HEAD
   prev_tag=HEAD
   for tag in $(git tag --sort=-v:refname | awk '{arr[i++]=$0} END {while (i>0) print arr[--i] }') ; do
     PAIRS+=("${prev_tag} ${tag}")
@@ -136,65 +58,47 @@ generate_changelog() {
   for ((i=${#idx[@]} - 1; i >= 0; i--)) ; do
     tag_from=${PAIRS[idx[i]]%% *}
     tag_to=${PAIRS[idx[i]]#* }
-
     DATE=$(git log -1 --format=%cD ${tag_to})
-
     commits=$(echo "$(git log --no-merges --pretty=oneline --pretty=format:%s ^${tag_from} ${tag_to})" | sed '/^[[:space:]]*$/d' | uniq)
-
     if [[ -n "${commits// }" ]] ; then
-      echo "lake (${tag_to#v}) unstable; urgency=medium" >> ${target}
+      echo "lake (${tag_to#v}) stable; urgency=medium" >> ${target}
       echo "" >> ${target}
-
       echo "${commits}" | \
       while read note ; do
-        echo "  * $(tr '[:lower:]' '[:upper:]' <<< ${note:0:1})${note:1}" >> ${target}
+        line="$(tr '[:lower:]' '[:upper:]' <<< ${note:0:1})${note:1}"
+        echo "  * ${line:0:75}" >> ${target}
       done
-
       echo "" >> ${target}
-
       echo " -- Jan Cajthaml <jan.cajthaml@gmail.com>  ${DATE}" >> ${target}
       echo "" >> ${target}
     fi
   done
-
-  case "${VERSION}" in
-    *+*)
-      cat ${target} | gzip -n -9 > ${target}.Debian.gz
-      ;;
-    *)
-      cat ${target} | gzip -n -9 > ${target}.gz
-      ;;
-  esac
-
-  rm ${target}
 }
 
-check_files() {
-  chmod 0755 "${DEB_SOURCES}/DEBIAN/control"
-  chmod 0755 "${DEB_SOURCES}/DEBIAN/postinst"
-  chmod 0755 "${DEB_SOURCES}/DEBIAN/postrm"
-  chmod 0755 "${DEB_SOURCES}/DEBIAN/preinst"
-  chmod 0755 "${DEB_SOURCES}/usr/bin/lake"
+lifecycle::debian::package() {
+  local CC=gcc
+  case ${TARGET_ARCHITECTURE} in
+    armhf) CC=arm-linux-gnueabihf-gcc ;;
+    arm64) CC=aarch64-linux-gnu-gcc   ;;
+    *)     CC=gcc                     ;;
+  esac
+
+  cd ${SOURCE} && \
+  \
+  CC=${CC} \
+    dpkg-buildpackage \
+    --host-arch=${TARGET_ARCHITECTURE} \
+    -tc -uc -b -rfakeroot
+
+  find ".." -name "lake_*_${TARGET_ARCHITECTURE}.*" -exec mv {} bin/ \;
+}
+
+lifecycle::lintian() {
+  find bin -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
 }
 
 ################################################################################
 
-cp \
-  "${BIN_SOURCES}/lake-linux-${TARGET_ARCHITECTURE}" \
-  "${DEB_SOURCES}/usr/bin/lake"
-
-generate_changelog
-generate_manpage
-
-sed -i 's/Version.*/Version: '${VERSION#v}'/' "${DEB_SOURCES}/DEBIAN/control"
-
-find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec rm -f {} \;
-
-check_files
-
-dpkg-deb --build "${DEB_SOURCES}" "${BIN_SOURCES}"
-
-find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec fakeroot lintian --pedantic {} \;
-find "${BIN_SOURCES}" -name "lake_*_${TARGET_ARCHITECTURE}.deb" -exec du -hs {} \;
-
-exit 0
+lifecycle::debian::generate_changelog
+lifecycle::debian::package
+lifecycle::lintian

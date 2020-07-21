@@ -19,10 +19,10 @@ import (
 	"os"
 
 	"github.com/jancajthaml-openbank/lake/config"
+	"github.com/jancajthaml-openbank/lake/logging"
 	"github.com/jancajthaml-openbank/lake/metrics"
 	"github.com/jancajthaml-openbank/lake/relay"
 	"github.com/jancajthaml-openbank/lake/utils"
-	"github.com/jancajthaml-openbank/lake/logging"
 )
 
 // Program encapsulate initialized application

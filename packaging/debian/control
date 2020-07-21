@@ -1,0 +1,13 @@
+Source: lake
+Maintainer: Jan Cajthaml <jan.cajthaml@gmail.com>
+Section: misc
+Priority: optional
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.1.4
+
+Package: lake
+Architecture: any
+Description: message relay for openbank
+ ZMQ backed message relay for OpenBank services.
+Depends: libzmq5 (>= 4.2.1~), ${shlibs:Depends}
+

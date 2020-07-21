@@ -94,7 +94,7 @@ class ApplianceManager(object):
     progress('installing lake {}'.format(self.image_version))
 
     (code, result, error) = execute_shell([
-      "apt-get", "-y", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", '/opt/artifacts/lake.deb'
+      "apt-get", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "-o=Dpkg::Options::=--force-confdef", "-o=Dpkg::Options::=--force-confnew", '/opt/artifacts/lake.deb'
     ])
 
     if code != 0:
@@ -135,7 +135,8 @@ class ApplianceManager(object):
       'METRICS_CONTINUOUS': 'false',
     }
 
-    with open('/etc/init/lake.conf', 'w') as fd:
+    os.makedirs("/etc/lake/conf.d", exist_ok=True)
+    with open('/etc/lake/conf.d/init.conf', 'w') as fd:
       for k, v in sorted(options.items()):
         fd.write('LAKE_{}={}\n'.format(k, v))
 
