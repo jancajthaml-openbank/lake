@@ -1,7 +1,6 @@
 vendor
 reports
 coverage
-*.pyc
+*.deb
 *.buildinfo
 *.changes
-*.deb

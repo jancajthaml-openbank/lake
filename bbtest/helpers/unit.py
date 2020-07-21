@@ -112,9 +112,15 @@ class UnitHelper(object):
         fd.write('LAKE_{}={}\n'.format(k, v))
 
   def cleanup(self):
-    for unit in ['lake-relay', 'lake']:
+    (code, result, error) = execute([
+      'systemctl', 'list-units', '--no-legend'
+    ])
+    result = [item.split(' ')[0].strip() for item in result.split('\n')]
+    result = [item.split('.service')[0] for item in result if ("lake" in item and ".service" in item)]
+
+    for unit in result:
       (code, result, error) = execute([
-        'journalctl', '-o', 'cat', '-t', 'lake', '-u', '{}.service'.format(unit), '--no-pager'
+        'journalctl', '-o', 'cat', '-u', '{}.service'.format(unit), '--no-pager'
       ])
       if code != 0 or not result:
         continue
