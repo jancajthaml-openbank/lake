@@ -23,8 +23,10 @@ def lake_responds_with(context, data):
 
 @given('handshake is performed')
 def perform_handshake(context):
+  pivot = '!'.encode('utf-8')
   @eventually(3)
   def impl():
-    lake_recieves(context, '!')
-    lake_responds_with(context, '!')
+    context.zmq.send(pivot)
+    assert pivot in context.zmq.backlog, "{} not found in zmq backlog {}".format(pivot, context.zmq.backlog)
+    context.zmq.ack(pivot)
   impl()
