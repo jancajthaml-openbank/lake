@@ -12,10 +12,11 @@ def lake_recieves(context, data):
 
 @then('lake responds with "{data}"')
 def lake_responds_with(context,  data):
+  pivot = data.encode('utf-8')
   @eventually(5)
   def impl():
-    assert data in context.zmq.backlog, '"{}" was not found in lake responses {}'.format(data, context.zmq.backlog)
-    context.zmq.ack(data)
+    assert pivot in context.zmq.backlog, "{} not found in zmq backlog {}".format(pivot, context.zmq.backlog)
+    context.zmq.ack(pivot)
   impl()
 
 
