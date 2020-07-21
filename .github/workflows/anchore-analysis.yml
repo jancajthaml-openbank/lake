@@ -23,7 +23,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v2
       with:
-        name: lake
+        name: docker.pkg.github.com/jancajthaml-openbank/lake/lake
     - name: Run the local Anchore scan action itself with GitHub Advanced Security code scanning integration enabled
       uses: anchore/scan-action@master
       with:
