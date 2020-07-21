@@ -8,7 +8,14 @@
 
 name: Anchore Container Scan
 
-on: registry_package
+on:
+  pull_request:
+    branches: [master]
+
+  registry_package:
+    action:
+      - 'updated'
+    name: 'docker.pkg.github.com/jancajthaml-openbank/lake/lake'
 
 jobs:
   Anchore-Build-Scan:
