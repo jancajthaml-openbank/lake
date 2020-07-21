@@ -23,6 +23,4 @@ def lake_responds_with(context,  data):
 @given('handshake is performed')
 def perform_handshake(context):
   lake_recieves(context, '!')
-  @eventually(3)
-  def impl():
-    lake_responds_with(context, '!')
+  lake_responds_with(context, '!')
