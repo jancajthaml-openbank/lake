@@ -43,7 +43,7 @@ def step_impl(context, path):
   @eventually(3)
   def wait_for_metrics_update():
     for row in context.table:
-      assert row['key'] in actual
-      assert str(actual[row['key']]) == row['value']
+      assert row['key'] in actual, 'key {} not found in metrics'.format(row['key'])
+      assert str(actual[row['key']]) == row['value'], 'metrics value mismatch expected {} actual {}'.format(row['value'], str(actual[row['key']]))
   wait_for_metrics_update()
 

@@ -29,7 +29,7 @@ override_dh_systemd_start:
 	dh_systemd_start -plake --name=lake-relay lake-relay.service
 
 override_dh_installinit:
-	dh_installinit --noscript
+	dh_installinit -plake --noscripts
 	@mv \
 		debian/target/${DEB_HOST_ARCH}/usr/bin/lake-* \
 		debian/target/${DEB_HOST_ARCH}/usr/bin/lake
