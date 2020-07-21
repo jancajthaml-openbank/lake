@@ -73,6 +73,8 @@ lifecycle::debian::generate_changelog() {
       echo "" >> ${target}
     fi
   done
+
+  /go/bin/misspell -w ${target}
 }
 
 lifecycle::debian::package() {
