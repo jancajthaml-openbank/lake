@@ -13,7 +13,6 @@ def after_feature(context, feature):
 def before_all(context):
   context.unit = UnitHelper()
   context.zmq = ZMQHelper()
-  os.system('rm -rf /tmp/reports/blackbox-tests/logs/*.log /tmp/reports/blackbox-tests/metrics/*.json')
   context.zmq.start()
   context.unit.download()
   context.unit.configure()
