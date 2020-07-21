@@ -74,7 +74,7 @@ lifecycle::debian::generate_changelog() {
     fi
   done
 
-  /go/bin/misspell -w ${target}
+  /go/bin/misspell -q -locale US -source=text -w
 }
 
 lifecycle::debian::package() {
