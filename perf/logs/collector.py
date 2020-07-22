@@ -5,6 +5,7 @@ import time
 import os
 import threading
 
+
 class LogsCollector(threading.Thread):
 
   def __init__(self):

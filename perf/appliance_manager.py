@@ -2,7 +2,7 @@
 
 import docker
 from utils import progress, info, print_daemon
-from shell.process import execute_shell
+from helpers.shell import execute
 from systemd.lake import Lake
 import platform
 import tarfile
@@ -79,7 +79,7 @@ class ApplianceManager(object):
       archive.extract('lake.deb', '/opt/artifacts')
       os.remove(tar_name)
 
-      (code, result, error) = execute_shell([
+      (code, result, error) = execute([
         'dpkg', '-c', '/opt/artifacts/lake.deb'
       ])
 
@@ -93,14 +93,14 @@ class ApplianceManager(object):
 
     progress('installing lake {}'.format(self.image_version))
 
-    (code, result, error) = execute_shell([
+    (code, result, error) = execute([
       "apt-get", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "-o=Dpkg::Options::=--force-confdef", "-o=Dpkg::Options::=--force-confnew", '/opt/artifacts/lake.deb'
     ])
 
     if code != 0:
       raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
 
-    (code, result, error) = execute_shell([
+    (code, result, error) = execute([
       "systemctl", "-t", "service", "--no-legend"
     ])
 

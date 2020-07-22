@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-
-from shell.process import execute_shell
-
+from helpers.eventually import eventually
+from helpers.shell import execute
 import subprocess
 import multiprocessing
 import string
@@ -22,8 +21,8 @@ class Lake(object):
 
   def teardown(self):
     for unit in ['lake-relay', 'lake']:
-      execute_shell(['systemctl', 'stop', unit])
-      (code, result, error) = execute_shell([
+      execute(['systemctl', 'stop', unit])
+      (code, result, error) = execute([
         'journalctl', '-o', 'cat', '-t', 'lake', '-u', '{}.service'.format(unit), '--no-pager'
       ], True)
       if code != 0 or not result:
@@ -32,29 +31,31 @@ class Lake(object):
         f.write(result)
 
   def restart(self) -> bool:
-    (code, result, error) = execute_shell(['systemctl', 'restart', 'lake-relay'])
-    if code != 0:
-      raise RuntimeError("Failed to restart lake-relay, stdout: {}, stderr: {}".format(result, error))
-    if not self.is_healthy:
-      raise RuntimeError("Failed to restart lake-relay, stdout: {}, stderr: {}".format(result, error))
+    (code, result, error) = execute(['systemctl', 'restart', 'lake-relay'])
+    assert code == 0, str(result) + ' ' + str(error)
+
+    @eventually(5)
+    def wait_for_running():
+      (code, result, error) = execute([
+        "systemctl", "show", "-p", "SubState", 'lake-relay'
+      ])
+      assert code == 0, str(result) + ' ' + str(error)
+      assert 'SubState=running' in result
+    wait_for_running()
 
   def stop(self) -> bool:
-    (code, result, error) = execute_shell(['systemctl', 'stop', 'lake-relay'])
-    if code != 0:
-      raise RuntimeError("Failed to stop lake-relay, stdout: {}, stderr: {}".format(result, error))
+    (code, result, error) = execute(['systemctl', 'stop', 'lake-relay'])
+    assert code == 0, str(result) + ' ' + str(error)
 
   def start(self) -> bool:
-    (code, result, error) = execute_shell(['systemctl', 'start', 'lake-relay'])
-    if code != 0:
-      raise RuntimeError("Failed to start lake-relay, stdout: {}, stderr: {}".format(result, error))
-    if not self.is_healthy:
-      raise RuntimeError("Failed to start lake-relay, stdout: {}, stderr: {}".format(result, error))
+    (code, result, error) = execute(['systemctl', 'start', 'lake-relay'])
+    assert code == 0, str(result) + ' ' + str(error)
 
-  @property
-  def is_healthy(self) -> bool:
-    (code, result, error) = execute_shell([
-      'bash',
-      '-c',
-      'while [ "$(systemctl show -p SubState lake-relay)" != "SubState=running" ]; do sleep 0.5; done;',
-    ])
-    return code == 0
+    @eventually(5)
+    def wait_for_running():
+      (code, result, error) = execute([
+        "systemctl", "show", "-p", "SubState", 'lake-relay'
+      ])
+      assert code == 0, str(result) + ' ' + str(error)
+      assert 'SubState=running' in result
+    wait_for_running()
