@@ -1,4 +1,5 @@
 .git
+.github
 .circleci
 packaging/debian/target
-services/*/vendor
+**/*/vendor
