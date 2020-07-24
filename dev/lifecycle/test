@@ -67,7 +67,7 @@ lifecycle::go::test() {
   cd ${dir} && \
   \
   GOMAXPROCS=1 \
-    grc grc go test \
+    grc go test \
     -v ./... \
     -run=^$ \
     -bench=. \
