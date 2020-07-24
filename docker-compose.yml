@@ -76,6 +76,8 @@ services:
       context: .
     image: openbank/lake
 
+  # -------------------------------------------------------------------------- #
+
   bbtest:
     image: jancajthaml/bbtest:amd64
     environment:
