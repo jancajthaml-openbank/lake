@@ -47,13 +47,12 @@ lifecycle::go::test() {
   cd ${dir} && \
   \
   GOMAXPROCS=1 \
-    go test \
+    grc go test \
     -v ./... \
     -coverprofile=${coverage_out} \
     -coverpkg=./... \
     -timeout=10s \
-  | tee ${test_out} \
-  | xargs --no-run-if-empty grc
+  | tee ${test_out}
 
   go2xunit \
     -fail \
@@ -68,13 +67,12 @@ lifecycle::go::test() {
   cd ${dir} && \
   \
   GOMAXPROCS=1 \
-    grc go test \
+    grc grc go test \
     -v ./... \
     -run=^$ \
     -bench=. \
     -benchmem \
-    -timeout=1m \
-  | xargs --no-run-if-empty grc
+    -timeout=1m
 }
 
 ################################################################################
