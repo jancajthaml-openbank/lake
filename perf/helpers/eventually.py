@@ -3,6 +3,7 @@
 
 import time
 
+
 class eventually():
 
   def __init__(self, timeout=2):
@@ -24,9 +25,8 @@ class eventually():
     while deadline > time.monotonic():
       try:
         return self.__block(*args, **kwargs)
-      except (AssertionError, Exception) as ex:
+      except (Exception, AssertionError) as ex:
         self.__last_exception = ex
-        time.sleep(1)
-
+        time.sleep(0.5)
     if self.__last_exception:
       raise self.__last_exception

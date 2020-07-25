@@ -531,7 +531,6 @@ jobs:
                 -e UNIT_VERSION="${UNIT_VERSION}" \
                 -e UNIT_ARCH=amd64 \
                 -e CI=1 \
-                -v /tmp/reports:/reports/bbtest \
                 -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
                 -v /var/run/docker.sock:/var/run/docker.sock \
                 -v /var/lib/docker/containers:/var/lib/docker/containers \
