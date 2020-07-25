@@ -98,7 +98,7 @@ class UnitHelper(object):
           fd.write(result)
 
         result = [item for item in result.split(os.linesep)]
-        result = [item.rsplit('/', 1)[-1].strip() for item in result if "/lib/systemd/system/cnb-rates" in item]
+        result = [item.rsplit('/', 1)[-1].strip() for item in result if "/lib/systemd/system/lake" in item]
 
         self.units = result
 
