@@ -175,7 +175,7 @@ workflows:
   rolling_performance:
     triggers:
       - schedule:
-          cron: "0 1,6,12,18 * * *"
+          cron: "0 3,15 * * *"
           filters:
             branches:
               only:
