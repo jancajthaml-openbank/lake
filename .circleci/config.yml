@@ -246,9 +246,6 @@ jobs:
   deps:
     docker:
       - image: jancajthaml/go:latest
-      - environment:
-          - COMPOSE_DOCKER_CLI_BUILD: 1
-          - DOCKER_BUILDKIT: 1
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -281,9 +278,6 @@ jobs:
   bin-amd64:
     docker:
       - image: jancajthaml/go:latest
-      - environment:
-          - COMPOSE_DOCKER_CLI_BUILD: 1
-          - DOCKER_BUILDKIT: 1
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -308,9 +302,6 @@ jobs:
   bin-armhf:
     docker:
       - image: jancajthaml/go:latest
-      - environment:
-          - COMPOSE_DOCKER_CLI_BUILD: 1
-          - DOCKER_BUILDKIT: 1
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -335,9 +326,6 @@ jobs:
   bin-arm64:
     docker:
       - image: jancajthaml/go:latest
-      - environment:
-          - COMPOSE_DOCKER_CLI_BUILD: 1
-          - DOCKER_BUILDKIT: 1
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
@@ -362,9 +350,6 @@ jobs:
   debian-amd64:
     docker:
       - image: jancajthaml/debian-packager:latest
-      - environment:
-          - COMPOSE_DOCKER_CLI_BUILD: 1
-          - DOCKER_BUILDKIT: 1
     working_directory: /mnt/ramdisk/project
     steps:
       - restore_cache:
@@ -393,9 +378,6 @@ jobs:
   debian-armhf:
     docker:
       - image: jancajthaml/debian-packager:latest
-      - environment:
-          - COMPOSE_DOCKER_CLI_BUILD: 1
-          - DOCKER_BUILDKIT: 1
     working_directory: /mnt/ramdisk/project
     steps:
       - restore_cache:
@@ -477,9 +459,6 @@ jobs:
   publish:
     docker:
       - image: docker:19.03
-        environment:
-          - COMPOSE_DOCKER_CLI_BUILD: 1
-          - DOCKER_BUILDKIT: 1
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
