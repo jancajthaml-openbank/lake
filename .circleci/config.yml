@@ -212,6 +212,10 @@ jobs:
 
   versions:
     working_directory: /home/circleci/project
+    docker:
+      - image: docker:19.03.0-ce-git
+        environment:
+          - LANG: C.UTF-8
     steps:
       - checkout
       - run:
