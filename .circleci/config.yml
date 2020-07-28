@@ -185,8 +185,8 @@ executors:
 
   machine:
     machine:
-      - image: circleci/classic:201808-01
-      - docker_layer_caching: false
+      image: circleci/classic:201808-01
+      docker_layer_caching: false
 
 # ---------------------------------------------------------------------------- #
 
