@@ -213,7 +213,7 @@ jobs:
 
   versions:
     docker:
-      - image: alpine
+      - image: alpine/git
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
