@@ -447,6 +447,9 @@ jobs:
   publish:
     docker:
       - image: docker:18.06.0-ce
+        environment:
+          - COMPOSE_DOCKER_CLI_BUILD: 1
+          - DOCKER_BUILDKIT: 1
     working_directory: /home/circleci/project
     steps:
       - setup_remote_docker:
@@ -511,6 +514,9 @@ jobs:
   bbtest-amd64:
     machine:
       image: circleci/classic:201808-01
+      environment:
+        - COMPOSE_DOCKER_CLI_BUILD: 1
+        - DOCKER_BUILDKIT: 1
       docker_layer_caching: false
     working_directory: /home/circleci/project
     steps:
@@ -552,6 +558,9 @@ jobs:
     machine:
       image: circleci/classic:201808-01
       docker_layer_caching: false
+      environment:
+        - COMPOSE_DOCKER_CLI_BUILD: 1
+        - DOCKER_BUILDKIT: 1
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
