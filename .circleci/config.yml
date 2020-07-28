@@ -464,7 +464,7 @@ jobs:
           name: Publish to docker.io
           command: |
             echo ${DOCKER_PASSWORD} \
-              | docker login -u ${DOCKER_USER} -p --password-stdin
+              | docker login -u ${DOCKER_USER} --password-stdin
             VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
             docker push \
               docker.io/openbank/lake:${VERSION}
@@ -472,7 +472,7 @@ jobs:
           name: Publish to docker.pkg.github.com
           command: |
             echo ${GITHUB_RELEASE_TOKEN} \
-              | docker login docker.pkg.github.com -u jancajthaml -p --password-stdin
+              | docker login docker.pkg.github.com -u jancajthaml --password-stdin
             VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
             docker push \
               docker.pkg.github.com/jancajthaml-openbank/lake/lake:${VERSION}
