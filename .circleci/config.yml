@@ -425,7 +425,7 @@ jobs:
 
   publish:
     docker:
-      - image: circleci/classic:201808-01
+      - image: docker:18.06.0-ce-git
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
