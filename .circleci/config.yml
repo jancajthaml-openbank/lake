@@ -196,7 +196,7 @@ jobs:
 
   checkout:
     docker:
-      - image: docker:18.06.0-ce-git
+      - image: docker:19.03.0-ce-git
         environment:
           - LANG: C.UTF-8
     working_directory: /home/circleci/project
@@ -211,10 +211,6 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   versions:
-    docker:
-      - image: docker:18.06.0-ce-git
-        environment:
-          - LANG: C.UTF-8
     working_directory: /home/circleci/project
     steps:
       - checkout
@@ -310,7 +306,7 @@ jobs:
     working_directory: /home/circleci/project
     steps:
       - setup_remote_docker:
-          version: 18.06.0-ce
+          version: 19.03.0-ce
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -336,7 +332,7 @@ jobs:
     working_directory: /home/circleci/project
     steps:
       - setup_remote_docker:
-          version: 18.06.0-ce
+          version: 19.03.0-ce
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -389,8 +385,6 @@ jobs:
       - image: jancajthaml/debian-packager:latest
     working_directory: /home/circleci/project
     steps:
-      - setup_remote_docker:
-          version: 18.06.0-ce
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -419,8 +413,6 @@ jobs:
       - image: jancajthaml/debian-packager:latest
     working_directory: /home/circleci/project
     steps:
-      - setup_remote_docker:
-          version: 18.06.0-ce
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -446,14 +438,14 @@ jobs:
 
   publish:
     docker:
-      - image: docker:18.06.0-ce
+      - image: docker:19.03.0-ce
         environment:
           - COMPOSE_DOCKER_CLI_BUILD: 1
           - DOCKER_BUILDKIT: 1
     working_directory: /home/circleci/project
     steps:
       - setup_remote_docker:
-          version: 18.06.0-ce
+          version: 19.03.0-ce
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -557,10 +549,10 @@ jobs:
   perf-amd64:
     machine:
       image: circleci/classic:201808-01
-      docker_layer_caching: false
       environment:
         - COMPOSE_DOCKER_CLI_BUILD: 1
         - DOCKER_BUILDKIT: 1
+      docker_layer_caching: false
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
