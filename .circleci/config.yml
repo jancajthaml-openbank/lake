@@ -192,6 +192,7 @@ jobs:
             - /mnt/ramdisk/services
             - /mnt/ramdisk/packaging
             - /mnt/ramdisk/bbtest
+            - /mnt/ramdisk/Dockerfile
 
   # -------------------------------------------------------------------------- #
 
@@ -461,17 +462,28 @@ jobs:
       - restore_cache:
           key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
-          name: docker build
+          name: Package for docker
           command: |
             DOCKER_VERSION=$(cat /mnt/ramdisk/DOCKER_VERSION)
             TAG_VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
 
             docker build -t docker.io/openbank/lake:${DOCKER_VERSION} .
             docker build -t docker.pkg.github.com/jancajthaml-openbank/lake/lake:${TAG_VERSION} .
-      - run: docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-      - run: docker push docker.io/openbank/lake
-      - run: docker login docker.pkg.github.com -u jancajthaml -p ${GITHUB_RELEASE_TOKEN}
-      - run: docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake
+      - run:
+          name: Publish to docker.io
+          command: |
+            DOCKER_VERSION=$(cat /mnt/ramdisk/DOCKER_VERSION)
+
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+            docker push docker.io/openbank/lake:${DOCKER_VERSION}
+
+      - run:
+          name: Publish to docker.pkg.github.com
+          command: |
+            TAG_VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
+
+            docker login docker.pkg.github.com -u jancajthaml -p ${GITHUB_RELEASE_TOKEN}
+            docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake:${TAG_VERSION}
 
   # -------------------------------------------------------------------------- #
 
