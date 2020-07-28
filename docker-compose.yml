@@ -89,9 +89,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - /var/lib/docker/containers:/var/lib/docker/containers:rw
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - ./bbtest:/opt/app
-      - ./reports:/tmp/reports
-    working_dir: /opt/app
+      - .:/opt/app
+    working_dir: /opt/app/bbtest
 
   # -------------------------------------------------------------------------- #
 

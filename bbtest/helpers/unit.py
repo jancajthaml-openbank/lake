@@ -20,7 +20,7 @@ class UnitHelper(object):
       "PORT_PULL": "5562",
       "PORT_PUB": "5561",
       "METRICS_REFRESHRATE": "1h",
-      "METRICS_OUTPUT": "/tmp/reports/blackbox-tests/metrics",
+      "METRICS_OUTPUT": "reports/blackbox-tests/metrics",
       "METRICS_CONTINUOUS": "true",
     }
 
@@ -94,7 +94,7 @@ class UnitHelper(object):
       if code != 0:
         raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
       else:
-        with open('/tmp/reports/blackbox-tests/meta/debian.lake.txt', 'w') as fd:
+        with open('reports/blackbox-tests/meta/debian.lake.txt', 'w') as fd:
           fd.write(result)
 
         result = [item for item in result.split(os.linesep)]
@@ -113,7 +113,7 @@ class UnitHelper(object):
     if params:
       options.update(params)
 
-    os.makedirs("/etc/lake/conf.d", exist_ok=True)
+    os.makedirs('/etc/lake/conf.d', exist_ok=True)
     with open('/etc/lake/conf.d/init.conf', 'w') as fd:
       fd.write(str(os.linesep).join("LAKE_{!s}={!s}".format(k, v) for (k, v) in options.items()))
 
@@ -122,7 +122,7 @@ class UnitHelper(object):
       (code, result, error) = execute(['journalctl', '-o', 'cat', '-u', unit, '--no-pager'])
       if code != 0 or not result:
         continue
-      with open('/tmp/reports/blackbox-tests/logs/{}.log'.format(unit), 'w') as fd:
+      with open('reports/blackbox-tests/logs/{}.log'.format(unit), 'w') as fd:
         fd.write(result)
 
   def teardown(self):

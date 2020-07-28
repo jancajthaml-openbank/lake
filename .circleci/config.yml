@@ -481,19 +481,22 @@ jobs:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - setup_remote_docker:
+          version: 18.06.0-ce
       - run:
           name: Run blackbox tests
           command: |
-            UNIT_ARCH=amd64 \
-            CI=1 \
-            FULL_VERSION=$(cat /mnt/ramdisk/FULL_VERSION) \
-            SHORT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION) \
-            python3 /mnt/ramdisk/bbtest/main.py
+            export UNIT_ARCH=amd64
+            export CI=1
+            export FULL_VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
+            export SHORT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
+
+            python3 bbtest/main.py
           no_output_timeout: 5m
       - store_test_results:
-          path: /tmp/reports/blackbox-tests/cucumber
+          path: /mnt/ramdisk/reports/blackbox-tests/cucumber
       - store_artifacts:
-          path: /tmp/reports/blackbox-tests
+          path: /mnt/ramdisk/reports/blackbox-tests
           destination: reports
 
   # -------------------------------------------------------------------------- #
