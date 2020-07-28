@@ -203,7 +203,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Update DOCKER_VERSION + TAG_VERSION
+          name: Update FULL_VERSION + SHORT_VERSION
           command: |
             if [ -z ${CIRCLE_TAG} ] ; then
               tags=$(git tag --sort=-v:refname | head -1)
@@ -213,17 +213,17 @@ jobs:
                 VERSION=${tags}
               fi
               META=$(echo -e ${CIRCLE_BRANCH} | sed 's:.*/::')
-              echo -e "${VERSION#v}" > /mnt/ramdisk/TAG_VERSION
-              echo -e "${VERSION}-${META}" > /mnt/ramdisk/DOCKER_VERSION
+              echo -e "${VERSION#v}" > /mnt/ramdisk/SHORT_VERSION
+              echo -e "${VERSION}-${META}" > /mnt/ramdisk/FULL_VERSION
             else
-              echo -e "${CIRCLE_TAG#v}" > /mnt/ramdisk/TAG_VERSION
-              echo -e "${CIRCLE_TAG}" > /mnt/ramdisk/DOCKER_VERSION
+              echo -e "${CIRCLE_TAG#v}" > /mnt/ramdisk/SHORT_VERSION
+              echo -e "${CIRCLE_TAG}" > /mnt/ramdisk/FULL_VERSION
             fi
       - save_cache:
           key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
-            - /mnt/ramdisk/TAG_VERSION
-            - /mnt/ramdisk/DOCKER_VERSION
+            - /mnt/ramdisk/SHORT_VERSION
+            - /mnt/ramdisk/FULL_VERSION
 
   # -------------------------------------------------------------------------- #
 
@@ -345,7 +345,7 @@ jobs:
       - run:
           name: Package for debian
           command: |
-            VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
+            VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
             /mnt/ramdisk/dev/lifecycle/debian \
               --arch amd64 \
               --pkg lake \
@@ -373,7 +373,7 @@ jobs:
       - run:
           name: Package for debian
           command: |
-            VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
+            VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
             /mnt/ramdisk/dev/lifecycle/debian \
               --arch armhf \
               --pkg lake \
@@ -401,7 +401,7 @@ jobs:
       - run:
           name: Package for debian
           command: |
-            VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
+            VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
             /mnt/ramdisk/dev/lifecycle/debian \
               --arch arm64 \
               --pkg lake \
@@ -442,7 +442,7 @@ jobs:
 
   publish:
     docker:
-      - image: docker:19.03
+      - image: alpine
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -461,29 +461,31 @@ jobs:
           key: debian-arm64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - setup_remote_docker:
+          version: 18.06.0-ce
       - run:
           name: Package for docker
           command: |
-            DOCKER_VERSION=$(cat /mnt/ramdisk/DOCKER_VERSION)
-            TAG_VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
+            FULL_VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
+            SHORT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
 
-            docker build -t docker.io/openbank/lake:${DOCKER_VERSION} .
-            docker build -t docker.pkg.github.com/jancajthaml-openbank/lake/lake:${TAG_VERSION} .
+            docker build -t docker.io/openbank/lake:${FULL_VERSION} .
+            docker build -t docker.pkg.github.com/jancajthaml-openbank/lake/lake:${SHORT_VERSION} .
       - run:
           name: Publish to docker.io
           command: |
-            DOCKER_VERSION=$(cat /mnt/ramdisk/DOCKER_VERSION)
+            FULL_VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
 
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-            docker push docker.io/openbank/lake:${DOCKER_VERSION}
+            docker push docker.io/openbank/lake:${FULL_VERSION}
 
       - run:
           name: Publish to docker.pkg.github.com
           command: |
-            TAG_VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
+            SHORT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
 
             docker login docker.pkg.github.com -u jancajthaml -p ${GITHUB_RELEASE_TOKEN}
-            docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake:${TAG_VERSION}
+            docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake:${SHORT_VERSION}
 
   # -------------------------------------------------------------------------- #
 
@@ -504,13 +506,13 @@ jobs:
       - run:
           name: Run blackbox tests
           command: |
-            IMAGE_VERSION=$(cat /mnt/ramdisk/DOCKER_VERSION)
-            UNIT_VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
+            FULL_VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
+            SHORT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
 
             docker exec -it $(\
               docker run -d -t \
-                -e IMAGE_VERSION="${IMAGE_VERSION}" \
-                -e UNIT_VERSION="${UNIT_VERSION}" \
+                -e IMAGE_VERSION="${FULL_VERSION}" \
+                -e UNIT_VERSION="${SHORT_VERSION}" \
                 -e UNIT_ARCH=amd64 \
                 -e CI=1 \
                 -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
