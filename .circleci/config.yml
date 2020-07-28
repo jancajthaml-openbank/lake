@@ -473,44 +473,30 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   bbtest-amd64:
-    machine:
-      image: circleci/classic:201808-01
+    docker:
+      image: jancajthaml/bbtest:amd64
       environment:
         - COMPOSE_DOCKER_CLI_BUILD: 1
         - DOCKER_BUILDKIT: 1
-      docker_layer_caching: false
+        - CI: 1
+        - UNIT_ARCH: amd64
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run: docker pull jancajthaml/bbtest:amd64
       - run:
           name: Run blackbox tests
           command: |
-            FULL_VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
-            SHORT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
-
-            docker exec -it $(\
-              docker run -d -t \
-                -e IMAGE_VERSION="${FULL_VERSION}" \
-                -e UNIT_VERSION="${SHORT_VERSION}" \
-                -e UNIT_ARCH=amd64 \
-                -e CI=1 \
-                -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-                -v /var/run/docker.sock:/var/run/docker.sock \
-                -v /var/lib/docker/containers:/var/lib/docker/containers \
-                -v /mnt/ramdisk/bbtest:/opt/app \
-                -v /mnt/ramdisk/reports:/tmp/reports \
-                -w /opt/app \
-              jancajthaml/bbtest:amd64 \
-            ) python3 /opt/app/main.py
+            FULL_VERSION=$(cat /mnt/ramdisk/FULL_VERSION) \
+            SHORT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION) \
+            python3 /mnt/ramdisk/bbtest/main.py
           no_output_timeout: 5m
       - store_test_results:
-          path: /home/circleci/project/reports/blackbox-tests/cucumber
+          path: /tmp/reports/blackbox-tests/cucumber
       - store_artifacts:
-          path: /home/circleci/project/reports/blackbox-tests
+          path: /tmp/reports/blackbox-tests
           destination: reports
 
   # -------------------------------------------------------------------------- #
