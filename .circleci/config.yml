@@ -480,7 +480,9 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   bbtest-amd64:
-    machine: true
+    machine:
+      image: circleci/classic:201808-01
+      docker_layer_caching: false
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
