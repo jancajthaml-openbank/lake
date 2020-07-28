@@ -252,6 +252,8 @@ jobs:
     working_directory: /home/circleci/project
     steps:
       - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Ensure services namespace
           command: |
@@ -310,7 +312,7 @@ jobs:
     working_directory: /home/circleci/project
     steps:
       - setup_remote_docker:
-          version: 19.03.0-ce
+          version: 19.03
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -336,7 +338,7 @@ jobs:
     working_directory: /home/circleci/project
     steps:
       - setup_remote_docker:
-          version: 19.03.0-ce
+          version: 19.03
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -449,7 +451,7 @@ jobs:
     working_directory: /home/circleci/project
     steps:
       - setup_remote_docker:
-          version: 19.03.0-ce
+          version: 19.03
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
