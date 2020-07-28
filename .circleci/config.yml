@@ -474,12 +474,7 @@ jobs:
 
   bbtest-amd64:
     docker:
-      image: jancajthaml/bbtest:amd64
-      environment:
-        - COMPOSE_DOCKER_CLI_BUILD: 1
-        - DOCKER_BUILDKIT: 1
-        - CI: 1
-        - UNIT_ARCH: amd64
+      - image: jancajthaml/bbtest:amd64
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -489,6 +484,8 @@ jobs:
       - run:
           name: Run blackbox tests
           command: |
+            UNIT_ARCH=amd64 \
+            CI=1 \
             FULL_VERSION=$(cat /mnt/ramdisk/FULL_VERSION) \
             SHORT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION) \
             python3 /mnt/ramdisk/bbtest/main.py
