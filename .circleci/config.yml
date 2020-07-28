@@ -480,12 +480,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   bbtest-amd64:
-    docker:
-      - image: docker.io/jancajthaml/bbtest:amd64
-        volumes:
-          - /var/run/docker.sock:/var/run/docker.sock:rw
-          - /var/lib/docker/containers:/var/lib/docker/containers:rw
-          - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    machine: true
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -494,6 +489,7 @@ jobs:
           key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - setup_remote_docker:
           version: 18.06.0-ce
+      - run: docker pull docker.io/jancajthaml/bbtest:amd64
       - run:
           name: Run blackbox tests
           command: |
@@ -501,7 +497,9 @@ jobs:
             export IMAGE_VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
             export UNIT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
 
-            python3 bbtest/main.py
+            docker-compose up -d bbtest
+            docker exec -t $(docker-compose ps -q bbtest) python3 /opt/app/bbtest/main.py
+            docker-compose down -v
           no_output_timeout: 5m
       - store_test_results:
           path: /mnt/ramdisk/reports/blackbox-tests/cucumber
