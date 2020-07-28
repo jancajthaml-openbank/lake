@@ -195,7 +195,8 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   checkout:
-    docker: docker:19.03-git
+    docker:
+      - image: docker:19.03-git
     working_directory: /mnt/ramdisk
     steps:
       - checkout
@@ -209,7 +210,8 @@ jobs:
 
   versions:
     working_directory: /mnt/ramdisk
-    docker: docker:19.03-git
+    docker:
+      - image: docker:19.03-git
     steps:
       - checkout
       - run:
