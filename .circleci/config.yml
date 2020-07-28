@@ -482,7 +482,10 @@ jobs:
   bbtest-amd64:
     docker:
       - image: docker.io/jancajthaml/bbtest:amd64
-        command: /sbin/init
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock:rw
+          - /var/lib/docker/containers:/var/lib/docker/containers:rw
+          - /sys/fs/cgroup:/sys/fs/cgroup:ro
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
