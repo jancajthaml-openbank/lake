@@ -183,6 +183,11 @@ executors:
     docker:
       - image: docker.io/jancajthaml/debian-packager:latest
 
+  machine:
+    machine:
+      - image: circleci/classic:201808-01
+      - docker_layer_caching: false
+
 # ---------------------------------------------------------------------------- #
 
 jobs:
@@ -475,17 +480,14 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   bbtest-amd64:
-    machine:
-      image: circleci/classic:201808-01
-      docker_layer_caching: false
+    executor: machine
     working_directory: /home/circleci/project
     steps:
       - checkout
       - run: docker pull docker.io/jancajthaml/bbtest:amd64
       - run:
-          name: Update environment variables
+          name: Update FULL_VERSION + SHORT_VERSION
           command: |
-            export UNIT_ARCH=amd64
             if [ -z ${CIRCLE_TAG} ] ; then
               tags=$(git tag --sort=-v:refname | head -1)
               if [ -z ${tags} ] ; then
@@ -494,15 +496,18 @@ jobs:
                 VERSION=${tags}
               fi
               META=$(echo -e ${CIRCLE_BRANCH} | sed 's:.*/::')
-              export UNIT_VERSION="${VERSION#v}"
-              export IMAGE_VERSION="${VERSION}-${META}"
+              echo -e "${VERSION#v}" > /mnt/ramdisk/SHORT_VERSION
+              echo -e "${VERSION}-${META}" > /mnt/ramdisk/FULL_VERSION
             else
-              export UNIT_VERSION="${CIRCLE_TAG#v}"
-              export IMAGE_VERSION="${CIRCLE_TAG}"
+              echo -e "${CIRCLE_TAG#v}" > /mnt/ramdisk/SHORT_VERSION
+              echo -e "${CIRCLE_TAG}" > /mnt/ramdisk/FULL_VERSION
             fi
       - run:
           name: Run blackbox tests
           command: |
+            export IMAGE_VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
+            export UNIT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
+
             docker-compose up -d bbtest
             docker exec -t $(docker-compose ps -q bbtest) python3 /opt/app/bbtest/main.py
             docker-compose down -v
