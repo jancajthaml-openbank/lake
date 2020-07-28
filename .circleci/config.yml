@@ -474,6 +474,7 @@ jobs:
   bbtest-amd64:
     docker:
       - image: jancajthaml/bbtest:amd64
+        command: /sbin/init
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
