@@ -42,12 +42,8 @@ class UnitHelper(object):
     self.context = context
 
   def download(self):
-    try:
-      os.mkdir("/tmp/packages")
-    except OSError as exc:
-      if exc.errno != errno.EEXIST:
-        raise
-      pass
+    failure = None
+    os.makedirs('/tmp/packages', exist_ok=True)
 
     self.image_version = os.environ.get('IMAGE_VERSION', '')
     self.debian_version = os.environ.get('UNIT_VERSION', '')
@@ -102,9 +98,14 @@ class UnitHelper(object):
         self.units = result
 
       scratch.remove()
+    except Exception as ex:
+      failure = ex
     finally:
       temp.close()
       self.docker.images.remove('bbtest_artifacts-scratch', force=True)
+
+    if failure:
+      raise failure
 
   def configure(self, params = None):
     options = dict()
