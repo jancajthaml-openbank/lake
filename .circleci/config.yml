@@ -196,7 +196,7 @@ jobs:
 
   checkout:
     docker:
-      - image: docker:19.03.0-ce-git
+      - image: docker:19.03-git
         environment:
           - LANG: C.UTF-8
     working_directory: /home/circleci/project
@@ -213,7 +213,7 @@ jobs:
   versions:
     working_directory: /home/circleci/project
     docker:
-      - image: docker:19.03.0-ce-git
+      - image: docker:19.03-git
         environment:
           - LANG: C.UTF-8
     steps:
@@ -442,7 +442,7 @@ jobs:
 
   publish:
     docker:
-      - image: docker:19.03.0-ce
+      - image: docker:19.03
         environment:
           - COMPOSE_DOCKER_CLI_BUILD: 1
           - DOCKER_BUILDKIT: 1
