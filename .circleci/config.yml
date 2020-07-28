@@ -219,6 +219,10 @@ jobs:
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
+          name: Check ramdisk contents
+          command: |
+            ls -la /mnt/ramdisk
+      - run:
           name: Update DOCKER_VERSION + TAG_VERSION
           command: |
             if [ -z ${CIRCLE_TAG} ] ; then
