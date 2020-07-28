@@ -20,7 +20,7 @@ class UnitHelper(object):
       "PORT_PULL": "5562",
       "PORT_PUB": "5561",
       "METRICS_REFRESHRATE": "1h",
-      "METRICS_OUTPUT": "reports/blackbox-tests/metrics",
+      "METRICS_OUTPUT": "{}/reports/blackbox-tests/metrics".format(os.getcwd()),
       "METRICS_CONTINUOUS": "true",
     }
 
@@ -38,7 +38,7 @@ class UnitHelper(object):
     self.image_version = None
     self.debian_version = None
     self.units = list()
-    self.docker = docker.APIClient(base_url='unix://var/run/docker.sock')
+    self.docker = docker.from_env()
     self.context = context
 
   def download(self):
@@ -67,7 +67,9 @@ class UnitHelper(object):
           'COPY --from={} {} {}'.format(image, package, target)
         ]))
 
-      for chunk in self.docker.build(fileobj=temp, rm=True, pull=False, decode=True, tag='bbtest_artifacts-scratch'):
+
+      image, stream = self.docker.images.build(fileobj=temp, rm=True, pull=False, tag='bbtest_artifacts-scratch')
+      for chunk in stream:
         if not 'stream' in chunk:
           continue
         for line in chunk['stream'].splitlines():
@@ -76,15 +78,12 @@ class UnitHelper(object):
             continue
           print(l)
 
-      scratch = self.docker.create_container('bbtest_artifacts-scratch', '/bin/true')
-
-      if scratch['Warnings']:
-        raise Exception(scratch['Warnings'])
+      scratch = self.docker.containers.run('bbtest_artifacts-scratch', ['/bin/true'], detach=True)
 
       tar_name = tempfile.NamedTemporaryFile(delete=True)
       with open(tar_name.name, 'wb') as destination:
-        tar_stream, stat = self.docker.get_archive(scratch['Id'], target)
-        for chunk in tar_stream:
+        bits, stat = scratch.get_archive(target)
+        for chunk in bits:
           destination.write(chunk)
 
       archive = tarfile.TarFile(tar_name.name)
@@ -102,10 +101,10 @@ class UnitHelper(object):
 
         self.units = result
 
-      self.docker.remove_container(scratch['Id'])
+      scratch.remove()
     finally:
       temp.close()
-      self.docker.remove_image('bbtest_artifacts-scratch', force=True)
+      self.docker.images.remove('bbtest_artifacts-scratch', force=True)
 
   def configure(self, params = None):
     options = dict()

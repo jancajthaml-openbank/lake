@@ -65,7 +65,7 @@ release:
 .PHONY: bbtest
 bbtest:
 	@META=$(META) VERSION=$(VERSION) docker-compose up -d bbtest
-	@docker exec -t $$(docker-compose ps -q bbtest) python3 /opt/app/main.py
+	@docker exec -t $$(docker-compose ps -q bbtest) python3 /opt/app/bbtest/main.py
 	@docker-compose down -v
 
 .PHONY: perf

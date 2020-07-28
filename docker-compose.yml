@@ -90,7 +90,7 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:rw
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - .:/opt/app
-    working_dir: /opt/app/bbtest
+    working_dir: /opt/app
 
   # -------------------------------------------------------------------------- #
 
