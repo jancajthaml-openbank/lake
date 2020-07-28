@@ -389,7 +389,7 @@ jobs:
       - run:
           name: Package for debian
           command: |
-            VERSION=$(cat /mnt/ramdisk/project/TAG_VERSION)
+            VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
             /mnt/ramdisk/dev/lifecycle/debian \
               --arch armhf \
               --pkg lake \
@@ -481,7 +481,7 @@ jobs:
           name: Package for docker
           command: |
             DOCKER_VERSION=$(cat /mnt/ramdisk/DOCKER_VERSION)
-            TAG_VERSION=$(cat /mnt/ramdisk/project/TAG_VERSION)
+            TAG_VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
 
             docker build -t openbank/lake:${DOCKER_VERSION} .
 
@@ -559,8 +559,8 @@ jobs:
       - run:
           name: Run perf tests
           command: |
-            IMAGE_VERSION=$(cat /home/circleci/project/DOCKER_VERSION)
-            UNIT_VERSION=$(cat /home/circleci/project/TAG_VERSION)
+            IMAGE_VERSION=$(cat /mnt/ramdisk/DOCKER_VERSION)
+            UNIT_VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
 
             docker exec -it $(\
               docker run -d -t \
@@ -572,13 +572,13 @@ jobs:
                 -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
                 -v /var/run/docker.sock:/var/run/docker.sock \
                 -v /var/lib/docker/containers:/var/lib/docker/containers \
-                -v /home/circleci/project/perf:/opt/app \
-                -v /home/circleci/project/reports:/tmp/reports \
+                -v /mnt/ramdisk/perf:/opt/app \
+                -v /mnt/ramdisk/reports:/tmp/reports \
               jancajthaml/bbtest:amd64 \
             ) python3 /opt/app/main.py
           no_output_timeout: 5h
       - store_artifacts:
-          path: /home/circleci/project/reports/perf-tests
+          path: /mnt/ramdisk/reports/perf-tests
           destination: reports
 
   # -------------------------------------------------------------------------- #
