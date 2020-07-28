@@ -425,7 +425,7 @@ jobs:
 
   publish:
     docker:
-      - image: alpine
+      - image: circleci/classic:201808-01
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
