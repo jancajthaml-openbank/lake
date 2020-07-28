@@ -51,6 +51,9 @@ class UnitHelper(object):
     if self.debian_version.startswith('v'):
       self.debian_version = self.debian_version[1:]
 
+    assert self.image_version, 'IMAGE_VERSION not provided'
+    assert self.debian_version, 'UNIT_VERSION not provided'
+
     image = 'openbank/lake:{}'.format(self.image_version)
     package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
     target = '/tmp/packages/lake.deb'
@@ -62,7 +65,6 @@ class UnitHelper(object):
           'FROM alpine',
           'COPY --from={} {} {}'.format(image, package, target)
         ]))
-
 
       image, stream = self.docker.images.build(fileobj=temp, rm=True, pull=False, tag='bbtest_artifacts-scratch')
       for chunk in stream:
@@ -77,10 +79,10 @@ class UnitHelper(object):
       scratch = self.docker.containers.run('bbtest_artifacts-scratch', ['/bin/true'], detach=True)
 
       tar_name = tempfile.NamedTemporaryFile(delete=True)
-      with open(tar_name.name, 'wb') as destination:
+      with open(tar_name.name, 'wb') as fd:
         bits, stat = scratch.get_archive(target)
         for chunk in bits:
-          destination.write(chunk)
+          fd.write(chunk)
 
       archive = tarfile.TarFile(tar_name.name)
       archive.extract(os.path.basename(target), os.path.dirname(target))
