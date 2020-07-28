@@ -195,10 +195,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   checkout:
-    docker:
-      - image: docker:19.03-git
-        environment:
-          - LANG: C.UTF-8
+    docker: docker:19.03-git
     working_directory: /mnt/ramdisk
     steps:
       - checkout
@@ -211,11 +208,8 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   versions:
-    working_directory: /home/circleci/project
-    docker:
-      - image: docker:19.03-git
-        environment:
-          - LANG: C.UTF-8
+    working_directory: /mnt/ramdisk
+    docker: docker:19.03-git
     steps:
       - checkout
       - run:
@@ -229,20 +223,17 @@ jobs:
                 VERSION=${tags}
               fi
               META=$(echo -e ${CIRCLE_BRANCH} | sed 's:.*/::')
-              echo -e "${VERSION#v}" > /home/circleci/project/TAG_VERSION
-              echo -e "${VERSION}-${META}" > /home/circleci/project/DOCKER_VERSION
+              echo -e "${VERSION#v}" > /mnt/ramdisk/TAG_VERSION
+              echo -e "${VERSION}-${META}" > /mnt/ramdisk/DOCKER_VERSION
             else
-              echo -e "${CIRCLE_TAG#v}" > /home/circleci/project/TAG_VERSION
-              echo -e "${CIRCLE_TAG}" > /home/circleci/project/DOCKER_VERSION
+              echo -e "${CIRCLE_TAG#v}" > /mnt/ramdisk/TAG_VERSION
+              echo -e "${CIRCLE_TAG}" > /mnt/ramdisk/DOCKER_VERSION
             fi
-
-            cat /home/circleci/project/TAG_VERSION
-            cat /home/circleci/project/DOCKER_VERSION
       - save_cache:
           key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
-            - /home/circleci/project/TAG_VERSION
-            - /home/circleci/project/DOCKER_VERSION
+            - /mnt/ramdisk/TAG_VERSION
+            - /mnt/ramdisk/DOCKER_VERSION
 
   # -------------------------------------------------------------------------- #
 
