@@ -235,27 +235,35 @@ jobs:
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
-          name: Ensure services namespace
-          command: |
-            mkdir -p /go/src/github.com/jancajthaml-openbank
-            cp -r \
-              /mnt/ramdisk/services/lake \
-              /go/src/github.com/jancajthaml-openbank/lake
-      - run:
           name: Sync dependencies
           command: |
             /mnt/ramdisk/dev/lifecycle/sync \
-              --pkg lake
-      - run:
-          name: Move vendor folder to project
-          command: |
-            cp -r \
-              /go/src/github.com/jancajthaml-openbank/lake/vendor \
-              /mnt/ramdisk/services/lake/vendor
+              --source /mnt/ramdisk/services/lake
       - save_cache:
           key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
-            - /go/src/github.com/jancajthaml-openbank/lake
+            - /mnt/ramdisk/services/lake/vendor
+
+  # -------------------------------------------------------------------------- #
+
+  test:
+    docker:
+      - image: jancajthaml/go:latest
+    working_directory: /mnt/ramdisk
+    steps:
+      - restore_cache:
+          key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Unit test
+          command: |
+            /mnt/ramdisk/dev/lifecycle/test \
+              --source /mnt/ramdisk/services/lake
+              --output /mnt/ramdisk/reports
+          no_output_timeout: 5m
+      - store_test_results:
+          path: /mnt/ramdisk/reports/unit-tests
 
   # -------------------------------------------------------------------------- #
 
@@ -273,7 +281,7 @@ jobs:
           command: |
             /mnt/ramdisk/dev/lifecycle/package \
               --arch linux/amd64 \
-              --pkg lake \
+              --source /mnt/ramdisk/services/lake
               --output /mnt/ramdisk/packaging/bin
           no_output_timeout: 5m
       - save_cache:
@@ -297,7 +305,7 @@ jobs:
           command: |
             /mnt/ramdisk/dev/lifecycle/package \
               --arch linux/armhf \
-              --pkg lake \
+              --source /mnt/ramdisk/services/lake
               --output /mnt/ramdisk/packaging/bin
           no_output_timeout: 5m
       - save_cache:
@@ -321,7 +329,7 @@ jobs:
           command: |
             /mnt/ramdisk/dev/lifecycle/package \
               --arch linux/arm64 \
-              --pkg lake \
+              --source /mnt/ramdisk/services/lake
               --output /mnt/ramdisk/packaging/bin
           no_output_timeout: 5m
       - save_cache:
@@ -412,31 +420,6 @@ jobs:
           key: debian-arm64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - /mnt/ramdisk/packaging/bin
-
-  # -------------------------------------------------------------------------- #
-
-  test:
-    docker:
-      - image: jancajthaml/go:latest
-    working_directory: /mnt/ramdisk
-    steps:
-      - restore_cache:
-          key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - restore_cache:
-          key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Check ramdisk contents
-          command: |
-            ls -la /mnt/ramdisk
-      - run:
-          name: Unit test
-          command: |
-            /mnt/ramdisk/dev/lifecycle/test \
-              --pkg lake \
-              --output /mnt/ramdisk/reports
-          no_output_timeout: 5m
-      - store_test_results:
-          path: /mnt/ramdisk/reports/unit-tests
 
   # -------------------------------------------------------------------------- #
 
@@ -541,58 +524,16 @@ jobs:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           key: binaries-amd64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          command: |
-            if [ ! -f ./packaging/bin/lake-linux-amd64 ] ; then
-              echo "lake-linux-amd64 not found at"
-              ls -la ./packaging/bin
-              exit 1
-            fi
       - restore_cache:
           key: binaries-armhf-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          command: |
-            if [ ! -f ./packaging/bin/lake-linux-armhf ] ; then
-              echo "lake-linux-armhf not found at"
-              ls -la ./packaging/bin
-              exit 1
-            fi
       - restore_cache:
           key: binaries-arm64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          command: |
-            if [ ! -f ./packaging/bin/lake-linux-arm64 ] ; then
-              echo "lake-linux-arm64 not found at"
-              ls -la ./packaging/bin
-              exit 1
-            fi
       - restore_cache:
           key: debian-amd64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          command: |
-            if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_amd64.deb ] ; then
-              echo "lake_${CIRCLE_TAG#v}_amd64.deb not found at"
-              ls -la ./packaging/bin
-              exit 1
-            fi
       - restore_cache:
           key: debian-armhf-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          command: |
-            if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_armhf.deb ] ; then
-              echo "lake_${CIRCLE_TAG#v}_armhf.deb not found at"
-              ls -la ./packaging/bin
-              exit 1
-            fi
       - restore_cache:
           key: debian-arm64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          command: |
-            if [ ! -f ./packaging/bin/lake_${CIRCLE_TAG#v}_arm64.deb ] ; then
-              echo "lake_${CIRCLE_TAG#v}_arm64.deb not found at"
-              ls -la ./packaging/bin
-              exit 1
-            fi
       - deploy:
           name: Release artifacts to github
           command: |

@@ -28,7 +28,7 @@ package-%: %
 
 .PHONY: bundle-binaries-%
 bundle-binaries-%: %
-	@docker-compose run --rm package --arch linux/$^ --pkg lake --output /project/packaging/bin
+	@docker-compose run --rm package --arch linux/$^ --source /go/src/github.com/jancajthaml-openbank/lake --output /project/packaging/bin
 
 .PHONY: bundle-debian-%
 bundle-debian-%: %
@@ -44,19 +44,19 @@ bootstrap:
 
 .PHONY: lint
 lint:
-	@docker-compose run --rm lint --pkg lake || :
+	@docker-compose run --rm lint --source /go/src/github.com/jancajthaml-openbank/lake || :
 
 .PHONY: sec
 sec:
-	@docker-compose run --rm sec --pkg lake || :
+	@docker-compose run --rm sec --source /go/src/github.com/jancajthaml-openbank/lake || :
 
 .PHONY: sync
 sync:
-	@docker-compose run --rm sync --pkg lake
+	@docker-compose run --rm sync --source /go/src/github.com/jancajthaml-openbank/lake
 
 .PHONY: test
 test:
-	@docker-compose run --rm test --pkg lake --output /project/reports
+	@docker-compose run --rm test --source /go/src/github.com/jancajthaml-openbank/lake --output /project/reports/unit-tests
 
 .PHONY: release
 release:
