@@ -489,8 +489,6 @@ jobs:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - setup_remote_docker:
-          version: 18.06.0-ce
       - run: docker pull docker.io/jancajthaml/bbtest:amd64
       - run:
           name: Run blackbox tests
