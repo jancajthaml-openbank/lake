@@ -259,7 +259,7 @@ jobs:
           name: Unit test
           command: |
             /mnt/ramdisk/dev/lifecycle/test \
-              --source /mnt/ramdisk/services/lake
+              --source /mnt/ramdisk/services/lake \
               --output /mnt/ramdisk/reports
           no_output_timeout: 5m
       - store_test_results:
@@ -281,7 +281,7 @@ jobs:
           command: |
             /mnt/ramdisk/dev/lifecycle/package \
               --arch linux/amd64 \
-              --source /mnt/ramdisk/services/lake
+              --source /mnt/ramdisk/services/lake \
               --output /mnt/ramdisk/packaging/bin
           no_output_timeout: 5m
       - save_cache:
@@ -305,7 +305,7 @@ jobs:
           command: |
             /mnt/ramdisk/dev/lifecycle/package \
               --arch linux/armhf \
-              --source /mnt/ramdisk/services/lake
+              --source /mnt/ramdisk/services/lake \
               --output /mnt/ramdisk/packaging/bin
           no_output_timeout: 5m
       - save_cache:
@@ -329,7 +329,7 @@ jobs:
           command: |
             /mnt/ramdisk/dev/lifecycle/package \
               --arch linux/arm64 \
-              --source /mnt/ramdisk/services/lake
+              --source /mnt/ramdisk/services/lake \
               --output /mnt/ramdisk/packaging/bin
           no_output_timeout: 5m
       - save_cache:
