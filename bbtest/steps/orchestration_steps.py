@@ -25,7 +25,7 @@ def step_impl(context, package, operation):
 @then('systemctl contains following active units')
 def step_impl(context):
   (code, result, error) = execute(["systemctl", "list-units", "--no-legend"])
-  assert code == 0
+  assert code == 0, str(result) + ' ' + str(error)
 
   items = []
   for row in context.table:
@@ -41,7 +41,7 @@ def step_impl(context):
 @then('systemctl does not contain following active units')
 def step_impl(context):
   (code, result, error) = execute(["systemctl", "list-units", "--no-legend"])
-  assert code == 0
+  assert code == 0, str(result) + ' ' + str(error)
 
   items = []
   for row in context.table:
@@ -59,7 +59,7 @@ def unit_running(context, unit):
   @eventually(10)
   def wait_for_unit_state_change():
     (code, result, error) = execute(["systemctl", "show", "-p", "SubState", unit])
-    assert code == 0, code
+    assert code == 0, str(result) + ' ' + str(error)
     assert 'SubState=running' in result, result
 
   wait_for_unit_state_change()
