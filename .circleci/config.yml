@@ -463,19 +463,19 @@ jobs:
       - run:
           name: Publish to docker.io
           command: |
-            FULL_VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
-
-            cat ${DOCKER_PASSWORD} \
-            | docker login -u ${DOCKER_USER} -p --password-stdin
-            docker push docker.io/openbank/lake:${FULL_VERSION}
+            echo ${DOCKER_PASSWORD} \
+              | docker login -u ${DOCKER_USER} -p --password-stdin
+            VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
+            docker push \
+              docker.io/openbank/lake:${VERSION}
       - run:
           name: Publish to docker.pkg.github.com
           command: |
-            SHORT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
-
-            cat ${GITHUB_RELEASE_TOKEN} \
-            | docker login docker.pkg.github.com -u jancajthaml -p --password-stdin
-            docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake:${SHORT_VERSION}
+            echo ${GITHUB_RELEASE_TOKEN} \
+              | docker login docker.pkg.github.com -u jancajthaml -p --password-stdin
+            VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
+            docker push \
+              docker.pkg.github.com/jancajthaml-openbank/lake/lake:${VERSION}
 
   # -------------------------------------------------------------------------- #
 

@@ -55,7 +55,7 @@ lifecycle::go::build() {
 
   go clean
 
-  echo "[info] (${PLATFORM}/${ARCH}) cleaned"
+  echo "[info] ${output} cleaned"
 
   case ${ARCH} in
 
@@ -68,7 +68,7 @@ lifecycle::go::build() {
       CC=arm-linux-gnueabihf-gcc \
       \
       go build -a -o ${output} || {
-        (>&2 echo "[error] (${PLATFORM}/${ARCH}) unable to build")
+        (>&2 echo "[error] ${output} unable to build")
         exit 1
       }
     ;;
@@ -81,7 +81,7 @@ lifecycle::go::build() {
       CC=aarch64-linux-gnu-gcc \
       \
       go build -a -o ${output} || {
-        (>&2 echo "[error] (${PLATFORM}/${ARCH}) unable to build")
+        (>&2 echo "[error] ${output} unable to build")
         exit 1
       }
     ;;
@@ -94,13 +94,13 @@ lifecycle::go::build() {
       CC=gcc \
       \
       go build -a -o ${output} || {
-        (>&2 echo "[error] (${PLATFORM}/${ARCH}) unable to build")
+        (>&2 echo "[error] ${output} unable to build")
         exit 1
       }
     ;;
 
     *)
-      (>&2 echo "[error] (${PLATFORM}/${ARCH}) unsupported target")
+      (>&2 echo "[error] ${output} unsupported target")
       exit 1
     ;;
 
@@ -108,7 +108,7 @@ lifecycle::go::build() {
 
   chmod +x ${output}
 
-  echo "[info] (${PLATFORM}/${ARCH}) compiled"
+  echo "[info] ${output} compiled"
 
   du -hs ${output}
 }
@@ -138,7 +138,7 @@ lifecycle::go::strip() {
 
   esac
 
-  echo "[info] (${PLATFORM}/${ARCH}) stripped"
+  echo "[info] ${output} stripped"
 
   du -hs ${output}
 }
