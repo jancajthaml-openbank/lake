@@ -172,22 +172,6 @@ workflows:
             - checkout
             - versions
 
-  rolling_performance:
-    triggers:
-      - schedule:
-          cron: "0 3,15 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - checkout
-      - versions
-      - perf-amd64:
-          requires:
-            - checkout
-            - versions
-
 # ---------------------------------------------------------------------------- #
 
 jobs:
@@ -208,7 +192,6 @@ jobs:
             - /mnt/ramdisk/services
             - /mnt/ramdisk/packaging
             - /mnt/ramdisk/bbtest
-            - /mnt/ramdisk/perf
 
   # -------------------------------------------------------------------------- #
 
@@ -350,7 +333,7 @@ jobs:
   debian-amd64:
     docker:
       - image: jancajthaml/debian-packager:latest
-    working_directory: /mnt/ramdisk/project
+    working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -378,7 +361,7 @@ jobs:
   debian-armhf:
     docker:
       - image: jancajthaml/debian-packager:latest
-    working_directory: /mnt/ramdisk/project
+    working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -406,7 +389,7 @@ jobs:
   debian-arm64:
     docker:
       - image: jancajthaml/debian-packager:latest
-    working_directory: /home/circleci/project
+    working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -427,7 +410,7 @@ jobs:
       - save_cache:
           key: debian-arm64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
-            - /home/circleci/project/packaging/bin
+            - /mnt/ramdisk/packaging/bin
 
   # -------------------------------------------------------------------------- #
 
@@ -478,24 +461,17 @@ jobs:
       - restore_cache:
           key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
-          name: Package for docker
+          name: docker build
           command: |
             DOCKER_VERSION=$(cat /mnt/ramdisk/DOCKER_VERSION)
             TAG_VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
 
-            docker build -t openbank/lake:${DOCKER_VERSION} .
-
-            docker tag openbank/lake:${DOCKER_VERSION} \
-              docker.pkg.github.com/jancajthaml-openbank/lake/lake:${TAG_VERSION}
-
-            docker tag openbank/lake:${DOCKER_VERSION} \
-              docker.io/openbank/lake:${DOCKER_VERSION}
-
-            docker login docker.pkg.github.com -u jancajthaml -p ${GITHUB_RELEASE_TOKEN}
-            docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake:${TAG_VERSION}
-
-            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-            docker push docker.io/openbank/lake:${DOCKER_VERSION}
+            docker build -t docker.io/openbank/lake:${DOCKER_VERSION} .
+            docker build -t docker.pkg.github.com/jancajthaml-openbank/lake/lake:${TAG_VERSION} .
+      - run: docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+      - run: docker push docker.io/openbank/lake
+      - run: docker login docker.pkg.github.com -u jancajthaml -p ${GITHUB_RELEASE_TOKEN}
+      - run: docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake
 
   # -------------------------------------------------------------------------- #
 
@@ -538,47 +514,6 @@ jobs:
           path: /home/circleci/project/reports/blackbox-tests/cucumber
       - store_artifacts:
           path: /home/circleci/project/reports/blackbox-tests
-          destination: reports
-
-  # -------------------------------------------------------------------------- #
-
-  perf-amd64:
-    machine:
-      image: circleci/classic:201808-01
-      environment:
-        - COMPOSE_DOCKER_CLI_BUILD: 1
-        - DOCKER_BUILDKIT: 1
-      docker_layer_caching: false
-    working_directory: /home/circleci/project
-    steps:
-      - restore_cache:
-          key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - restore_cache:
-          key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run: docker pull jancajthaml/bbtest:amd64
-      - run:
-          name: Run perf tests
-          command: |
-            IMAGE_VERSION=$(cat /mnt/ramdisk/DOCKER_VERSION)
-            UNIT_VERSION=$(cat /mnt/ramdisk/TAG_VERSION)
-
-            docker exec -it $(\
-              docker run -d -t \
-                -e IMAGE_VERSION="${IMAGE_VERSION}" \
-                -e UNIT_VERSION="${UNIT_VERSION}" \
-                -e UNIT_ARCH=amd64 \
-                -e MESSAGES_PUSHED=100000000 \
-                -e CI=1 \
-                -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-                -v /var/run/docker.sock:/var/run/docker.sock \
-                -v /var/lib/docker/containers:/var/lib/docker/containers \
-                -v /mnt/ramdisk/perf:/opt/app \
-                -v /mnt/ramdisk/reports:/tmp/reports \
-              jancajthaml/bbtest:amd64 \
-            ) python3 /opt/app/main.py
-          no_output_timeout: 5h
-      - store_artifacts:
-          path: /mnt/ramdisk/reports/perf-tests
           destination: reports
 
   # -------------------------------------------------------------------------- #
