@@ -4,7 +4,7 @@ version: 2
 
 workflows:
 
-  version: 2
+  version: 2.1
 
   tag:
     jobs:
@@ -174,13 +174,28 @@ workflows:
 
 # ---------------------------------------------------------------------------- #
 
+executors:
+
+  git:
+    docker:
+      - image: docker.io/alpine/git
+
+  go:
+    docker:
+      - image: docker.io/jancajthaml/go:latest
+
+  debian:
+    docker:
+      - image: docker.io/jancajthaml/debian-packager:latest
+
+# ---------------------------------------------------------------------------- #
+
 jobs:
 
   # -------------------------------------------------------------------------- #
 
   checkout:
-    docker:
-      - image: alpine/git
+    executor: git
     working_directory: /mnt/ramdisk
     steps:
       - checkout
@@ -197,8 +212,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   versions:
-    docker:
-      - image: alpine/git
+    executor: git
     working_directory: /mnt/ramdisk
     steps:
       - checkout
@@ -228,8 +242,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   deps:
-    docker:
-      - image: jancajthaml/go:latest
+    executor: go
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -247,8 +260,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   test:
-    docker:
-      - image: jancajthaml/go:latest
+    executor: go
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -268,8 +280,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   bin-amd64:
-    docker:
-      - image: jancajthaml/go:latest
+    executor: go
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -292,8 +303,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   bin-armhf:
-    docker:
-      - image: jancajthaml/go:latest
+    executor: go
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -316,8 +326,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   bin-arm64:
-    docker:
-      - image: jancajthaml/go:latest
+    executor: go
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
@@ -340,8 +349,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   debian-amd64:
-    docker:
-      - image: jancajthaml/debian-packager:latest
+    executor: debian
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -368,8 +376,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   debian-armhf:
-    docker:
-      - image: jancajthaml/debian-packager:latest
+    executor: debian
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -396,8 +403,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   debian-arm64:
-    docker:
-      - image: jancajthaml/debian-packager:latest
+    executor: debian
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -425,7 +431,7 @@ jobs:
 
   publish:
     docker:
-      - image: docker:18.06.0-ce-git
+      - image: docker.io/docker:18.06.0-ce-git
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -473,7 +479,7 @@ jobs:
 
   bbtest-amd64:
     docker:
-      - image: jancajthaml/bbtest:amd64
+      - image: docker.io/jancajthaml/bbtest:amd64
         command: /sbin/init
     working_directory: /mnt/ramdisk
     steps:
@@ -487,7 +493,6 @@ jobs:
           name: Run blackbox tests
           command: |
             export UNIT_ARCH=amd64
-            export CI=1
             export IMAGE_VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
             export UNIT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
 
@@ -502,8 +507,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   release:
-    docker:
-      - image: jancajthaml/debian-packager:latest
+    executor: debian
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -524,7 +528,7 @@ jobs:
           name: Release artifacts to github
           command: |
             /mnt/ramdisk/dev/lifecycle/release \
-              -v ${CIRCLE_TAG} \
-              -t ${GITHUB_RELEASE_TOKEN}
+              --version ${CIRCLE_TAG} \
+              --token ${GITHUB_RELEASE_TOKEN}
 
 # ---------------------------------------------------------------------------- #
