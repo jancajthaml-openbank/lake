@@ -102,7 +102,10 @@ class UnitHelper(object):
       failure = ex
     finally:
       temp.close()
-      self.docker.images.remove('bbtest_artifacts-scratch', force=True)
+      try:
+        self.docker.images.remove('bbtest_artifacts-scratch', force=True)
+      except:
+        pass
 
     if failure:
       raise failure
