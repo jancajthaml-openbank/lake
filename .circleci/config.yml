@@ -199,14 +199,14 @@ jobs:
       - image: docker:19.03-git
         environment:
           - LANG: C.UTF-8
-    working_directory: /home/circleci/project
+    working_directory: /mnt/ramdisk
     steps:
       - checkout
-      - run: rm /home/circleci/project/.dockerignore
+      - run: rm /mnt/ramdisk/.dockerignore
       - save_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
-            - /home/circleci/project
+            - /mnt/ramdisk
 
   # -------------------------------------------------------------------------- #
 
@@ -251,9 +251,8 @@ jobs:
       - image: jancajthaml/go:latest
     working_directory: /home/circleci/project
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - checkout
+      - restore_cache:
+          key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Ensure services namespace
           command: |
@@ -287,8 +286,6 @@ jobs:
       - image: jancajthaml/go:latest
     working_directory: /home/circleci/project
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -313,8 +310,6 @@ jobs:
       - image: jancajthaml/go:latest
     working_directory: /home/circleci/project
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -339,8 +334,6 @@ jobs:
       - image: jancajthaml/go:latest
     working_directory: /home/circleci/project
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -365,8 +358,6 @@ jobs:
       - image: jancajthaml/debian-packager:latest
     working_directory: /home/circleci/project
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -395,8 +386,6 @@ jobs:
       - image: jancajthaml/debian-packager:latest
     working_directory: /home/circleci/project
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -425,8 +414,6 @@ jobs:
       - image: jancajthaml/debian-packager:latest
     working_directory: /home/circleci/project
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
@@ -455,8 +442,6 @@ jobs:
       - image: jancajthaml/go:latest
     working_directory: /home/circleci/project
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
       - restore_cache:
           key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
@@ -479,8 +464,6 @@ jobs:
           - DOCKER_BUILDKIT: 1
     working_directory: /home/circleci/project
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: false
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
