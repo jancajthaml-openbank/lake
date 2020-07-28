@@ -28,7 +28,7 @@ workflows:
               only: master
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - test:
+      - unit-test:
           requires:
             - deps
           filters:
@@ -36,7 +36,7 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - bin-amd64:
+      - compile-amd64:
           requires:
             - deps
           filters:
@@ -44,7 +44,7 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - bin-armhf:
+      - compile-armhf:
           requires:
             - deps
           filters:
@@ -52,7 +52,7 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - bin-arm64:
+      - compile-arm64:
           requires:
             - deps
           filters:
@@ -60,47 +60,47 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - debian-amd64:
+      - package-debian-amd64:
           requires:
-            - bin-amd64
+            - compile-amd64
             - versions
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - debian-armhf:
+      - package-debian-armhf:
           requires:
-            - bin-armhf
+            - compile-armhf
             - versions
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - debian-arm64:
+      - package-debian-arm64:
           requires:
-            - bin-arm64
+            - compile-arm64
             - versions
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - publish:
+      - package-docker:
           requires:
-            - test
-            - debian-amd64
-            - debian-armhf
-            - debian-arm64
+            - unit-test
+            - package-debian-amd64
+            - package-debian-armhf
+            - package-debian-arm64
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - bbtest-amd64:
+      - blackbox-test-amd64:
           requires:
-            - publish
+            - package-docker
           filters:
             branches:
               ignore: /.*/
@@ -108,7 +108,7 @@ workflows:
               only: /^v[0-9]+(\.[0-9]+)*$/
       - release:
           requires:
-            - bbtest-amd64
+            - blackbox-test-amd64
           filters:
             branches:
               ignore: /.*/
@@ -122,41 +122,41 @@ workflows:
       - deps:
           requires:
             - checkout
-      - test:
+      - unit-test:
           requires:
             - deps
-      - bin-amd64:
+      - compile-amd64:
           requires:
             - deps
-      - bin-armhf:
+      - compile-armhf:
           requires:
             - deps
-      - bin-arm64:
+      - compile-arm64:
           requires:
             - deps
-      - debian-amd64:
+      - package-debian-amd64:
           requires:
-            - bin-amd64
+            - compile-amd64
             - versions
-      - debian-armhf:
+      - package-debian-armhf:
           requires:
-            - bin-armhf
+            - compile-armhf
             - versions
-      - debian-arm64:
+      - package-debian-arm64:
           requires:
-            - bin-arm64
+            - compile-arm64
             - versions
-      - publish:
+      - package-docker:
           requires:
-            - test
-            - debian-amd64
-            - debian-armhf
-            - debian-arm64
-      - bbtest-amd64:
+            - unit-test
+            - package-debian-amd64
+            - package-debian-armhf
+            - package-debian-arm64
+      - blackbox-test-amd64:
           requires:
-            - publish
+            - package-docker
 
-  rolling_test:
+  rolling_contract:
     triggers:
       - schedule:
           cron: "0 * * * *"
@@ -165,7 +165,7 @@ workflows:
               only:
                 - master
     jobs:
-      - bbtest-amd64
+      - blackbox-test-amd64
 
 # ---------------------------------------------------------------------------- #
 
@@ -206,7 +206,6 @@ jobs:
             - /mnt/ramdisk/dev
             - /mnt/ramdisk/services
             - /mnt/ramdisk/packaging
-            - /mnt/ramdisk/bbtest
             - /mnt/ramdisk/Dockerfile
 
   # -------------------------------------------------------------------------- #
@@ -248,7 +247,7 @@ jobs:
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
-          name: Sync dependencies
+          name: Sync lake dependencies
           command: |
             /mnt/ramdisk/dev/lifecycle/sync \
               --source /mnt/ramdisk/services/lake
@@ -259,7 +258,7 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  test:
+  unit-test:
     executor: go
     working_directory: /mnt/ramdisk
     steps:
@@ -268,7 +267,7 @@ jobs:
       - restore_cache:
           key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
-          name: Unit test
+          name: Unit test lake
           command: |
             /mnt/ramdisk/dev/lifecycle/test \
               --source /mnt/ramdisk/services/lake \
@@ -279,7 +278,7 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  bin-amd64:
+  compile-amd64:
     executor: go
     working_directory: /mnt/ramdisk
     steps:
@@ -302,7 +301,7 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  bin-armhf:
+  compile-armhf:
     executor: go
     working_directory: /mnt/ramdisk
     steps:
@@ -325,7 +324,7 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  bin-arm64:
+  compile-arm64:
     executor: go
     working_directory: /home/circleci/project
     steps:
@@ -348,7 +347,7 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  debian-amd64:
+  package-debian-amd64:
     executor: debian
     working_directory: /mnt/ramdisk
     steps:
@@ -375,7 +374,7 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  debian-armhf:
+  package-debian-armhf:
     executor: debian
     working_directory: /mnt/ramdisk
     steps:
@@ -402,7 +401,7 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  debian-arm64:
+  package-debian-arm64:
     executor: debian
     working_directory: /mnt/ramdisk
     steps:
@@ -429,7 +428,7 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  publish:
+  package-docker:
     docker:
       - image: docker.io/docker:18.06.0-ce-git
     working_directory: /mnt/ramdisk
@@ -468,6 +467,7 @@ jobs:
             VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
             docker push \
               docker.io/openbank/lake:${VERSION}
+            rm -f /root/.docker/config.json
       - run:
           name: Publish to docker.pkg.github.com
           command: |
@@ -476,10 +476,11 @@ jobs:
             VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
             docker push \
               docker.pkg.github.com/jancajthaml-openbank/lake/lake:${VERSION}
+            rm -f /root/.docker/config.json
 
   # -------------------------------------------------------------------------- #
 
-  bbtest-amd64:
+  blackbox-test-amd64:
     executor: machine
     working_directory: /home/circleci/project
     steps:
@@ -496,17 +497,17 @@ jobs:
                 VERSION=${tags}
               fi
               META=$(echo -e ${CIRCLE_BRANCH} | sed 's:.*/::')
-              echo -e "${VERSION#v}" > /mnt/ramdisk/SHORT_VERSION
+              echo -e "${VERSION#v}" > /home/circleci/project/SHORT_VERSION
               echo -e "${VERSION}-${META}" > /mnt/ramdisk/FULL_VERSION
             else
-              echo -e "${CIRCLE_TAG#v}" > /mnt/ramdisk/SHORT_VERSION
-              echo -e "${CIRCLE_TAG}" > /mnt/ramdisk/FULL_VERSION
+              echo -e "${CIRCLE_TAG#v}" > /home/circleci/project/SHORT_VERSION
+              echo -e "${CIRCLE_TAG}" > /home/circleci/project/FULL_VERSION
             fi
       - run:
           name: Run blackbox tests
           command: |
-            export IMAGE_VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
-            export UNIT_VERSION=$(cat /mnt/ramdisk/SHORT_VERSION)
+            export IMAGE_VERSION=$(cat /home/circleci/project/FULL_VERSION)
+            export UNIT_VERSION=$(cat /home/circleci/project/SHORT_VERSION)
 
             docker-compose up -d bbtest
             docker exec -t $(docker-compose ps -q bbtest) python3 /opt/app/bbtest/main.py
