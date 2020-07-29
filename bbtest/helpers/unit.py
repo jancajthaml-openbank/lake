@@ -96,6 +96,7 @@ class UnitHelper(object):
 
         result = [item for item in result.split(os.linesep)]
         result = [item.rsplit('/', 1)[-1].strip() for item in result if "/lib/systemd/system/lake" in item]
+        result = [item for item in result if not item.endswith('unit.slice')]
 
         self.units = result
 
@@ -123,6 +124,11 @@ class UnitHelper(object):
       fd.write(str(os.linesep).join("LAKE_{!s}={!s}".format(k, v) for (k, v) in options.items()))
 
   def collect_logs(self):
+    (code, result, error) = execute(['journalctl', '-o', 'cat', '--no-pager'])
+    if code == 0:
+      with open('reports/blackbox-tests/logs/journal.log', 'w') as fd:
+        fd.write(result)
+
     for unit in set(self.__get_systemd_units() + self.units):
       (code, result, error) = execute(['journalctl', '-o', 'cat', '-u', unit, '--no-pager'])
       if code != 0 or not result:
