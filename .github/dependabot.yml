@@ -1,0 +1,6 @@
+version: 2
+updates:
+  - package-ecosystem: "go:modules"
+    directory: "/services/lake"
+    schedule:
+      interval: "daily"
