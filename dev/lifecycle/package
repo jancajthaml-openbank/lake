@@ -53,8 +53,8 @@ lifecycle::go::clean() {
 }
 
 lifecycle::go::build() {
-  local dir="$1"
-  if [ -z ${dir} -o ! -d ${dir} ] ; then
+  local source="$1"
+  if [ -z ${source} -o ! -d ${source} ] ; then
     return
   fi
 
@@ -63,9 +63,13 @@ lifecycle::go::build() {
     return
   fi
 
+
+
   case ${ARCH} in
 
     armhf)
+      cd ${source} && \
+      \
       GOOS=${PLATFORM} \
       GOARM=7 \
       GOARCH=arm \
@@ -80,6 +84,8 @@ lifecycle::go::build() {
     ;;
 
     arm64)
+      cd ${source} && \
+      \
       GOOS=${PLATFORM} \
       GOARCH=arm64 \
       CGO_ENABLED=1 \
@@ -93,6 +99,8 @@ lifecycle::go::build() {
     ;;
 
     amd64)
+      cd ${source} && \
+      \
       GOOS=${PLATFORM} \
       GOARCH=amd64 \
       CGO_ENABLED=1 \
@@ -115,8 +123,6 @@ lifecycle::go::build() {
   chmod +x ${output}
 
   echo "[info] ${output} compiled"
-
-  du -hs ${output}
 }
 
 lifecycle::go::strip() {
@@ -145,8 +151,6 @@ lifecycle::go::strip() {
   esac
 
   echo "[info] ${output} stripped"
-
-  du -hs ${output}
 }
 
 ################################################################################
@@ -161,3 +165,5 @@ lifecycle::go::build \
 
 lifecycle::go::strip \
   ${OUTPUT_FILE}
+
+du -hs ${OUTPUT_FILE}
