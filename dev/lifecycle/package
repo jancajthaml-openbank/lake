@@ -31,13 +31,26 @@ if [ -z "${OUTPUT}" ] ; then
   exit 1
 fi
 
-if [ -d ${OUTPUT} ] ; then
-  rm -rf ${OUTPUT}/*
-fi
-
 OUTPUT_FILE=${OUTPUT}/$(basename ${SOURCE})-${PLATFORM}-${ARCH}
 
 ################################################################################
+
+lifecycle::go::clean() {
+  local source="$1"
+  if [ -z ${source} -o ! -d ${source} ] ; then
+    return
+  fi
+  local output="$2"
+  if [ -z ${output} -o ! -d ${output} ] ; then
+    return
+  fi
+
+  find "${output}" -name "$(basename ${source})*${ARCH}*" -exec rm -f {} \;
+  echo "[info] ${output} cleaned"
+
+  cd ${source} && go clean
+  echo "[info] ${source} cleaned"
+}
 
 lifecycle::go::build() {
   local dir="$1"
@@ -49,16 +62,6 @@ lifecycle::go::build() {
   if [ -z ${output} ] ; then
     return
   fi
-
-  if [ -f ${output} ] ; then
-    rm -f ${output}
-  fi
-
-  cd ${dir}
-
-  go clean
-
-  echo "[info] ${output} cleaned"
 
   case ${ARCH} in
 
@@ -147,6 +150,10 @@ lifecycle::go::strip() {
 }
 
 ################################################################################
+
+lifecycle::go::clean \
+  ${SOURCE} \
+  ${OUTPUT}
 
 lifecycle::go::build \
   ${SOURCE} \
