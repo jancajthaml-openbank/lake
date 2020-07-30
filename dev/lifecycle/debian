@@ -85,7 +85,7 @@ lifecycle::debian::generate_changelog() {
 	
   if [ ! -s ${target} ] ; then
     DATE=$(git log -1 --format=%cD HEAD)
-    echo "${TARGET_PACKAGE} (0.0.0) unstable; urgency=medium" >> ${target}
+    echo "${TARGET_PACKAGE} (${VERSION#v}) unstable; urgency=medium" >> ${target}
     echo "" >> ${target}
     echo "  * contains unrelease commits" >> ${target}
     echo "" >> ${target}
