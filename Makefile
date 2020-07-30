@@ -38,7 +38,7 @@ bundle-debian-%: %
 	@docker-compose \
 		run \
 		--rm debian-package \
-		--version $(VERSION)+$(META) \
+		--version $(VERSION) \
 		--arch $^ \
 		--pkg lake \
 		--source /project/packaging
