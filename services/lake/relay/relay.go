@@ -61,7 +61,7 @@ func (relay Relay) Start() {
 
 	ctx, err := zmq.NewContext()
 	if err != nil {
-		log.Warnf("Unable to create ZMQ context %+v", err)
+		log.Warn().Msgf("Unable to create ZMQ context %+v", err)
 		return
 	}
 
@@ -75,14 +75,14 @@ func (relay Relay) Start() {
 				alive = false
 				relay.MarkDone()
 				ctx.Term()
-				log.Info("Stop relay-daemon")
+				log.Info().Msg("Stop relay-daemon")
 			}
 		}
 	}()
 
 	receiver, err = ctx.NewSocket(zmq.PULL)
 	if err != nil {
-		log.Warnf("Unable create ZMQ PULL %v", err)
+		log.Warn().Msgf("Unable create ZMQ PULL %v", err)
 		return
 	}
 
@@ -94,7 +94,7 @@ func (relay Relay) Start() {
 
 	sender, err = ctx.NewSocket(zmq.PUB)
 	if err != nil {
-		log.Warnf("Unable create ZMQ PUB %v", err)
+		log.Warn().Msgf("Unable create ZMQ PUB %v", err)
 		return
 	}
 
@@ -129,7 +129,7 @@ func (relay Relay) Start() {
 		goto eos
 	}
 
-	log.Info("Start relay-daemon")
+	log.Info().Msg("Start relay-daemon")
 
 loop:
 	chunk, err = receiver.Recv(0)
