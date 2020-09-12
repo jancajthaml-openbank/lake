@@ -32,7 +32,8 @@ func loadConfFromEnv() Configuration {
 
 	if metricsOutput != "" && os.MkdirAll(filepath.Dir(metricsOutput), os.ModePerm) != nil {
 		// FIXME try without panic
-		log.Fatal("unable to assert metrics output")
+		log.Error().Msg("unable to assert metrics output")
+		panic("unable to assert metrics output")
 	}
 
 	return Configuration{
@@ -52,7 +53,7 @@ func getEnvBoolean(key string, fallback bool) bool {
 	}
 	cast, err := strconv.ParseBool(value)
 	if err != nil {
-		log.Errorf("invalid value of variable %s", key)
+		log.Error().Msgf("invalid value of variable %s", key)
 		return fallback
 	}
 	return cast
@@ -85,7 +86,7 @@ func getEnvInteger(key string, fallback int) int {
 	}
 	cast, err := strconv.Atoi(value)
 	if err != nil {
-		log.Errorf("invalid value of variable %s", key)
+		log.Error().Msgf("invalid value of variable %s", key)
 		return fallback
 	}
 	return cast
@@ -98,7 +99,7 @@ func getEnvDuration(key string, fallback time.Duration) time.Duration {
 	}
 	cast, err := time.ParseDuration(value)
 	if err != nil {
-		log.Errorf("invalid value of variable %s", key)
+		log.Error().Msgf("invalid value of variable %s", key)
 		return fallback
 	}
 	return cast

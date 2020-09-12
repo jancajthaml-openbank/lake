@@ -18,4 +18,4 @@ import (
 	"github.com/jancajthaml-openbank/lake/logging"
 )
 
-var log = logging.NewLogger("relay")
+var log = logging.New("relay")

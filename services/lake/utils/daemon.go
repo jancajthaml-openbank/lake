@@ -40,7 +40,7 @@ type DaemonSupport struct {
 	CanStart   chan interface{}
 }
 
-// NewDaemonSupport constructor
+// NewDaemonSupport constructs new daemon support
 func NewDaemonSupport(parentCtx context.Context, name string) DaemonSupport {
 	ctx, cancel := context.WithCancel(parentCtx)
 	return DaemonSupport{
