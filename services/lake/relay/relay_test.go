@@ -3,7 +3,6 @@ package relay
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"runtime"
 	"sync"
 	"testing"
@@ -12,13 +11,8 @@ import (
 	"github.com/jancajthaml-openbank/lake/metrics"
 
 	zmq "github.com/pebbe/zmq4"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
-
-func init() {
-	logrus.SetOutput(ioutil.Discard)
-}
 
 func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
 	runtime.LockOSThread()
