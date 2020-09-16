@@ -5,26 +5,18 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-
 	localfs "github.com/jancajthaml-openbank/local-fs"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMarshalJSON(t *testing.T) {
 
-	t.Log("error when caller is nil")
-	{
-		var entity *Metrics
-		_, err := entity.MarshalJSON()
-		assert.EqualError(t, err, "cannot marshall nil")
-	}
-
 	t.Log("error when values are nil")
 	{
 		entity := Metrics{}
-		_, err := entity.MarshalJSON()
-		assert.NotNil(t, err)
+		_, err := json.Marshal(entity)
+		if err == nil {
+			t.Errorf("extected error")
+		}
 	}
 
 	t.Log("happy path")
@@ -37,18 +29,26 @@ func TestMarshalJSON(t *testing.T) {
 			messageIngress: &ingress,
 		}
 
-		actual, err := entity.MarshalJSON()
-		require.Nil(t, err)
+		actual, err := json.Marshal(&entity)
+		if err != nil {
+			t.Fatalf("unexpected error when calling json.Marshal %+v", err)
+		}
 
 		aux := &struct {
 			MessageEgress  uint64 `json:"messageEgress"`
 			MessageIngress uint64 `json:"messageIngress"`
 		}{}
 
-		require.Nil(t, json.Unmarshal(actual, &aux))
+		if json.Unmarshal(actual, &aux) != nil {
+			t.Errorf("unexpected error when calling json.Unmarshal %+v", err)
+		}
 
-		assert.Equal(t, egress, aux.MessageEgress)
-		assert.Equal(t, ingress, aux.MessageIngress)
+		if egress != aux.MessageEgress {
+			t.Errorf("extected MessageEgress %d actual %d", egress, aux.MessageEgress)
+		}
+		if ingress != aux.MessageIngress {
+			t.Errorf("extected MessageIngress %d actual %d", egress, aux.MessageIngress)
+		}
 	}
 }
 
@@ -57,15 +57,17 @@ func TestUnmarshalJSON(t *testing.T) {
 	t.Log("error when caller is nil")
 	{
 		var entity *Metrics
-		err := entity.UnmarshalJSON([]byte(""))
-		assert.NotNil(t, err)
+		if json.Unmarshal([]byte(""), entity) == nil {
+			t.Errorf("extected error")
+		}
 	}
 
 	t.Log("error when values are nil")
 	{
 		entity := Metrics{}
-		err := entity.UnmarshalJSON([]byte(""))
-		assert.NotNil(t, err)
+		if json.Unmarshal([]byte(""), entity) == nil {
+			t.Errorf("extected error")
+		}
 	}
 
 	t.Log("error on malformed data")
@@ -78,8 +80,9 @@ func TestUnmarshalJSON(t *testing.T) {
 			messageIngress: &ingress,
 		}
 
-		data := []byte("{")
-		assert.NotNil(t, entity.UnmarshalJSON(data))
+		if json.Unmarshal([]byte("{"), &entity) == nil {
+			t.Errorf("extected error")
+		}
 	}
 
 	t.Log("happy path")
@@ -93,13 +96,18 @@ func TestUnmarshalJSON(t *testing.T) {
 		}
 
 		data := []byte("{\"messageEgress\":32,\"messageIngress\":77}")
-		require.Nil(t, entity.UnmarshalJSON(data))
+		err := json.Unmarshal(data, &entity)
+		if err != nil {
+			t.Fatalf("unexpected error when calling UnmarshalJSON %+v", err)
+		}
 
-		assert.NotNil(t, entity.messageEgress)
-		assert.Equal(t, 32, int(*entity.messageEgress))
+		if int(*entity.messageEgress) != 32 {
+			t.Errorf("extected MessageEgress 32 actual %d", int(*entity.messageEgress))
+		}
 
-		assert.NotNil(t, entity.messageIngress)
-		assert.Equal(t, 77, int(*entity.messageIngress))
+		if int(*entity.messageIngress) != 77 {
+			t.Errorf("extected MessageIngress 77 actual %d", int(*entity.messageIngress))
+		}
 	}
 }
 
@@ -108,13 +116,17 @@ func TestPersist(t *testing.T) {
 	t.Log("error when caller is nil")
 	{
 		var entity *Metrics
-		assert.NotNil(t, entity.Persist())
+		if entity.Persist() == nil {
+			t.Errorf("extected error")
+		}
 	}
 
 	t.Log("error when marshaling fails")
 	{
 		entity := Metrics{}
-		assert.NotNil(t, entity.Persist())
+		if entity.Persist() == nil {
+			t.Errorf("extected error")
+		}
 	}
 
 	t.Log("happy path")
@@ -130,15 +142,23 @@ func TestPersist(t *testing.T) {
 			messageIngress: &ingress,
 		}
 
-		require.Nil(t, entity.Persist())
+		if entity.Persist() != nil {
+			t.Fatalf("unexpected error when calling Persist")
+		}
 
-		expected, err := entity.MarshalJSON()
-		require.Nil(t, err)
+		expected, err := json.Marshal(&entity)
+		if err != nil {
+			t.Fatalf("unexpected error when calling MarshalJSON %+v", err)
+		}
 
 		actual, err := ioutil.ReadFile("/tmp/metrics.json")
-		require.Nil(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error when calling reading /tmp/metrics.json")
+		}
 
-		assert.Equal(t, expected, actual)
+		if string(expected) != string(actual) {
+			t.Errorf("extected %s actual %s", string(expected), string(actual))
+		}
 	}
 }
 
@@ -147,7 +167,9 @@ func TestHydrate(t *testing.T) {
 	t.Log("error when caller is nil")
 	{
 		var entity *Metrics
-		assert.NotNil(t, entity.Hydrate())
+		if entity.Hydrate() == nil {
+			t.Errorf("extected error")
+		}
 	}
 
 	t.Log("happy path")
@@ -163,10 +185,14 @@ func TestHydrate(t *testing.T) {
 			messageIngress: &ingressOld,
 		}
 
-		data, err := old.MarshalJSON()
-		require.Nil(t, err)
+		data, err := json.Marshal(&old)
+		if err != nil {
+			t.Fatalf("unexpected error when calling MarshalJSON %+v", err)
+		}
 
-		require.Nil(t, ioutil.WriteFile("/tmp/metrics.json", data, 0444))
+		if ioutil.WriteFile("/tmp/metrics.json", data, 0444) != nil {
+			t.Fatalf("unexpected error when writing /tmp/metrics.json")
+		}
 
 		egress := uint64(0)
 		ingress := uint64(0)
@@ -177,12 +203,16 @@ func TestHydrate(t *testing.T) {
 			messageIngress: &ingress,
 		}
 
-		require.Nil(t, entity.Hydrate())
+		if entity.Hydrate() != nil {
+			t.Fatalf("unexpected error when calling Hydrate")
+		}
 
-		assert.NotNil(t, entity.messageEgress)
-		assert.Equal(t, 10, int(*entity.messageEgress))
+		if int(*entity.messageEgress) != 10 {
+			t.Errorf("extected MessageEgress 10 actual %d", int(*entity.messageEgress))
+		}
 
-		assert.NotNil(t, entity.messageIngress)
-		assert.Equal(t, 20, int(*entity.messageIngress))
+		if int(*entity.messageIngress) != 20 {
+			t.Errorf("extected MessageIngress 20 actual %d", int(*entity.messageIngress))
+		}
 	}
 }

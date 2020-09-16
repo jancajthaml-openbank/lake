@@ -27,11 +27,11 @@ import (
 // MarshalJSON serializes Metrics as json bytes
 func (metrics *Metrics) MarshalJSON() ([]byte, error) {
 	if metrics == nil {
-		return nil, fmt.Errorf("cannot marshall nil")
+		return nil, fmt.Errorf("cannot marshal nil")
 	}
 
 	if metrics.messageEgress == nil || metrics.messageIngress == nil {
-		return nil, fmt.Errorf("cannot marshall nil references")
+		return nil, fmt.Errorf("cannot marshal nil references")
 	}
 
 	var stats = new(runtime.MemStats)
@@ -53,11 +53,11 @@ func (metrics *Metrics) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON deserializes Metrics from json bytes
 func (metrics *Metrics) UnmarshalJSON(data []byte) error {
 	if metrics == nil {
-		return fmt.Errorf("cannot unmarshall to nil")
+		return fmt.Errorf("cannot unmarshal to nil")
 	}
 
 	if metrics.messageEgress == nil || metrics.messageIngress == nil {
-		return fmt.Errorf("cannot unmarshall to nil references")
+		return fmt.Errorf("cannot unmarshal to nil references")
 	}
 
 	aux := &struct {

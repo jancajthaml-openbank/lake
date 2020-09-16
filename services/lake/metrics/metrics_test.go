@@ -5,9 +5,6 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMetrics(t *testing.T) {
@@ -18,23 +15,31 @@ func TestMetrics(t *testing.T) {
 
 	t.Log("MessageEgress properly updates egress messages")
 	{
-		require.Equal(t, uint64(0), atomic.LoadUint64(entity.messageEgress))
+		if uint64(0) != atomic.LoadUint64(entity.messageEgress) {
+			t.Errorf("extected MessageEgress 0 actual %d", atomic.LoadUint64(entity.messageEgress))
+		}
 
 		for i := 1; i <= 10000; i++ {
 			entity.MessageEgress()
 		}
 
-		assert.Equal(t, uint64(10000), atomic.LoadUint64(entity.messageEgress))
+		if uint64(10000) != atomic.LoadUint64(entity.messageEgress) {
+			t.Errorf("extected MessageEgress 10000 actual %d", atomic.LoadUint64(entity.messageEgress))
+		}
 	}
 
 	t.Log("MessageIngress properly updates ingress messages")
 	{
-		require.Equal(t, uint64(0), atomic.LoadUint64(entity.messageIngress))
+		if uint64(0) != atomic.LoadUint64(entity.messageIngress) {
+			t.Errorf("extected MessageIngress 0 actual %d", atomic.LoadUint64(entity.messageIngress))
+		}
 
 		for i := 1; i <= 10000; i++ {
 			entity.MessageIngress()
 		}
 
-		assert.Equal(t, uint64(10000), atomic.LoadUint64(entity.messageIngress))
+		if uint64(10000) != atomic.LoadUint64(entity.messageIngress) {
+			t.Errorf("extected MessageIngress 10000 actual %d", atomic.LoadUint64(entity.messageIngress))
+		}
 	}
 }
