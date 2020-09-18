@@ -3,6 +3,7 @@
 Distributed services message relay
 
 ![Health Check](https://github.com/jancajthaml-openbank/lake/workflows/Health%20Check/badge.svg)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjancajthaml-openbank%2Flake.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjancajthaml-openbank%2Flake?ref=badge_shield)
 
 [![godoc for jancajthaml-openbank/lake](https://godoc.org/github.com/nathany/looper?status.svg)](https://godoc.org/github.com/jancajthaml-openbank/lake) [![CircleCI](https://circleci.com/gh/jancajthaml-openbank/lake/tree/master.svg?style=shield)](https://circleci.com/gh/jancajthaml-openbank/lake/tree/master)
 
