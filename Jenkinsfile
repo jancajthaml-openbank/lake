@@ -36,8 +36,7 @@ pipeline {
 
     agent {
         docker {
-            image 'debian:9'
-            label 'docker'
+            image 'debian:10'
         }
     }
 
