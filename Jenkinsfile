@@ -25,7 +25,7 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         disableResume()
-        timeout(time: 4, unit: 'HOURS')
+        timeout(time: 5, unit: 'MINUTES')
         timestamps()
     }
 
@@ -89,10 +89,6 @@ pipeline {
             }
             steps {
                 dir(env.PROJECT_PATH) {
-                    sh "pwd"
-
-                    sh "ls -la"
-
                     sh """
                         ${HOME}/dev/lifecycle/sync \
                         --source ${WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
@@ -127,7 +123,7 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    args "--tty --entrypoint='' -v ${env.WORKSPACE}:${env.WORKSPACE} -v ${env.WORKSPACE_TMP}:${env.WORKSPACE_TMP}"
+                    args "--tty --entrypoint=''"
                     reuseNode true
                 }
             }
@@ -146,7 +142,7 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    args '--tty'
+                    args "--tty --entrypoint=''"
                     reuseNode true
                 }
             }
