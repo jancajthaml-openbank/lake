@@ -1,36 +1,3 @@
-Skip to content
-Search or jump to…
-
-Pull requests
-Issues
-Marketplace
-Explore
-
-@jancajthaml
-jancajthaml-openbank
-/
-lake
-1
-2
-1
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-Settings
-lake/Jenkinsfile
-@jancajthaml
-jancajthaml improved performance and performance tests (#140)
-Latest commit 40ad41d on 3 Aug 2019
- History
- 1 contributor
-287 lines (265 sloc)  9.43 KB
-
-
 def DOCKER_IMAGE_AMD64
 def BBTEST_IMAGE
 
