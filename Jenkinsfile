@@ -1,12 +1,5 @@
 def DOCKER_IMAGE_AMD64
 
-def implicitVersion() {
-    String tag = sh(
-        script: 'git fetch --tags --force 2> /dev/null; tags=\$(git tag --sort=-v:refname | head -1) && ([ -z \${tags} ] && echo v0.0.0 || echo \${tags})',
-        returnStdout: true
-    ).trim() - 'v'
-    return tag
-}
 
 def dockerOptions() {
     String options = "--pull "
@@ -21,6 +14,19 @@ def dockerOptions() {
     return options
 }
 
+def getVersion() {
+    String tag = sh(
+        script: 'git fetch --tags --force 2> /dev/null; tags=\$(git tag --sort=-v:refname | head -1) && ([ -z \${tags} ] && echo v0.0.0 || echo \${tags})',
+        returnStdout: true
+    ).trim() - 'v'
+    String[] parts = sh(
+        script: "TZ=UTC git log --pretty='format:%cd,%h' --abbrev=7 --date=format-local:'%Y%m%d,%H%M' | head -1",
+        returnStdout: true
+    ).trim().split(',')
+    String version = "${tag}.${parts[0]}.${Integer.parseInt(parts[1], 10)}.${Long.parseLong(parts[2], 16)}"
+    return version
+}
+
 pipeline {
 
     agent {
@@ -33,7 +39,7 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         disableResume()
-        timeout(time: 5, unit: 'MINUTES')
+        timeout(time: 10, unit: 'MINUTES')
         timestamps()
     }
 
@@ -54,7 +60,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    env.VERSION = implicitVersion()
+                    env.VERSION = getVersion()
 
                     env.LICENSE = "Apache-2.0"                           // fixme read from sources
                     env.PROJECT_NAME = "openbank lake"                   // fixme read from sources
