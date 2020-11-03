@@ -54,7 +54,7 @@ pipeline {
                     ).trim() - 'v'
 
                     env.VERSION_META = sh(
-                        script: 'echo ${env.BRANCH_NAME} | sed \'s:.*/::\'',
+                        script: "echo ${env.BRANCH_NAME} | sed 's:.*/::'",
                         returnStdout: true
                     ).trim()
 
