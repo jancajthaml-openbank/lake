@@ -17,6 +17,7 @@ pipeline {
 
     agent {
         label 'docker'
+        args "--entrypoint='' -v ${env.WORKSPACE}:${env.WORKSPACE} -v ${env.WORKSPACE_TMP}:${env.WORKSPACE_TMP}"
     }
 
     options {
@@ -82,35 +83,41 @@ pipeline {
         }
 
         stage('Fetch Dependencies') {
+            agent {
+                docker {
+                    image 'jancajthaml/go:latest'
+                    args '--tty'
+                    reuseNode true
+                }
+            }
             steps {
-                script {
-                    docker.image('jancajthaml/go:latest').inside("""--entrypoint='' -v ${env.WORKSPACE}:${env.WORKSPACE} -v ${env.WORKSPACE_TMP}:${env.WORKSPACE_TMP}""") {
-                        dir(env.PROJECT_PATH) {
-                            sh """
-                                ${HOME}/dev/lifecycle/sync \
-                                --pkg lake
-                            """
-                        }
-                    }
+                dir(env.PROJECT_PATH) {
+                    sh """
+                        ${HOME}/dev/lifecycle/sync \
+                        --pkg lake
+                    """
                 }
             }
         }
 
         stage('Quality Gate') {
+            agent {
+                docker {
+                    image 'jancajthaml/go:latest'
+                    args '--tty'
+                    reuseNode true
+                }
+            }
             steps {
-                script {
-                    docker.image('jancajthaml/go:latest').inside("""--entrypoint='' -v ${env.WORKSPACE}:${env.WORKSPACE} -v ${env.WORKSPACE_TMP}:${env.WORKSPACE_TMP}""") {
-                        dir(env.PROJECT_PATH) {
-                            sh """
-                                ${HOME}/dev/lifecycle/lint \
-                                --pkg lake
-                            """
-                            sh """
-                                ${HOME}/dev/lifecycle/sec \
-                                --pkg lake
-                            """
-                        }
-                    }
+                dir(env.PROJECT_PATH) {
+                    sh """
+                        ${HOME}/dev/lifecycle/lint \
+                        --pkg lake
+                    """
+                    sh """
+                        ${HOME}/dev/lifecycle/sec \
+                        --pkg lake
+                    """
                 }
             }
         }
