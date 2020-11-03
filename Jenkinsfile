@@ -15,14 +15,13 @@ def dockerOptions() {
 }
 
 def getVersion() {
-    String tag = sh(
+    String[] versions = (sh(
         script: 'git fetch --tags --force 2> /dev/null; tags=\$(git tag --sort=-v:refname | head -1) && ([ -z \${tags} ] && echo v0.0.0 || echo \${tags})',
         returnStdout: true
-    ).trim() - 'v'
-    String[] versions = version.split('\\.')
+    ).trim() - 'v').split('\\.')
     String major = versions[0]
-    String minor = versions[0] + '.' + versions[1]
-    String patch = Integer.parseInt(version.trim())
+    String minor = versions[1]
+    String patch = Integer.parseInt(versions[2], 10)
     String[] log = sh(
         script: "TZ=UTC git log --pretty='format:%cd,%h' --abbrev=4 --date=format-local:'%Y%m%d,%H%M' | head -1",
         returnStdout: true
