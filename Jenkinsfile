@@ -63,13 +63,6 @@ pipeline {
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
 
-                    sh """
-                        mkdir -p \
-                            ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank && \
-                        mv \
-                            ${env.WORKSPACE}/services/lake \
-                            ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
-                    """
 
                     echo "VERSION: ${VERSION}"
                 }
@@ -88,7 +81,7 @@ pipeline {
                 dir(env.PROJECT_PATH) {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/sync \
-                        --source ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
+                        --source ${env.WORKSPACE}/services/lake
                     """
                 }
             }
@@ -106,11 +99,11 @@ pipeline {
                 dir(env.PROJECT_PATH) {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/lint \
-                        --source ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
+                        --source ${env.WORKSPACE}/services/lake
                     """
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/sec \
-                        --source ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
+                        --source ${env.WORKSPACE}/services/lake
                     """
                 }
             }
@@ -128,7 +121,7 @@ pipeline {
                 dir(env.PROJECT_PATH) {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/test \
-                        --source ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake \
+                        --source ${env.WORKSPACE}/services/lake \
                         --output ${env.WORKSPACE}/reports
                     """
                 }
@@ -148,7 +141,7 @@ pipeline {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/package \
                         --arch linux/amd64 \
-                        --source ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake \
+                        --source ${env.WORKSPACE}/services/lake \
                         --output ${env.WORKSPACE}/packaging/bin
                     """
                 }
