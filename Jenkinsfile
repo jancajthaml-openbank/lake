@@ -78,76 +78,101 @@ pipeline {
         }
 
         stage('Fetch Dependencies') {
+            agent {
+                docker {
+                    image 'jancajthaml/go:latest'
+                    args "--entrypoint=''"
+                    reuseNode true
+                }
+            }
             steps {
                 script {
-                    docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
-                        sh """
-                            ${env.WORKSPACE}/dev/lifecycle/sync \
-                            --source ${env.WORKSPACE}/services/lake
-                        """
-                    }
+                    sh """
+                        ${env.WORKSPACE}/dev/lifecycle/sync \
+                        --source ${env.WORKSPACE}/services/lake
+                    """
                 }
             }
         }
 
         stage('Quality Gate') {
+            agent {
+                docker {
+                    image 'jancajthaml/go:latest'
+                    args "--entrypoint=''"
+                    reuseNode true
+                }
+            }
             steps {
                 script {
-                    docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
-                        sh """
-                            ${env.WORKSPACE}/dev/lifecycle/lint \
-                            --source ${env.WORKSPACE}/services/lake
-                        """
-                        sh """
-                            ${env.WORKSPACE}/dev/lifecycle/sec \
-                            --source ${env.WORKSPACE}/services/lake
-                        """
-                    }
+                    sh """
+                        ${env.WORKSPACE}/dev/lifecycle/lint \
+                        --source ${env.WORKSPACE}/services/lake
+                    """
+                    sh """
+                        ${env.WORKSPACE}/dev/lifecycle/sec \
+                        --source ${env.WORKSPACE}/services/lake
+                    """
                 }
             }
         }
 
         stage('Unit Test') {
+            agent {
+                docker {
+                    image 'jancajthaml/go:latest'
+                    args "--entrypoint=''"
+                    reuseNode true
+                }
+            }
             steps {
                 script {
-                    docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
-                        sh """
-                            ${env.WORKSPACE}/dev/lifecycle/test \
-                            --source ${env.WORKSPACE}/services/lake \
-                            --output ${env.WORKSPACE}/reports/unit-tests
-                        """
-                    }
+                    sh """
+                        ${env.WORKSPACE}/dev/lifecycle/test \
+                        --source ${env.WORKSPACE}/services/lake \
+                        --output ${env.WORKSPACE}/reports/unit-tests
+                    """
                 }
             }
         }
 
         stage('Compile') {
+            agent {
+                docker {
+                    image 'jancajthaml/go:latest'
+                    args "--entrypoint=''"
+                    reuseNode true
+                }
+            }
             steps {
                 script {
-                    docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
-                        sh """
-                            ${env.WORKSPACE}/dev/lifecycle/package \
-                            --arch linux/amd64 \
-                            --source ${env.WORKSPACE}/services/lake \
-                            --output ${env.WORKSPACE}/packaging/bin
-                        """
-                    }
+                    sh """
+                        ${env.WORKSPACE}/dev/lifecycle/package \
+                        --arch linux/amd64 \
+                        --source ${env.WORKSPACE}/services/lake \
+                        --output ${env.WORKSPACE}/packaging/bin
+                    """
                 }
             }
         }
 
         stage('Package Debian') {
+            agent {
+                docker {
+                    image 'jancajthaml/go:latest'
+                    args "--entrypoint=''"
+                    reuseNode true
+                }
+            }
             steps {
                 script {
-                    docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
-                        sh """
-                            ${env.WORKSPACE}/dev/lifecycle/debian \
-                            --version ${env.VERSION} \
-                            --arch amd64 \
-                            --pkg lake \
-                            --source ${env.WORKSPACE}/packaging
-                        """
-                    }
+                    sh """
+                        ${env.WORKSPACE}/dev/lifecycle/debian \
+                        --version ${env.VERSION} \
+                        --arch amd64 \
+                        --pkg lake \
+                        --source ${env.WORKSPACE}/packaging
+                    """
                 }
             }
         }
