@@ -41,8 +41,6 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    echo sh(script: 'env|sort', returnStdout: true)
-
                     env.RFC3339_DATETIME = sh(
                         script: 'date --rfc-3339=ns',
                         returnStdout: true
@@ -97,7 +95,7 @@ pipeline {
 
                     sh """
                         ${HOME}/dev/lifecycle/sync \
-                        --pkg lake
+                        --source ${WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
                     """
                 }
             }
@@ -115,11 +113,11 @@ pipeline {
                 dir(env.PROJECT_PATH) {
                     sh """
                         ${HOME}/dev/lifecycle/lint \
-                        --pkg lake
+                        --source ${WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
                     """
                     sh """
                         ${HOME}/dev/lifecycle/sec \
-                        --pkg lake
+                        --source ${WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
                     """
                 }
             }
@@ -137,7 +135,7 @@ pipeline {
                 dir(env.PROJECT_PATH) {
                     sh """
                         ${HOME}/dev/lifecycle/test \
-                        --pkg lake \
+                        --source ${WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake \
                         --output ${HOME}/reports
                     """
                 }
@@ -156,8 +154,8 @@ pipeline {
                 dir(env.PROJECT_PATH) {
                     sh """
                         ${HOME}/dev/lifecycle/package \
-                        --pkg lake \
                         --arch linux/amd64 \
+                        --source ${WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake \
                         --output ${HOME}/packaging/bin
                     """
                 }
@@ -166,6 +164,7 @@ pipeline {
                         ${HOME}/dev/lifecycle/debian \
                         --version ${env.VERSION_MAIN}+${env.VERSION_META} \
                         --arch amd64 \
+                        --pkg lake \
                         --source ${HOME}/packaging
                     """
                 }
