@@ -1,5 +1,4 @@
 def DOCKER_IMAGE_AMD64
-def BBTEST_IMAGE
 
 def dockerOptions() {
     String options = "--pull "
@@ -14,30 +13,10 @@ def dockerOptions() {
     return options
 }
 
-def bbtestOptions() {
-    String options = ""
-    options += "-e IMAGE_VERSION=${env.GIT_COMMIT} "
-    options += "-e UNIT_VERSION=${env.VERSION_MAIN}+${env.VERSION_META} "
-    options += "-e UNIT_ARCH=amd64 "
-    options += "-e MESSAGES_PUSHED=100000000 "
-    options += "-e NO_TTY=1 "
-    options += "-v ${HOME}@tmp:/tmp "
-    options += "-v ${HOME}/reports:/tmp/reports "
-    options += "-v ${HOME}:${HOME} "
-    options += "-v /var/run/docker.sock:/var/run/docker.sock:rw "
-    options += "-v /var/lib/docker/containers:/var/lib/docker/containers:rw "
-    options += "-v /sys/fs/cgroup:/sys/fs/cgroup:ro "
-    options += "-v /run:/run:rw "
-    options += "-v /run/lock:/run/lock:rw "
-    return options
-}
-
 pipeline {
 
     agent {
-        docker {
-            image 'debian:10'
-        }
+        label 'master'
     }
 
     options {
@@ -54,8 +33,6 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    BBTEST_IMAGE = docker.image('jancajthaml/bbtest:amd64')
-
                     env.RFC3339_DATETIME = sh(
                         script: 'date --rfc-3339=ns',
                         returnStdout: true
@@ -94,6 +71,7 @@ pipeline {
         stage('Fetch Dependencies') {
             agent {
                 docker {
+                    dockerNode 'docker'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
@@ -112,6 +90,7 @@ pipeline {
         stage('Quality Gate') {
             agent {
                 docker {
+                    dockerNode 'docker'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
@@ -134,6 +113,7 @@ pipeline {
         stage('Unit Test') {
             agent {
                 docker {
+                    dockerNode 'docker'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
@@ -153,6 +133,7 @@ pipeline {
         stage('Package') {
             agent {
                 docker {
+                    dockerNode 'docker'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
@@ -186,43 +167,6 @@ pipeline {
             }
         }
 
-        stage('BlackBox Test') {
-            steps {
-                script {
-                    BBTEST_IMAGE.withRun(bbtestOptions()) { c ->
-                        sh """
-                            docker exec -t ${c.id} \
-                            python3 \
-                            ${HOME}/bbtest/main.py
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Performance Test') {
-            steps {
-                script {
-                    BBTEST_IMAGE.withRun(bbtestOptions()) { c ->
-                        sh """
-                            docker exec -t ${c.id} \
-                            python3 \
-                            ${HOME}/perf/main.py
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Publish') {
-            steps {
-                script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                        DOCKER_IMAGE_AMD64.push("amd64-${env.VERSION_MAIN}-${env.VERSION_META}", true)
-                    }
-                }
-            }
-        }
     }
 
     post {
