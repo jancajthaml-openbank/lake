@@ -71,7 +71,7 @@ pipeline {
         stage('Fetch Dependencies') {
             agent {
                 docker {
-                    dockerNode 'docker'
+                    label 'docker-agent'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
@@ -90,7 +90,7 @@ pipeline {
         stage('Quality Gate') {
             agent {
                 docker {
-                    dockerNode 'docker'
+                    label 'docker-agent'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
@@ -113,7 +113,7 @@ pipeline {
         stage('Unit Test') {
             agent {
                 docker {
-                    dockerNode 'docker'
+                    label 'docker-agent'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
@@ -133,7 +133,7 @@ pipeline {
         stage('Package') {
             agent {
                 docker {
-                    dockerNode 'docker'
+                    label 'docker-agent'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
