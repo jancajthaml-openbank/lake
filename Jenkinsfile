@@ -16,7 +16,7 @@ def dockerOptions() {
 pipeline {
 
     agent {
-        label 'master'
+        label 'docker'
     }
 
     options {
@@ -79,7 +79,6 @@ pipeline {
         stage('Fetch Dependencies') {
             agent {
                 docker {
-                    label 'docker'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
@@ -98,7 +97,6 @@ pipeline {
         stage('Quality Gate') {
             agent {
                 docker {
-                    label 'docker'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
@@ -121,7 +119,6 @@ pipeline {
         stage('Unit Test') {
             agent {
                 docker {
-                    label 'docker'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
@@ -141,7 +138,6 @@ pipeline {
         stage('Package') {
             agent {
                 docker {
-                    label 'docker'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
@@ -186,19 +182,16 @@ pipeline {
             script {
                 dir('reports') {
                     archiveArtifacts(
-                        allowMissing: true,
                         allowEmptyArchive: true,
                         artifacts: 'perf-tests/**/*'
                     )
                     archiveArtifacts(
-                        allowMissing: true,
                         allowEmptyArchive: true,
                         artifacts: 'blackbox-tests/**/*'
                     )
                 }
                 dir('packaging/bin') {
                     archiveArtifacts(
-                        allowMissing: true,
                         allowEmptyArchive: true,
                         artifacts: '*'
                     )
