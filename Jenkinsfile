@@ -52,7 +52,7 @@ pipeline {
                     ).trim() - 'v'
 
                     env.VERSION_META = sh(
-                        script: 'git rev-parse --abbrev-ref HEAD 2> /dev/null | sed \'s:.*/::\'',
+                        script: 'git branch --show-current 2> /dev/null | sed \'s:.*/::\'',
                         returnStdout: true
                     ).trim()
 
