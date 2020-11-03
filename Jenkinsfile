@@ -63,9 +63,15 @@ pipeline {
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
 
-
                     echo "VERSION: ${VERSION}"
                 }
+            }
+        }
+
+        stage('Ensure images up to date') {
+            script {
+                sh "docker pull jancajthaml/go:latest"
+                sh "docker pull jancajthaml/debian-packager:latest"
             }
         }
 
