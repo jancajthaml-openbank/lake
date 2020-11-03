@@ -91,6 +91,10 @@ pipeline {
             }
             steps {
                 dir(env.PROJECT_PATH) {
+                    sh "pwd"
+
+                    sh "ls -la"
+
                     sh """
                         ${HOME}/dev/lifecycle/sync \
                         --pkg lake
