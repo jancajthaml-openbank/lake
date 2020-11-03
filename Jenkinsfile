@@ -186,16 +186,19 @@ pipeline {
             script {
                 dir('reports') {
                     archiveArtifacts(
+                        allowMissing: true,
                         allowEmptyArchive: true,
                         artifacts: 'perf-tests/**/*'
                     )
                     archiveArtifacts(
+                        allowMissing: true,
                         allowEmptyArchive: true,
                         artifacts: 'blackbox-tests/**/*'
                     )
                 }
                 dir('packaging/bin') {
                     archiveArtifacts(
+                        allowMissing: true,
                         allowEmptyArchive: true,
                         artifacts: '*'
                     )
@@ -209,6 +212,7 @@ pipeline {
                     reportName: 'Lake | Unit Test Coverage'
                 ])
                 junit(
+                    allowMissing: true,
                     allowEmptyResults: true,
                     testResults: 'reports/unit-tests/lake-results.xml'
                 )
