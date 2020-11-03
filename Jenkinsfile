@@ -60,7 +60,8 @@ pipeline {
                     env.PROJECT_DESCRIPTION = "OpenBanking lake service" // fixme read from sources
                     env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
                     env.PROJECT_PATH = "${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake"
-                    env.XDG_CACHE_HOME = "${env.WORKSPACE}/go/.cache"
+                    env.GOPATH = "${env.WORKSPACE}/go"
+                    env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
 
                     sh """
                         mkdir -p \
