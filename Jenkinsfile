@@ -206,7 +206,7 @@ pipeline {
                 junit(
                     checksName: 'Unit Test'
                     allowEmptyResults: true,
-                    skipPublishingChecks: true,
+                    skipPublishingChecks: false,
                     testResults: 'reports/unit-tests/lake-results.xml'
                 )
             }
