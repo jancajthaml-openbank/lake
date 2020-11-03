@@ -101,6 +101,8 @@ pipeline {
                         ${env.WORKSPACE}/dev/lifecycle/lint \
                         --source ${env.WORKSPACE}/services/lake
                     """
+                }
+                dir(env.PROJECT_PATH) {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/sec \
                         --source ${env.WORKSPACE}/services/lake
@@ -182,7 +184,9 @@ pipeline {
     post {
         always {
             script {
-                sh "docker rmi -f lake:${env.VERSION} || :"
+                if (DOCKER_IMAGE_AMD64 != null) {
+                    sh "docker rmi -f ${DOCKER_IMAGE_AMD64.id} || :"
+                }
             }
             script {
                 dir('reports') {
