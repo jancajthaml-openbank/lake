@@ -17,7 +17,6 @@ pipeline {
 
     agent {
         label 'docker'
-        args "--entrypoint='' -v ${env.WORKSPACE}:${env.WORKSPACE} -v ${env.WORKSPACE_TMP}:${env.WORKSPACE_TMP}"
     }
 
     options {
@@ -86,7 +85,7 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    args '--tty'
+                    args "--tty --entrypoint='' -v ${env.WORKSPACE}:${env.WORKSPACE} -v ${env.WORKSPACE_TMP}:${env.WORKSPACE_TMP}"
                     reuseNode true
                 }
             }
@@ -104,7 +103,7 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    args '--tty'
+                    args "--tty --entrypoint='' -v ${env.WORKSPACE}:${env.WORKSPACE} -v ${env.WORKSPACE_TMP}:${env.WORKSPACE_TMP}"
                     reuseNode true
                 }
             }
@@ -126,7 +125,7 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    args '--tty'
+                    args "--tty --entrypoint='' -v ${env.WORKSPACE}:${env.WORKSPACE} -v ${env.WORKSPACE_TMP}:${env.WORKSPACE_TMP}"
                     reuseNode true
                 }
             }
