@@ -101,16 +101,18 @@ pipeline {
 
         stage('Quality Gate') {
             steps {
-                docker.image('jancajthaml/go:latest').inside("""--entrypoint=''""") {
-                    dir(env.PROJECT_PATH) {
-                        sh """
-                            ${HOME}/dev/lifecycle/lint \
-                            --pkg lake
-                        """
-                        sh """
-                            ${HOME}/dev/lifecycle/sec \
-                            --pkg lake
-                        """
+                script {
+                    docker.image('jancajthaml/go:latest').inside("""--entrypoint=''""") {
+                        dir(env.PROJECT_PATH) {
+                            sh """
+                                ${HOME}/dev/lifecycle/lint \
+                                --pkg lake
+                            """
+                            sh """
+                                ${HOME}/dev/lifecycle/sec \
+                                --pkg lake
+                            """
+                        }
                     }
                 }
             }
