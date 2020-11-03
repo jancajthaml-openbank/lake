@@ -92,8 +92,8 @@ pipeline {
             steps {
                 dir(env.PROJECT_PATH) {
                     sh """
-                        echo X;
-                        exit 1;
+                        ${HOME}/dev/lifecycle/sync \
+                        --pkg lake
                     """
                 }
             }
