@@ -28,7 +28,7 @@ pipeline {
     }
 
     options {
-        skipDefaultCheckout(true)
+        skipDefaultCheckout true
         ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
@@ -42,7 +42,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 deleteDir()
-                checkout(scm)
+                checkout scm
             }
         }
 
