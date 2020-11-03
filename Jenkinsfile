@@ -83,7 +83,7 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    args "--tty --entrypoint=''"
+                    args "--entrypoint=''"
                     reuseNode true
                 }
             }
@@ -101,7 +101,7 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    args "--tty --entrypoint=''"
+                    args "--entrypoint=''"
                     reuseNode true
                 }
             }
@@ -123,7 +123,7 @@ pipeline {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    args "--tty --entrypoint=''"
+                    args "--entrypoint=''"
                     reuseNode true
                 }
             }
@@ -138,11 +138,11 @@ pipeline {
             }
         }
 
-        stage('Package') {
+        stage('Compile') {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
-                    args "--tty --entrypoint=''"
+                    args "--entrypoint=''"
                     reuseNode true
                 }
             }
@@ -155,6 +155,18 @@ pipeline {
                         --output ${HOME}/packaging/bin
                     """
                 }
+            }
+        }
+
+        stage('Package Debian') {
+            agent {
+                docker {
+                    image 'jancajthaml/debian-packager:latest'
+                    args "--entrypoint=''"
+                    reuseNode true
+                }
+            }
+            steps {
                 dir(env.PROJECT_PATH) {
                     sh """
                         ${HOME}/dev/lifecycle/debian \
