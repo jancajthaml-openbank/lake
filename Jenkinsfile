@@ -71,7 +71,7 @@ pipeline {
         stage('Fetch Dependencies') {
             agent {
                 docker {
-                    label 'docker-agent'
+                    label 'docker'
                     image 'jancajthaml/go:latest'
                     args '--tty'
                     reuseNode true
