@@ -21,7 +21,7 @@ def getVersion() {
     ).trim() - 'v').split('\\.')
     String major = versions[0]
     String minor = versions[1]
-    String patch = Integer.parseInt(versions[2], 10)
+    Integer patch = Integer.parseInt(versions[2], 10)
     String[] log = sh(
         script: "TZ=UTC git log --pretty='format:%cd,%h' --abbrev=4 --date=format-local:'%Y%m%d,%H%M' | head -1",
         returnStdout: true
