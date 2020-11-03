@@ -1,5 +1,12 @@
 def DOCKER_IMAGE_AMD64
 
+def implicitVersion() {
+    return sh(
+        script: 'git fetch --tags --force 2> /dev/null; tags=\$(git tag --sort=-v:refname | head -1) && ([ -z \${tags} ] && echo v0.0.0 || echo \${tags})',
+        returnStdout: true
+    ).trim() - 'v'
+}
+
 def dockerOptions() {
     String options = "--pull "
     options += "--label 'org.opencontainers.image.source=${env.GIT_URL}' "
@@ -46,35 +53,23 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    env.VERSION_MAIN = sh(
-                        script: 'git fetch --tags --force 2> /dev/null; tags=\$(git tag --sort=-v:refname | head -1) && ([ -z \${tags} ] && echo v0.0.0 || echo \${tags})',
-                        returnStdout: true
-                    ).trim() - 'v'
-
-                    env.VERSION_META = sh(
-                        script: "echo ${env.BRANCH_NAME} | sed 's:.*/::'",
-                        returnStdout: true
-                    ).trim()
+                    env.VERSION = implicitVersion()
 
                     env.LICENSE = "Apache-2.0"                           // fixme read from sources
                     env.PROJECT_NAME = "openbank lake"                   // fixme read from sources
                     env.PROJECT_DESCRIPTION = "OpenBanking lake service" // fixme read from sources
                     env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
-                    env.HOME = "${WORKSPACE}"
-                    env.GOPATH = "${WORKSPACE}/go"
-                    env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
                     env.PROJECT_PATH = "${env.GOPATH}/src/github.com/jancajthaml-openbank/lake"
 
                     sh """
                         mkdir -p \
-                            ${env.GOPATH}/src/github.com/jancajthaml-openbank && \
+                            ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank && \
                         mv \
-                            ${WORKSPACE}/services/lake \
-                            ${env.GOPATH}/src/github.com/jancajthaml-openbank/lake
+                            ${env.WORKSPACE}/services/lake \
+                            ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
                     """
 
-                    echo "VERSION_MAIN: ${VERSION_MAIN}"
-                    echo "VERSION_META: ${VERSION_META}"
+                    echo "VERSION: ${VERSION}"
                 }
             }
         }
@@ -90,8 +85,8 @@ pipeline {
             steps {
                 dir(env.PROJECT_PATH) {
                     sh """
-                        ${HOME}/dev/lifecycle/sync \
-                        --source ${WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
+                        ${env.WORKSPACE}/dev/lifecycle/sync \
+                        --source ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
                     """
                 }
             }
@@ -108,12 +103,12 @@ pipeline {
             steps {
                 dir(env.PROJECT_PATH) {
                     sh """
-                        ${HOME}/dev/lifecycle/lint \
-                        --source ${WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
+                        ${env.WORKSPACE}/dev/lifecycle/lint \
+                        --source ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
                     """
                     sh """
-                        ${HOME}/dev/lifecycle/sec \
-                        --source ${WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
+                        ${env.WORKSPACE}/dev/lifecycle/sec \
+                        --source ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake
                     """
                 }
             }
@@ -130,9 +125,9 @@ pipeline {
             steps {
                 dir(env.PROJECT_PATH) {
                     sh """
-                        ${HOME}/dev/lifecycle/test \
-                        --source ${WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake \
-                        --output ${HOME}/reports
+                        ${env.WORKSPACE}/dev/lifecycle/test \
+                        --source ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake \
+                        --output ${env.WORKSPACE}/reports
                     """
                 }
             }
@@ -149,10 +144,10 @@ pipeline {
             steps {
                 dir(env.PROJECT_PATH) {
                     sh """
-                        ${HOME}/dev/lifecycle/package \
+                        ${env.WORKSPACE}/dev/lifecycle/package \
                         --arch linux/amd64 \
-                        --source ${WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake \
-                        --output ${HOME}/packaging/bin
+                        --source ${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake \
+                        --output ${env.WORKSPACE}/packaging/bin
                     """
                 }
             }
@@ -169,11 +164,11 @@ pipeline {
             steps {
                 dir(env.PROJECT_PATH) {
                     sh """
-                        ${HOME}/dev/lifecycle/debian \
-                        --version ${env.VERSION_MAIN}+${env.VERSION_META} \
+                        ${env.WORKSPACE}/dev/lifecycle/debian \
+                        --version ${env.VERSION} \
                         --arch amd64 \
                         --pkg lake \
-                        --source ${HOME}/packaging
+                        --source ${env.WORKSPACE}/packaging
                     """
                 }
             }
@@ -182,7 +177,7 @@ pipeline {
         stage('Package Docker') {
             steps {
                 script {
-                    DOCKER_IMAGE_AMD64 = docker.build("openbank/lake:${env.GIT_COMMIT}", dockerOptions())
+                    DOCKER_IMAGE_AMD64 = docker.build("openbank/lake:${env.VERSION}", dockerOptions())
                 }
             }
         }
@@ -192,8 +187,7 @@ pipeline {
     post {
         always {
             script {
-                sh "docker rmi -f registry.hub.docker.com/openbank/lake:amd64-${env.VERSION_MAIN}-${env.VERSION_META} || :"
-                sh "docker rmi -f lake:amd64-${env.GIT_COMMIT} || :"
+                sh "docker rmi -f registry.hub.docker.com/openbank/lake:${env.VERSION} || :"
             }
             script {
                 dir('reports') {

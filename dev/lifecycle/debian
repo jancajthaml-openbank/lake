@@ -25,6 +25,8 @@ done
 if [ -z "${VERSION}" ] ; then
   (>&2 echo "version not provided")
   exit 1
+else
+  VERSION=$(echo "${VERSION}" | sed 's/-/+/g')
 fi
 
 if [ -z "${SOURCE}" ] ; then
@@ -82,7 +84,7 @@ lifecycle::debian::generate_changelog() {
       echo "" >> ${target}
     fi
   done
-	
+
   if [ ! -s ${target} ] ; then
     DATE=$(git log -1 --format=%cD HEAD)
     echo "${TARGET_PACKAGE} (${VERSION#v}) unstable; urgency=medium" >> ${target}
