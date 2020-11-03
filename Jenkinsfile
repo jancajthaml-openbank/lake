@@ -1,10 +1,11 @@
 def DOCKER_IMAGE_AMD64
 
 def implicitVersion() {
-    return sh(
+    String tag = sh(
         script: 'git fetch --tags --force 2> /dev/null; tags=\$(git tag --sort=-v:refname | head -1) && ([ -z \${tags} ] && echo v0.0.0 || echo \${tags})',
         returnStdout: true
     ).trim() - 'v'
+    return tag
 }
 
 def dockerOptions() {
@@ -27,7 +28,7 @@ pipeline {
     }
 
     options {
-        skipDefaultCheckout true
+        skipDefaultCheckout(true)
         ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
@@ -41,7 +42,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 deleteDir()
-                checkout scm
+                checkout(scm)
             }
         }
 
@@ -64,6 +65,15 @@ pipeline {
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
 
                     echo "VERSION: ${VERSION}"
+                }
+            }
+        }
+
+        stage('Ensure images up to date') {
+            steps {
+                script {
+                    sh "docker pull jancajthaml/go:latest"
+                    sh "docker pull jancajthaml/debian-packager:latest"
                 }
             }
         }
@@ -183,9 +193,9 @@ pipeline {
     post {
         always {
             script {
-                if (DOCKER_IMAGE_AMD64 != null) {
-                    sh "docker rmi -f ${DOCKER_IMAGE_AMD64.id} || :"
-                }
+                //if (DOCKER_IMAGE_AMD64 != null) {
+                sh "docker rmi -f ${DOCKER_IMAGE_AMD64.id} || :"
+                //}
             }
             script {
                 dir('packaging/bin') {
