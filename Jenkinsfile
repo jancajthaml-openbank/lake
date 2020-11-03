@@ -182,7 +182,7 @@ pipeline {
     post {
         always {
             script {
-                sh "docker rmi -f registry.hub.docker.com/openbank/lake:${env.VERSION} || :"
+                sh "docker rmi -f lake:${env.VERSION} || :"
             }
             script {
                 dir('reports') {
