@@ -84,7 +84,7 @@ pipeline {
         stage('Fetch Dependencies') {
             steps {
                 script {
-                    docker.image('jancajthaml/go:latest').inside("""--entrypoint=''""") {
+                    docker.image('jancajthaml/go:latest').inside("""--entrypoint='' -v ${env.WORKSPACE}:${env.WORKSPACE} -v ${env.WORKSPACE_TMP}:${env.WORKSPACE_TMP}""") {
                         dir(env.PROJECT_PATH) {
                             sh """
                                 ${HOME}/dev/lifecycle/sync \
@@ -99,7 +99,7 @@ pipeline {
         stage('Quality Gate') {
             steps {
                 script {
-                    docker.image('jancajthaml/go:latest').inside("""--entrypoint=''""") {
+                    docker.image('jancajthaml/go:latest').inside("""--entrypoint='' -v ${env.WORKSPACE}:${env.WORKSPACE} -v ${env.WORKSPACE_TMP}:${env.WORKSPACE_TMP}""") {
                         dir(env.PROJECT_PATH) {
                             sh """
                                 ${HOME}/dev/lifecycle/lint \
