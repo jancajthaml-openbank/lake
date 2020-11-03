@@ -79,65 +79,75 @@ pipeline {
 
         stage('Fetch Dependencies') {
             steps {
-                docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
-                    sh """
-                        ${env.WORKSPACE}/dev/lifecycle/sync \
-                        --source ${env.WORKSPACE}/services/lake
-                    """
+                script {
+                    docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
+                        sh """
+                            ${env.WORKSPACE}/dev/lifecycle/sync \
+                            --source ${env.WORKSPACE}/services/lake
+                        """
+                    }
                 }
             }
         }
 
         stage('Quality Gate') {
             steps {
-                docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
-                    sh """
-                        ${env.WORKSPACE}/dev/lifecycle/lint \
-                        --source ${env.WORKSPACE}/services/lake
-                    """
-                    sh """
-                        ${env.WORKSPACE}/dev/lifecycle/sec \
-                        --source ${env.WORKSPACE}/services/lake
-                    """
+                script {
+                    docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
+                        sh """
+                            ${env.WORKSPACE}/dev/lifecycle/lint \
+                            --source ${env.WORKSPACE}/services/lake
+                        """
+                        sh """
+                            ${env.WORKSPACE}/dev/lifecycle/sec \
+                            --source ${env.WORKSPACE}/services/lake
+                        """
+                    }
                 }
             }
         }
 
         stage('Unit Test') {
             steps {
-                docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
-                    sh """
-                        ${env.WORKSPACE}/dev/lifecycle/test \
-                        --source ${env.WORKSPACE}/services/lake \
-                        --output ${env.WORKSPACE}/reports/unit-tests
-                    """
+                script {
+                    docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
+                        sh """
+                            ${env.WORKSPACE}/dev/lifecycle/test \
+                            --source ${env.WORKSPACE}/services/lake \
+                            --output ${env.WORKSPACE}/reports/unit-tests
+                        """
+                    }
                 }
             }
         }
 
         stage('Compile') {
             steps {
-                docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
-                    sh """
-                        ${env.WORKSPACE}/dev/lifecycle/package \
-                        --arch linux/amd64 \
-                        --source ${env.WORKSPACE}/services/lake \
-                        --output ${env.WORKSPACE}/packaging/bin
-                    """
+                script {
+                    docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
+                        sh """
+                            ${env.WORKSPACE}/dev/lifecycle/package \
+                            --arch linux/amd64 \
+                            --source ${env.WORKSPACE}/services/lake \
+                            --output ${env.WORKSPACE}/packaging/bin
+                        """
+                    }
                 }
             }
         }
 
         stage('Package Debian') {
             steps {
-                docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
-                    sh """
-                        ${env.WORKSPACE}/dev/lifecycle/debian \
-                        --version ${env.VERSION} \
-                        --arch amd64 \
-                        --pkg lake \
-                        --source ${env.WORKSPACE}/packaging
-                    """
+                script {
+                    docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
+                        sh """
+                            ${env.WORKSPACE}/dev/lifecycle/debian \
+                            --version ${env.VERSION} \
+                            --arch amd64 \
+                            --pkg lake \
+                            --source ${env.WORKSPACE}/packaging
+                        """
+                    }
                 }
             }
         }
