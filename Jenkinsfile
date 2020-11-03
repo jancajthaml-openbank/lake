@@ -100,24 +100,21 @@ pipeline {
         }
 
         stage('Quality Gate') {
-            agent {
-                docker {
-                    image 'jancajthaml/go:latest'
-                    args '--tty'
-                    reuseNode true
-                }
-            }
             steps {
-                dir(env.PROJECT_PATH) {
-                    sh """
-                        ${HOME}/dev/lifecycle/lint \
-                        --pkg lake
-                    """
-                    sh """
-                        ${HOME}/dev/lifecycle/sec \
-                        --pkg lake
-                    """
-                }
+                docker
+                    .image('jancajthaml/go:latest')
+                    .inside("""--entrypoint=''""") {
+                        dir(env.PROJECT_PATH) {
+                            sh """
+                                ${HOME}/dev/lifecycle/lint \
+                                --pkg lake
+                            """
+                            sh """
+                                ${HOME}/dev/lifecycle/sec \
+                                --pkg lake
+                            """
+                        }
+                    }
             }
         }
 
