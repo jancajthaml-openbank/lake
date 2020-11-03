@@ -35,7 +35,10 @@ def bbtestOptions() {
 pipeline {
 
     agent {
-        label 'master'
+        docker {
+            image 'debian:9'
+            label 'docker'
+        }
     }
 
     options {
