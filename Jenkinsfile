@@ -62,26 +62,33 @@ pipeline {
                         script: 'date --rfc-3339=ns',
                         returnStdout: true
                     ).trim()
-
                     env.VERSION = getVersion()
-
                     env.LICENSE = "Apache-2.0"                           // fixme read from sources
                     env.PROJECT_NAME = "openbank lake"                   // fixme read from sources
                     env.PROJECT_DESCRIPTION = "OpenBanking lake service" // fixme read from sources
                     env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
-
                     echo "VERSION: ${VERSION}"
                 }
             }
         }
 
         stage('Ensure images up to date') {
-            steps {
-                script {
-                    sh "docker pull jancajthaml/go:latest"
-                    sh "docker pull jancajthaml/debian-packager:latest"
+            parallel {
+                stage('jancajthaml/go:latest') {
+                    steps {
+                        script {
+                            sh "docker pull jancajthaml/go:latest"
+                        }
+                    }
+                }
+                stage('jancajthaml/debian-packager:latest') {
+                    steps {
+                        script {
+                            sh "docker pull jancajthaml/debian-packager:latest"
+                        }
+                    }
                 }
             }
         }
@@ -104,7 +111,7 @@ pipeline {
             }
         }
 
-        stage('Quality Gate') {
+        stage('Static Analysis') {
             agent {
                 docker {
                     image 'jancajthaml/go:latest'
