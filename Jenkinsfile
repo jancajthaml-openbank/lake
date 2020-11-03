@@ -82,19 +82,16 @@ pipeline {
         }
 
         stage('Fetch Dependencies') {
-            agent {
-                docker {
-                    image 'jancajthaml/go:latest'
-                    args '--tty'
-                    reuseNode true
-                }
-            }
             steps {
-                dir(env.PROJECT_PATH) {
-                    sh """
-                        ${HOME}/dev/lifecycle/sync \
-                        --pkg lake
-                    """
+                script {
+                    docker.image('jancajthaml/go:latest').inside("""--entrypoint=''""") {
+                        dir(env.PROJECT_PATH) {
+                            sh """
+                                ${HOME}/dev/lifecycle/sync \
+                                --pkg lake
+                            """
+                        }
+                    }
                 }
             }
         }
