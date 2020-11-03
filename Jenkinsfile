@@ -20,10 +20,10 @@ def getVersion() {
         returnStdout: true
     ).trim() - 'v'
     String[] parts = sh(
-        script: "TZ=UTC git log --pretty='format:%cd,%h' --abbrev=7 --date=format-local:'%Y%m%d,%H%M' | head -1",
+        script: "TZ=UTC git log --pretty='format:%cd,%h' --abbrev=4 --date=format-local:'%Y%m%d,%H%M' | head -1",
         returnStdout: true
     ).trim().split(',')
-    String version = "${tag}-${parts[0]}${Integer.parseInt(parts[1], 10)}${Long.parseLong(parts[2], 16)}"
+    String version = "${tag}b${parts[0]}${Integer.parseInt(parts[1], 10)}${Long.parseLong(parts[2], 16)}"
     return version
 }
 
@@ -165,7 +165,7 @@ pipeline {
         stage('Package Debian') {
             agent {
                 docker {
-                    image 'jancajthaml/go:latest'
+                    image 'jancajthaml/debian-packager:latest'
                     args "--entrypoint=''"
                     reuseNode true
                 }
