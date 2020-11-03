@@ -69,9 +69,11 @@ pipeline {
         }
 
         stage('Ensure images up to date') {
-            script {
-                sh "docker pull jancajthaml/go:latest"
-                sh "docker pull jancajthaml/debian-packager:latest"
+            steps {
+                script {
+                    sh "docker pull jancajthaml/go:latest"
+                    sh "docker pull jancajthaml/debian-packager:latest"
+                }
             }
         }
 
