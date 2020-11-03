@@ -204,6 +204,7 @@ pipeline {
                     reportName: 'Lake | Unit Test Coverage'
                 ])
                 junit(
+                    checksName: 'Unit Test'
                     allowEmptyResults: true,
                     skipPublishingChecks: true,
                     testResults: 'reports/unit-tests/lake-results.xml'
