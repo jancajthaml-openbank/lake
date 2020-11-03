@@ -60,7 +60,6 @@ pipeline {
                     env.PROJECT_NAME = "openbank lake"                   // fixme read from sources
                     env.PROJECT_DESCRIPTION = "OpenBanking lake service" // fixme read from sources
                     env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
-                    env.PROJECT_PATH = "${env.WORKSPACE}/go/src/github.com/jancajthaml-openbank/lake"
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
 
@@ -79,15 +78,8 @@ pipeline {
         }
 
         stage('Fetch Dependencies') {
-            agent {
-                docker {
-                    image 'jancajthaml/go:latest'
-                    args "--entrypoint=''"
-                    reuseNode true
-                }
-            }
             steps {
-                dir(env.PROJECT_PATH) {
+                docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/sync \
                         --source ${env.WORKSPACE}/services/lake
@@ -105,13 +97,11 @@ pipeline {
                 }
             }
             steps {
-                dir(env.PROJECT_PATH) {
+                docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/lint \
                         --source ${env.WORKSPACE}/services/lake
                     """
-                }
-                dir(env.PROJECT_PATH) {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/sec \
                         --source ${env.WORKSPACE}/services/lake
@@ -121,15 +111,8 @@ pipeline {
         }
 
         stage('Unit Test') {
-            agent {
-                docker {
-                    image 'jancajthaml/go:latest'
-                    args "--entrypoint=''"
-                    reuseNode true
-                }
-            }
             steps {
-                dir(env.PROJECT_PATH) {
+                docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/test \
                         --source ${env.WORKSPACE}/services/lake \
@@ -140,15 +123,8 @@ pipeline {
         }
 
         stage('Compile') {
-            agent {
-                docker {
-                    image 'jancajthaml/go:latest'
-                    args "--entrypoint=''"
-                    reuseNode true
-                }
-            }
             steps {
-                dir(env.PROJECT_PATH) {
+                docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/package \
                         --arch linux/amd64 \
@@ -160,15 +136,8 @@ pipeline {
         }
 
         stage('Package Debian') {
-            agent {
-                docker {
-                    image 'jancajthaml/debian-packager:latest'
-                    args "--entrypoint=''"
-                    reuseNode true
-                }
-            }
             steps {
-                dir(env.PROJECT_PATH) {
+                docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/debian \
                         --version ${env.VERSION} \
@@ -193,12 +162,12 @@ pipeline {
     post {
         always {
             script {
-                //if (DOCKER_IMAGE_AMD64 != null) {
-                sh "docker rmi -f ${DOCKER_IMAGE_AMD64.id} || :"
-                //}
+                if (DOCKER_IMAGE_AMD64 != null) {
+                    sh "docker rmi -f ${DOCKER_IMAGE_AMD64.id} || :"
+                }
             }
             script {
-                dir('packaging/bin') {
+                dir("${env.WORKSPACE}/packaging/bin") {
                     archiveArtifacts(
                         allowEmptyArchive: true,
                         artifacts: '*'
@@ -208,7 +177,7 @@ pipeline {
                     allowMissing: true,
                     alwaysLinkToLastBuild: false,
                     keepAll: true,
-                    reportDir: 'reports/unit-tests',
+                    reportDir: "${env.WORKSPACE}/reports/unit-tests",
                     reportFiles: 'lake-coverage.html',
                     reportName: 'Lake | Unit Test Coverage'
                 ])
@@ -216,7 +185,7 @@ pipeline {
                     checksName: 'Unit Test',
                     allowEmptyResults: true,
                     skipPublishingChecks: true,
-                    testResults: 'reports/unit-tests/lake-results.xml'
+                    testResults: "${env.WORKSPACE}/reports/unit-tests/lake-results.xml"
                 )
             }
             cleanWs()
