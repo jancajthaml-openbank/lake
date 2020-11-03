@@ -124,7 +124,7 @@ pipeline {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/test \
                         --source ${env.WORKSPACE}/services/lake \
-                        --output ${env.WORKSPACE}/reports
+                        --output ${env.WORKSPACE}/reports/unit-tests
                     """
                 }
             }
@@ -189,16 +189,6 @@ pipeline {
                 }
             }
             script {
-                dir('reports') {
-                    archiveArtifacts(
-                        allowEmptyArchive: true,
-                        artifacts: 'perf-tests/**/*'
-                    )
-                    archiveArtifacts(
-                        allowEmptyArchive: true,
-                        artifacts: 'blackbox-tests/**/*'
-                    )
-                }
                 dir('packaging/bin') {
                     archiveArtifacts(
                         allowEmptyArchive: true,
