@@ -89,13 +89,6 @@ pipeline {
         }
 
         stage('Quality Gate') {
-            agent {
-                docker {
-                    image 'jancajthaml/go:latest'
-                    args "--entrypoint=''"
-                    reuseNode true
-                }
-            }
             steps {
                 docker.image('jancajthaml/go:latest').inside("--entrypoint=''") {
                     sh """
