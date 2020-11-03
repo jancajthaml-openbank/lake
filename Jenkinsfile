@@ -228,16 +228,6 @@ pipeline {
             script {
                 sh "docker rmi -f registry.hub.docker.com/openbank/lake:amd64-${env.VERSION_MAIN}-${env.VERSION_META} || :"
                 sh "docker rmi -f lake:amd64-${env.GIT_COMMIT} || :"
-                sh """
-                    docker images \
-                        --no-trunc \
-                        --format '{{.ID}} {{.Tag}} {{.CreatedSince}}' | \
-                    grep '<none>' | \
-                    grep 'hours\\|days\\|weeks\\|months' | \
-                    awk '{ print \$1 }' | \
-                    xargs --no-run-if-empty docker rmi -f
-                    """
-                sh "docker system prune | yes"
             }
             script {
                 dir('reports') {
