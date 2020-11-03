@@ -72,6 +72,9 @@ pipeline {
                             ${WORKSPACE}/services/lake \
                             ${env.GOPATH}/src/github.com/jancajthaml-openbank/lake
                     """
+
+                    echo "VERSION_MAIN: ${VERSION_MAIN}"
+                    echo "VERSION_META: ${VERSION_META}"
                 }
             }
         }
