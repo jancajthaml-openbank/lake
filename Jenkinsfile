@@ -41,6 +41,8 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
+                    echo sh(script: 'env|sort', returnStdout: true)
+
                     env.RFC3339_DATETIME = sh(
                         script: 'date --rfc-3339=ns',
                         returnStdout: true
