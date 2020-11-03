@@ -19,11 +19,15 @@ def getVersion() {
         script: 'git fetch --tags --force 2> /dev/null; tags=\$(git tag --sort=-v:refname | head -1) && ([ -z \${tags} ] && echo v0.0.0 || echo \${tags})',
         returnStdout: true
     ).trim() - 'v'
-    String[] parts = sh(
+    String[] versions = version.split('\\.')
+    String major = versions[0]
+    String minor = versions[0] + '.' + versions[1]
+    String patch = Integer.parseInt(version.trim())
+    String[] log = sh(
         script: "TZ=UTC git log --pretty='format:%cd,%h' --abbrev=4 --date=format-local:'%Y%m%d,%H%M' | head -1",
         returnStdout: true
     ).trim().split(',')
-    String version = "${tag}b${parts[0]}${Integer.parseInt(parts[1], 10)}${Long.parseLong(parts[2], 16)}"
+    String version = "${major}.${minor}.${patch + 1}b${log[0]}${Integer.parseInt(log[1], 10)}${Long.parseLong(log[2], 16)}"
     return version
 }
 
