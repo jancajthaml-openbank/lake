@@ -28,8 +28,8 @@ pipeline {
     }
 
     options {
-        skipDefaultCheckout true
-        ansiColor('xterm')
+        skipDefaultCheckout(true)
+        //ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         disableResume()
@@ -42,7 +42,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 deleteDir()
-                checkout scm
+                checkout(scm)
             }
         }
 
