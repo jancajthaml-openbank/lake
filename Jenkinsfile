@@ -204,11 +204,6 @@ pipeline {
                     allowEmptyResults: true,
                     testResults: 'reports/unit-tests/lake-results.xml'
                 )
-                cucumber(
-                    allowEmptyResults: true,
-                    fileIncludePattern: '*',
-                    jsonReportDirectory: 'reports/blackbox-tests/cucumber'
-                )
             }
             cleanWs()
         }
