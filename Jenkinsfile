@@ -3,7 +3,7 @@ def DOCKER_IMAGE_AMD64
 
 def dockerOptions() {
     String options = "--pull "
-    options += "--label 'org.opencontainers.image.source=${env.GIT_URL}' "
+    options += "--label 'org.opencontainers.image.source=${env.CHANGE_BRANCH}' "
     options += "--label 'org.opencontainers.image.created=${env.RFC3339_DATETIME}' "
     options += "--label 'org.opencontainers.image.revision=${env.GIT_COMMIT}' "
     options += "--label 'org.opencontainers.image.licenses=${env.LICENSE}' "
@@ -63,6 +63,10 @@ pipeline {
                 script {
                     env.RFC3339_DATETIME = sh(
                         script: 'date --rfc-3339=ns',
+                        returnStdout: true
+                    ).trim()
+                    env.GIT_COMMIT = sh(
+                        script: 'git log -1 --format="%H"',
                         returnStdout: true
                     ).trim()
                     env.VERSION = getVersion()
