@@ -247,7 +247,7 @@ pipeline {
                     """.stripMargin().stripIndent().replaceAll("[\\t\\n\\r]+"," ").stripMargin().stripIndent()
                     docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
                         sh "docker ps -a"
-                        sh "docker exec -t ${c.id} python3 bbtest/main.py"
+                        sh "docker exec -t ${c.id} python3 ${env.WORKSPACE}/bbtest/main.py"
                     }
                     sh "echo outside docker 2"
                 }
