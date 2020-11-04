@@ -64,9 +64,9 @@ pipeline {
         stage('Probe') {
             steps {
                 script {
-                    sh "docker rmi -f docker-local.${env.ARTIFACTORY_DOCKER_REGISTRY}/openbank/lake:1.2.6b20201104102354106 || :"
+                    sh "docker rmi -f ${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106 || :"
                     sh "docker images"
-                    rtDocker.pull("docker-local.${env.ARTIFACTORY_DOCKER_REGISTRY}/openbank/lake:1.2.6b20201104102354106", "docker-local")
+                    rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "artifactory")
                     sh "docker images"
                 }
             }
