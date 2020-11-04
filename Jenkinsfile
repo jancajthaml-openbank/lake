@@ -62,7 +62,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     env.GIT_URL = sh(
-                        script: 'git config --get remote.origin.url',
+                        script: 'git ls-remote --get-url',
                         returnStdout: true
                     ).trim()
                     env.VERSION = getVersion()
