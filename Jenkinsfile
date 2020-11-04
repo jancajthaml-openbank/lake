@@ -224,7 +224,7 @@ pipeline {
         stage('Publish to Artifactory') {
             steps {
                 script {
-                    rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-virtual")
+                    rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-virtual", buildInfo)
                 }
             }
         }
