@@ -71,6 +71,8 @@ class UnitHelper(object):
     package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
     target = 'packaging/bin/lake_{}_{}.deb'.format(self.debian_version, self.arch)
 
+    print(target)
+
     if os.path.exists(target):
       print('binary exists')
       self.install(target)
