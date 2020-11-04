@@ -228,7 +228,7 @@ pipeline {
                         -u 0
                         --entrypoint /lib/systemd/systemd
                     """
-                    xxx
+                    xxx false
                     //sbin/init
                     reuseNode true
                 }
