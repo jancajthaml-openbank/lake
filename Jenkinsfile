@@ -202,7 +202,7 @@ pipeline {
         stage('Package Docker') {
             steps {
                 script {
-                    DOCKER_IMAGE_AMD64 = docker.build("${env.DOCKER_LOCAL_REGISTRY}/openbank/lake:${env.VERSION}", dockerOptions())
+                    DOCKER_IMAGE_AMD64 = docker.build("${env.DOCKER_PRIVATE_REGISTRY}/openbank/lake:${env.VERSION}", dockerOptions())
                 }
             }
         }
@@ -217,7 +217,7 @@ pipeline {
                     //def rtServer = Artifactory.server "artifactory"
                     //def rtDocker = Artifactory.docker server: rtServer
 
-                    rtDocker.push("${env.DOCKER_LOCAL_REGISTRY}/openbank/lake:${env.VERSION}", "docker-local") //, buildInfo)
+                    rtDocker.push("${env.DOCKER_PRIVATE_REGISTRY}/openbank/lake:${env.VERSION}", "docker-local") //, buildInfo)
 
                     //rtServer.publishBuildInfo buildInfo
 
