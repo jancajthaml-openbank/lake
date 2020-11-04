@@ -80,7 +80,7 @@ pipeline {
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
 
-                    currentBuild.displayName = "${currentBuild.number} - ${env.CHANGE_BRANCH} (${env.VERSION})"
+                    currentBuild.displayName = "#${currentBuild.number} - ${env.CHANGE_BRANCH} (${env.VERSION})"
                 }
             }
         }
