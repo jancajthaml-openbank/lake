@@ -233,6 +233,7 @@ pipeline {
             steps {
                 script {
                     sh "ls -lFa /tmp/packages"
+                    sh "rm -rf /tmp/packages/lake.deb || :"
                     sh "cp ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb /tmp/packages/lake.deb"
                     sh "python3 bbtest/main.py"
                 }
