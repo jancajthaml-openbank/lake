@@ -218,14 +218,12 @@ pipeline {
             agent {
                 docker {
                     image "jancajthaml/bbtest:${env.ARCH}"
-                    customWorkspace "/"
                     args """
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
                         -e UNIT_ARCH=${env.ARCH}
                         -e NO_TTY=1
                         -v ${env.WORKSPACE_TMP}:/tmp
-                        -v ${env.WORKSPACE}
                         -v ${env.WORKSPACE}/reports:/tmp/reports
                         -v ${env.WORKSPACE}/packaging/bin/lake_linux_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
                     """
@@ -234,6 +232,8 @@ pipeline {
             }
             steps {
                 script {
+                    sh "id"
+                    sh "ls -la /etc"
                     sh "python3 bbtest/main.py"
                 }
             }
