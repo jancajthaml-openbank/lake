@@ -224,7 +224,6 @@ pipeline {
                         -e UNIT_ARCH=${env.ARCH}
                         -e NO_TTY=1
                         -v ${env.WORKSPACE_TMP}:/tmp
-                        -v ${env.WORKSPACE_TMP}/etc/lake/conf.d:/etc/lake/conf.d
                         -v ${env.WORKSPACE}/reports:/tmp/reports
                         -v ${env.WORKSPACE}/packaging/bin/lake_linux_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
                     """
@@ -233,6 +232,7 @@ pipeline {
             }
             steps {
                 script {
+                    sh "ls -la /etc"
                     sh "python3 bbtest/main.py"
                 }
             }
