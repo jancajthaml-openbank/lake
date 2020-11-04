@@ -210,8 +210,8 @@ pipeline {
                         --pkg lake \
                         --source ${env.WORKSPACE}/packaging
                     """
-                    sh "rm -f lake_linux_amd64.deb || true"
-                    sh "ls -lFa ${env.WORKSPACE}/packaging"
+                    sh "rm -f bin/lake_linux_amd64.deb || true"
+                    sh "ls -lFa ${env.WORKSPACE}/packaging/bin"
                 }
             }
         }
@@ -235,7 +235,7 @@ pipeline {
             }
             steps {
                 script {
-                    sh "ls -la /tmp/bin"
+                    sh "ls -lFa /tmp/bin"
                     sh "cp /tmp/bin/lake_${env.VERSION}_${env.ARCH}.deb /tmp/packages/lake.deb"
                     sh "python3 bbtest/main.py"
                 }
