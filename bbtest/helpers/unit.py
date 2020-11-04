@@ -7,6 +7,7 @@ import tarfile
 import tempfile
 import errno
 import os
+import path
 import subprocess
 from helpers.shell import execute
 
