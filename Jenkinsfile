@@ -65,7 +65,7 @@ pipeline {
                 script {
                     sh "docker rmi -f ${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106 || :"
                     sh "docker images"
-                    rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "docker-virtual")
+                    rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "docker-local")
                     sh "docker images"
                 }
             }
@@ -226,7 +226,7 @@ pipeline {
         stage('Publish to Artifactory') {
             steps {
                 script {
-                    rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-virtual", buildInfo)
+                    rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-local", buildInfo)
                     rtServer.publishBuildInfo buildInfo
                 }
             }
