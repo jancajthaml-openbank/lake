@@ -20,7 +20,7 @@ class UnitHelper(object):
       "PORT_PULL": "5562",
       "PORT_PUB": "5561",
       "METRICS_REFRESHRATE": "1h",
-      "METRICS_OUTPUT": "{}/reports/blackbox-tests/metrics".format(os.getcwd()),
+      "METRICS_OUTPUT": "/tmp/reports/blackbox-tests/metrics",
       "METRICS_CONTINUOUS": "true",
     }
 
@@ -131,14 +131,14 @@ class UnitHelper(object):
   def collect_logs(self):
     (code, result, error) = execute(['journalctl', '-o', 'cat', '--no-pager'])
     if code == 0:
-      with open('reports/blackbox-tests/logs/journal.log', 'w') as fd:
+      with open('/tmp/reports/blackbox-tests/logs/journal.log', 'w') as fd:
         fd.write(result)
 
     for unit in set(self.__get_systemd_units() + self.units):
       (code, result, error) = execute(['journalctl', '-o', 'cat', '-u', unit, '--no-pager'])
       if code != 0 or not result:
         continue
-      with open('reports/blackbox-tests/logs/{}.log'.format(unit), 'w') as fd:
+      with open('/tmp/reports/blackbox-tests/logs/{}.log'.format(unit), 'w') as fd:
         fd.write(result)
 
   def teardown(self):
