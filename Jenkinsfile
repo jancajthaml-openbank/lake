@@ -234,7 +234,12 @@ pipeline {
             }
             steps {
                 script {
-                    sh "python3 bbtest/main.py"
+                    sh "echo outside docker 1"
+                    docker.image("jancajthaml/bbtest:${env.ARCH}").withRun("") { c ->
+                        sh "echo inside docker - ${c.id}"
+                    }
+                    sh "echo outside docker 2"
+                    //sh "python3 bbtest/main.py"
                 }
             }
         }
