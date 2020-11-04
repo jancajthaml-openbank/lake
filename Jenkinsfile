@@ -31,7 +31,7 @@ def getVersion() {
 }
 
 //def rtServer = Artifactory.server "artifactory"
-def rtServer = Artifactory.newServer url: "http://${ARTIFACTORY_DOCKER_REGISTRY}", credentialsId: 'jenkins-artifactory'
+def rtServer = Artifactory.newServer url: "http://${ARTIFACTORY_DOCKER_REGISTRY}/artifactory", credentialsId: 'jenkins-artifactory'
 
 def rtDocker = Artifactory.docker server: rtServer
 def buildInfo = Artifactory.newBuildInfo()
