@@ -89,23 +89,17 @@ pipeline {
             parallel {
                 stage('jancajthaml/go') {
                     steps {
-                        script {
-                            sh "docker pull jancajthaml/go:latest"
-                        }
+                        docker.pull("jancajthaml/go:latest")
                     }
                 }
                 stage('jancajthaml/debian-packager') {
                     steps {
-                        script {
-                            sh "docker pull jancajthaml/debian-packager:latest"
-                        }
+                        docker.pull("jancajthaml/debian-packager:latest")
                     }
                 }
                 stage('jancajthaml/bbtest') {
                     steps {
-                        script {
-                            sh "docker pull jancajthaml/bbtest:${env.ARCH}"
-                        }
+                        docker.pull("jancajthaml/bbtest:${env.ARCH}")
                     }
                 }
             }
@@ -230,11 +224,12 @@ pipeline {
                         -v /run:/run:rw
                         -v /run/lock:/run/lock:rw
                     """
-                    reuseNode true
+                    reuseNode false
                 }
             }
             steps {
                 script {
+                    sh "ls -la"
                     sh "python3 ${env.WORKSPACE}/bbtest/main.py"
                 }
             }
