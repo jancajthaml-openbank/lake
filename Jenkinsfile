@@ -204,7 +204,7 @@ pipeline {
         stage('Publish to Artifactory') {
             steps {
                 script {
-                    docker.withRegistry(env.ARTIFACTORY_REPOSITORY, "docker-local") {
+                    docker.withRegistry(env.DOCKER_LOCAL_REGISTRY, "jenkins-artifactory") {
                         DOCKER_IMAGE_AMD64.push()
                     }
                 }
