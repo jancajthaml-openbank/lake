@@ -47,7 +47,9 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                currentBuild.displayName = "#${currentBuild.number} - ${env.CHANGE_BRANCH} (?)"
+                script {
+                    currentBuild.displayName = "#${currentBuild.number} - ${env.CHANGE_BRANCH} (?)"
+                }
                 deleteDir()
                 checkout(scm)
             }
