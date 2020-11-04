@@ -232,7 +232,7 @@ pipeline {
                         script: 'hostname',
                         returnStdout: true
                     ).trim()
-                    docker("jancajthaml/bbtest:${env.ARCH}").withRun("""
+                    docker.image("jancajthaml/bbtest:${env.ARCH}").withRun("""
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
                         -e UNIT_ARCH=${env.ARCH}
