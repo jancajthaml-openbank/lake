@@ -87,17 +87,24 @@ pipeline {
 
         stage('Ensure images up to date') {
             parallel {
-                stage('jancajthaml/go:latest') {
+                stage('jancajthaml/go') {
                     steps {
                         script {
                             sh "docker pull jancajthaml/go:latest"
                         }
                     }
                 }
-                stage('jancajthaml/debian-packager:latest') {
+                stage('jancajthaml/debian-packager') {
                     steps {
                         script {
                             sh "docker pull jancajthaml/debian-packager:latest"
+                        }
+                    }
+                }
+                stage('jancajthaml/bbtest') {
+                    steps {
+                        script {
+                            sh "docker pull jancajthaml/bbtest:${env.ARCH}"
                         }
                     }
                 }
@@ -205,9 +212,10 @@ pipeline {
         }
 
         stage('BlackBox Test') {
-            steps {
-                script {
-                    String options = """
+            agent {
+                docker {
+                    image 'jancajthaml/debian-packager:latest'
+                    args """
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
                         -e UNIT_ARCH=${env.ARCH}
@@ -222,16 +230,12 @@ pipeline {
                         -v /run:/run:rw
                         -v /run/lock:/run/lock:rw
                     """
-
-                    echo options
-
-                    docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
-                        sh """
-                            docker exec -t ${c.id} \
-                            python3 \
-                            ${env.WORKSPACE}/bbtest/main.py
-                        """
-                    }
+                    reuseNode true
+                }
+            }
+            steps {
+                script {
+                    sh "python3 ${env.WORKSPACE}/bbtest/main.py"
                 }
             }
         }
