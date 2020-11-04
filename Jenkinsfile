@@ -230,7 +230,7 @@ pipeline {
                         -v /run:/run:rw
                         -v /run/lock:/run/lock:rw
                     """
-                    reuseNode false
+                    reuseNode true
                 }
             }
             steps {
