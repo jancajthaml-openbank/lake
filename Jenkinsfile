@@ -225,7 +225,7 @@ pipeline {
                         -e NO_TTY=1
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
-                        -v ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
+                        -v ${env.WORKSPACE}/packaging/bin:/tmp/bin:ro
                         -u root
                     """
                     reuseNode true
@@ -233,7 +233,8 @@ pipeline {
             }
             steps {
                 script {
-                    sh "ls -la /tmp/packages/lake.deb"
+                    sh "ls -la /tmp/bin/lake.deb"
+                    sh "cp /tmp/bin/lake_${env.VERSION}_${env.ARCH}.deb /tmp/packages/lake.deb"
                     sh "python3 bbtest/main.py"
                 }
             }
