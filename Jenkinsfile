@@ -210,9 +210,7 @@ pipeline {
                         def rtServer = Artifactory.server "artifactory"
                         def rtDocker = Artifactory.docker server: rtServer
 
-                        echo DOCKER_IMAGE_AMD64.imageName()
-
-                        buildInfo = rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), env.DOCKER_LOCAL_REGISTRY, buildInfo)
+                        buildInfo = rtDocker.push("openbank/lake:${env.VERSION}", env.DOCKER_LOCAL_REGISTRY, buildInfo)
                         rtServer.publishBuildInfo buildInfo
 
 
