@@ -254,13 +254,13 @@ pipeline {
                         | -e UNIT_ARCH=${env.ARCH}
                         | --volumes-from=${cid}
                         | -u 0
-                    """.stripMargin().stripIndent()
+                    """.replaceAll("[\\t\\n\\r]+"," ")
                     echo options
                     docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
                         sh "echo inside docker - ${c.id}"
                         sh "pwd"
                         sh "ls -la"
-                        sh "python3 bbtest/main.py"
+                        sh "docker exec -t python3 bbtest/main.py"
                     }
                     sh "echo outside docker 2"
                     sh ""
