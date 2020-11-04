@@ -204,18 +204,18 @@ pipeline {
         stage('Publish to Artifactory') {
             steps {
                 script {
-                    docker.withRegistry(env.DOCKER_LOCAL_REGISTRY, "jenkins-artifactory") {
+                    //docker.withRegistry(env.DOCKER_LOCAL_REGISTRY, "jenkins-artifactory") {
                         //DOCKER_IMAGE_AMD64.push("artifactory/api/docker/docker-local")
-                        def buildInfo = Artifactory.newBuildInfo()
-                        def rtServer = Artifactory.server "artifactory"
-                        def rtDocker = Artifactory.docker server: rtServer
+                    //def buildInfo = Artifactory.newBuildInfo()
+                    def rtServer = Artifactory.server "artifactory"
+                    def rtDocker = Artifactory.docker server: rtServer
 
-                        buildInfo = rtDocker.push("openbank/lake:${env.VERSION}", env.DOCKER_LOCAL_REGISTRY, buildInfo)
-                        rtServer.publishBuildInfo buildInfo
+                    buildInfo = rtDocker.push("openbank/lake:${env.VERSION}", "docker-local") //, buildInfo)
+                    rtServer.publishBuildInfo buildInfo
 
 
 
-                    }
+                    //}
                 }
             }
         }
