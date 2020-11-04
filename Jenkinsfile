@@ -242,6 +242,7 @@ pipeline {
                         |--volumes-from=${cid}
                         |-v /var/run/docker.sock:/var/run/docker.sock:rw
                         |-v /var/lib/docker/containers:/var/lib/docker/containers:rw
+                        |-v /sys/fs/cgroup:/sys/fs/cgroup:ro
                         |-u 0
                     """.stripMargin().stripIndent().replaceAll("[\\t\\n\\r]+"," ").stripMargin().stripIndent()
                     docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
