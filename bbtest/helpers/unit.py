@@ -65,8 +65,9 @@ class UnitHelper(object):
     assert self.image_version, 'IMAGE_VERSION not provided'
     assert self.debian_version, 'UNIT_VERSION not provided'
 
-    target = os.listdir(os.path.realpath('{}/../../packaging/bin/lake_{}_{}.deb'.format(os.path.dirname(__file__), self.debian_version, self.arch)))
-
+    print('A')
+    target = os.path.realpath('{}/../../packaging/bin/lake_{}_{}.deb'.format(os.path.dirname(__file__), self.debian_version, self.arch))
+    print('B')
     print(target)
 
     if os.path.exists(target):
