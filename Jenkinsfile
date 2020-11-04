@@ -2,7 +2,7 @@ def DOCKER_IMAGE
 
 def dockerOptions() {
     String options = "--pull "
-    options += "--label 'org.opencontainers.image.source=${env.CHANGE_BRANCH}' "
+    options += "--label 'org.opencontainers.image.source=${env.GIT_URL}#${env.CHANGE_BRANCH}' "
     options += "--label 'org.opencontainers.image.created=${env.RFC3339_DATETIME}' "
     options += "--label 'org.opencontainers.image.revision=${env.GIT_COMMIT}' "
     options += "--label 'org.opencontainers.image.licenses=${env.LICENSE}' "
@@ -18,14 +18,8 @@ def getVersion() {
         script: 'git fetch --tags --force 2> /dev/null; tags=\$(git tag --sort=-v:refname | head -1) && ([ -z \${tags} ] && echo v0.0.0 || echo \${tags})',
         returnStdout: true
     ).trim() - 'v').split('\\.')
-    String major = versions[0]
-    String minor = versions[1]
     Integer patch = Integer.parseInt(versions[2], 10)
-    String[] log = sh(
-        script: "TZ=UTC git log --pretty='format:%cd,%h' --abbrev=4 --date=format-local:'%Y%m%d,%H%M' | head -1",
-        returnStdout: true
-    ).trim().split(',')
-    String version = "${major}.${minor}.${patch + 1}b${log[0]}${Integer.parseInt(log[1], 10)}${Long.parseLong(log[2], 16)}"
+    String version = "${major}.${minor}.${patch + 1}"
     return version
 }
 
@@ -49,7 +43,6 @@ pipeline {
 
     stages {
 
-
         stage('Checkout') {
             steps {
                 deleteDir()
@@ -66,6 +59,10 @@ pipeline {
                     ).trim()
                     env.GIT_COMMIT = sh(
                         script: 'git log -1 --format="%H"',
+                        returnStdout: true
+                    ).trim()
+                    env.GIT_URL = sh(
+                        script: 'git config --get remote.origin.url',
                         returnStdout: true
                     ).trim()
                     env.VERSION = getVersion()
