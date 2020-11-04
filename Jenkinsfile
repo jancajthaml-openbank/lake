@@ -229,15 +229,13 @@ pipeline {
                         -v /sys/fs/cgroup:/sys/fs/cgroup:ro
                         -v /run:/run:rw
                         -v /run/lock:/run/lock:rw
-                        -w /project
                     """
                     reuseNode true
                 }
             }
             steps {
                 script {
-                    sh "ls -la"
-                    sh "python3 /project/main.py"
+                    sh "python3 /project/bbtest/main.py"
                 }
             }
         }
