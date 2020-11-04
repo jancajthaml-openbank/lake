@@ -219,7 +219,8 @@ pipeline {
                 docker {
                     image "jancajthaml/bbtest:${env.ARCH}"
                     args """
-                        -v ${env.WORKSPACE_TMP}:/tmp:rw
+                        -v ${env.WORKSPACE_TMP}:/tmp
+                        -v ${env.WORKSPACE}/reports:/tmp/reports
                         -u 0
                     """
                     reuseNode true
@@ -248,7 +249,7 @@ pipeline {
                         sh "docker exec -t ${c.id} python3 ${env.WORKSPACE}/bbtest/main.py"
                         sh "ls -lFa /tmp/reports"
                     }
-                    sh "ls -lFa ${env.WORKSPACE_TMP}/reports"
+                    sh "ls -lFa ${env.WORKSPACE}/reports"
                 }
             }
         }
