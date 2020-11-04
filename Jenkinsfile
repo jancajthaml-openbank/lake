@@ -73,9 +73,9 @@ pipeline {
                     ).trim()
 
                     env.VERSION = getVersion()
-                    env.LICENSE = "Apache-2.0"                           // fixme read from sources
-                    env.PROJECT_NAME = "openbank lake"                   // fixme read from sources
-                    env.PROJECT_DESCRIPTION = "OpenBanking lake service" // fixme read from sources
+                    env.LICENSE = "Apache-2.0"
+                    env.PROJECT_NAME = "openbank lake"
+                    env.PROJECT_DESCRIPTION = "OpenBanking lake service"
                     env.PROJECT_AUTHOR = "${env.CHANGE_AUTHOR_DISPLAY_NAME} <${env.CHANGE_AUTHOR_EMAIL}>"
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
@@ -242,19 +242,13 @@ pipeline {
                 }
             }
             script {
-                dir("${env.WORKSPACE}/packaging/bin") {
-                    archiveArtifacts(
-                        allowEmptyArchive: true,
-                        artifacts: '*'
-                    )
-                }
                 publishHTML(target: [
                     allowMissing: true,
                     alwaysLinkToLastBuild: false,
                     keepAll: true,
                     reportDir: "${env.WORKSPACE}/reports/unit-tests",
                     reportFiles: 'lake-coverage.html',
-                    reportName: 'Lake | Unit Test Coverage'
+                    reportName: 'Unit Test Coverage'
                 ])
                 junit(
                     checksName: 'Unit Test',
