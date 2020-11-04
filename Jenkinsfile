@@ -232,7 +232,7 @@ pipeline {
             }
             steps {
                 script {
-                    sh "ls -la /etc"
+                    sh "mkdir -p /etc/lake/conf.d"
                     sh "python3 bbtest/main.py"
                 }
             }
