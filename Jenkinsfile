@@ -219,12 +219,8 @@ pipeline {
                 docker {
                     image "jancajthaml/bbtest:${env.ARCH}"
                     args """
-                        -e IMAGE_VERSION=${env.VERSION}
-                        -e UNIT_VERSION=${env.VERSION}
-                        -e UNIT_ARCH=${env.ARCH}
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
-                        -u 0
                     """
                     reuseNode true
                 }
@@ -254,7 +250,7 @@ pipeline {
                         | -e UNIT_ARCH=${env.ARCH}
                         | --volumes-from=${cid}
                         | -u 0
-                    """.replaceAll("[\\t\\n\\r]+"," ")
+                    """.stripMargin().stripIndent().replaceAll("[\\t\\n\\r]+"," ")
                     echo options
                     docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
                         sh "echo inside docker - ${c.id}"
