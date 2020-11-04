@@ -18,6 +18,8 @@ def getVersion() {
         script: 'git fetch --tags --force 2> /dev/null; tags=\$(git tag --sort=-v:refname | head -1) && ([ -z \${tags} ] && echo v0.0.0 || echo \${tags})',
         returnStdout: true
     ).trim() - 'v').split('\\.')
+    String major = versions[0]
+    String minor = versions[1]
     Integer patch = Integer.parseInt(versions[2], 10)
     String version = "${major}.${minor}.${patch + 1}"
     return version
@@ -71,10 +73,9 @@ pipeline {
                     env.LICENSE = "Apache-2.0"                           // fixme read from sources
                     env.PROJECT_NAME = "openbank lake"                   // fixme read from sources
                     env.PROJECT_DESCRIPTION = "OpenBanking lake service" // fixme read from sources
-                    env.PROJECT_AUTHOR = "${CHANGE_AUTHOR_DISPLAY_NAME} <${CHANGE_AUTHOR_EMAIL}>"
+                    env.PROJECT_AUTHOR = "${env.CHANGE_AUTHOR_DISPLAY_NAME} <${env.CHANGE_AUTHOR_EMAIL}>"
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
-                    echo "VERSION: ${VERSION}"
 
                     echo sh(script: 'env|sort', returnStdout: true)
                 }
@@ -218,8 +219,8 @@ pipeline {
                     {
                         "files": [
                             {
-                                "pattern": "${env.WORKSPACE}/packaging/bin/lake-linux-amd64",
-                                "target": "generic-local/openbank/lake/linux/amd64/${env.VERSION}",
+                                "pattern": "${env.WORKSPACE}/packaging/bin/lake-(*)-(*)",
+                                "target": "generic-local/openbank/lake/{1}/{2}/${env.VERSION}",
                                 "recursive": "false"
                             }
                         ]
