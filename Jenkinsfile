@@ -215,22 +215,25 @@ pipeline {
         }
 
         stage('BlackBox Test') {
-            steps {
-                script {
-                    docker.image("jancajthaml/bbtest:${env.ARCH}").withRun("""
+            agent {
+                docker {
+                    image "jancajthaml/bbtest:${env.ARCH}"
+                    args """
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
                         -e UNIT_ARCH=${env.ARCH}
                         -e NO_TTY=1
+                        -v /etc
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
                         -v ${env.WORKSPACE}/packaging/bin/lake_linux_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
-                    """) { c ->
-                        sh """
-                            docker exec -t ${c.id} \
-                            python3 bbtest/main.py
-                        """
-                    }
+                    """
+                    reuseNode true
+                }
+            }
+            steps {
+                script {
+                    sh "python3 bbtest/main.py"
                 }
             }
         }
