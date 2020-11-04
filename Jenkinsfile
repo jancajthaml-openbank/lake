@@ -29,6 +29,8 @@ def getVersion() {
     return version
 }
 
+def artifactory = Artifactory.server "artifactory"
+
 pipeline {
 
     agent {
@@ -213,10 +215,18 @@ pipeline {
                     docker.withRegistry("http://${env.ARTIFACTORY_DOCKER_REGISTRY}", 'jenkins-artifactory') {
                         DOCKER_IMAGE.push()
                     }
+                    artifactory.upload spec: {
+                      "files": [
+                        {
+                          "pattern": "${env.WORKSPACE}/packaging/bin/lake-linux-amd64",
+                          "target": "generic-local"
+                        }
+                      ]
+                    }
+
                 }
             }
         }
-
     }
 
     post {
