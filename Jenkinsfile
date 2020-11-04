@@ -221,8 +221,6 @@ pipeline {
                         -e UNIT_ARCH=${env.ARCH}
                         -e NO_TTY=1
                         -v ${env.WORKSPACE_TMP}:/tmp
-                        -v ${env.WORKSPACE}/reports:/tmp/reports
-                        -v ${env.WORKSPACE}/bbtest:/project
                         -v ${env.WORKSPACE}/packaging/bin/lake_linux_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
                         -v /var/run/docker.sock:/var/run/docker.sock:rw
                         -v /var/lib/docker/containers:/var/lib/docker/containers:rw
@@ -235,7 +233,7 @@ pipeline {
             }
             steps {
                 script {
-                    sh "python3 /project/bbtest/main.py"
+                    sh "python3 bbtest/main.py"
                 }
             }
         }
