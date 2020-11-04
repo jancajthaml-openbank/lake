@@ -223,6 +223,8 @@ pipeline {
                         -v /run/lock:/run/lock:rw
                     """
 
+                    echo options
+
                     docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
                         sh """
                             docker exec -t ${c.id} \
