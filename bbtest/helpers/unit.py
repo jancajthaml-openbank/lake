@@ -69,8 +69,9 @@ class UnitHelper(object):
 
     image = 'openbank/lake:{}'.format(self.image_version)
     package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
-    target = 'packaging/bin/lake_{}_{}.deb'.format(self.debian_version, self.arch)
+    target = '../packaging/bin/lake_{}_{}.deb'.format(self.debian_version, self.arch)
 
+    print(os.listdir('../packaging/bin'))
     print(target)
 
     if os.path.exists(target):
