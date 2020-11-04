@@ -218,7 +218,7 @@ pipeline {
             agent {
                 docker {
                     image "jancajthaml/bbtest:${env.ARCH}"
-                    dir "/"
+                    customWorkspace "/"
                     args """
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
