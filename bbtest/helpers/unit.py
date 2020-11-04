@@ -41,8 +41,21 @@ class UnitHelper(object):
     self.docker = docker.from_env()
     self.context = context
 
+  def install(self, file):
+    (code, result, error) = execute(['dpkg', '-c', file])
+    if code != 0:
+      raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
+    else:
+      with open('reports/blackbox-tests/meta/debian.lake.txt', 'w') as fd:
+        fd.write(result)
+
+      result = [item for item in result.split(os.linesep)]
+      result = [item.rsplit('/', 1)[-1].strip() for item in result if "/lib/systemd/system/lake" in item]
+      result = [item for item in result if not item.endswith('unit.slice')]
+
+      self.units = result
+
   def download(self):
-    failure = None
     os.makedirs('/tmp/packages', exist_ok=True)
 
     self.image_version = os.environ.get('IMAGE_VERSION', '')
@@ -58,6 +71,11 @@ class UnitHelper(object):
     package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
     target = '/tmp/packages/lake.deb'
 
+    if path.exists(target):
+      self.install(target)
+      return
+
+    failure = None
     temp = tempfile.NamedTemporaryFile(delete=True)
     try:
       with open(temp.name, 'w') as fd:
@@ -86,20 +104,7 @@ class UnitHelper(object):
 
       archive = tarfile.TarFile(tar_name.name)
       archive.extract(os.path.basename(target), os.path.dirname(target))
-
-      (code, result, error) = execute(['dpkg', '-c', target])
-      if code != 0:
-        raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
-      else:
-        with open('reports/blackbox-tests/meta/debian.lake.txt', 'w') as fd:
-          fd.write(result)
-
-        result = [item for item in result.split(os.linesep)]
-        result = [item.rsplit('/', 1)[-1].strip() for item in result if "/lib/systemd/system/lake" in item]
-        result = [item for item in result if not item.endswith('unit.slice')]
-
-        self.units = result
-
+      self.install(target)
       scratch.remove()
     except Exception as ex:
       failure = ex

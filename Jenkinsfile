@@ -204,6 +204,36 @@ pipeline {
             }
         }
 
+        stage('BlackBox Test') {
+            steps {
+                script {
+                    String options = """
+                        -e IMAGE_VERSION=${env.VERSION}
+                        -e UNIT_VERSION=${env.VERSION}
+                        -e UNIT_ARCH=${env.ARCH}
+                        -e NO_TTY=1
+                        -v ${env.WORKSPACE_TMP}:/tmp
+                        -v ${env.WORKSPACE}/reports:/tmp/reports
+                        -v ${env.WORKSPACE}/bbtest:${env.WORKSPACE}/bbtest
+                        -v ${env.WORKSPACE}/packaging/bin/lake_linux_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
+                        -v /var/run/docker.sock:/var/run/docker.sock:rw
+                        -v /var/lib/docker/containers:/var/lib/docker/containers:rw
+                        -v /sys/fs/cgroup:/sys/fs/cgroup:ro
+                        -v /run:/run:rw
+                        -v /run/lock:/run/lock:rw
+                    """
+
+                    docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
+                        sh """
+                            docker exec -t ${c.id} \
+                            python3 \
+                            ${env.WORKSPACE}/bbtest/main.py
+                        """
+                    }
+                }
+            }
+        }
+
         stage('Package Docker') {
             steps {
                 script {
