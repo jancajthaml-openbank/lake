@@ -218,18 +218,26 @@ pipeline {
             agent {
                 docker {
                     image "jancajthaml/bbtest:${env.ARCH}"
+                    args """
+                        -v ${env.WORKSPACE_TMP}:/tmp
+                        -v ${env.WORKSPACE}/reports:/tmp/reports
+                        -u 0
+                    """
                     reuseNode true
                 }
             }
             steps {
                 script {
-                    docker.image("jancajthaml/bbtest:${env.ARCH}").withRun("""
+                    hostname = sh(
+                        script: 'hostname',
+                        returnStdout: true
+                    ).trim()
+                    docker("jancajthaml/bbtest:${env.ARCH}").withRun("""
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
                         -e UNIT_ARCH=${env.ARCH}
                         -e NO_TTY=1
-                        -v ${env.WORKSPACE_TMP}:/tmp
-                        -v ${env.WORKSPACE}/reports:/tmp/reports
+                        -volumes-from ${hostname}
                         -u 0
                     """) { c ->
                         sh """
