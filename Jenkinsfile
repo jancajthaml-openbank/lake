@@ -47,6 +47,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
+                currentBuild.displayName = "#${currentBuild.number} - ${env.CHANGE_BRANCH} (?)"
                 deleteDir()
                 checkout(scm)
             }
@@ -216,6 +217,7 @@ pipeline {
                 docker {
                     image "jancajthaml/bbtest:${env.ARCH}"
                     args """
+                        --privileged
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
                         -e UNIT_ARCH=${env.ARCH}
