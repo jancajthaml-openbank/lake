@@ -218,7 +218,12 @@ pipeline {
             agent {
                 docker {
                     image "jancajthaml/bbtest:${env.ARCH}"
-                    args """
+                    reuseNode true
+                }
+            }
+            steps {
+                script {
+                    docker.image("jancajthaml/bbtest:${env.ARCH}").withRun("""
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
                         -e UNIT_ARCH=${env.ARCH}
@@ -226,17 +231,17 @@ pipeline {
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
                         -u 0
-                        --entrypoint /lib/systemd/systemd
-                    """
-                    reuseNode true
-                }
-            }
-            steps {
-                script {
-                    sh "ls -lFa /tmp/packages"
-                    sh "rm -rf /tmp/packages/lake.deb || :"
-                    sh "cp ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb /tmp/packages/lake.deb"
-                    sh "python3 bbtest/main.py"
+                    """) { c ->
+                        sh """
+                            docker exec -t ${c.id} \
+                            cp ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb /tmp/packages/lake.deb
+                        """
+                        sh """
+                            docker exec -t ${c.id} \
+                            python3 bbtest/main.py
+                        """
+                    }
+
                 }
             }
         }
