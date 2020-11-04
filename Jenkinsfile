@@ -218,11 +218,6 @@ pipeline {
             steps {
                 script {
                     bbtest = docker.image("jancajthaml/bbtest:${env.ARCH}")
-                    cid = sh(
-                        script: 'hostname',
-                        returnStdout: true
-                    ).trim()
-
                     bbtest.withRun("""
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
