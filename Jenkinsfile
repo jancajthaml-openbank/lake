@@ -225,7 +225,6 @@ pipeline {
                         -e NO_TTY=1
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
-                        -v ${env.WORKSPACE}/packaging/bin:/tmp/bin:ro
                         -u 0
                     """
                     reuseNode true
@@ -233,12 +232,13 @@ pipeline {
             }
             steps {
                 script {
-
-                    sh "rm -rf ${env.WORKSPACE}/packaging/bin/lake_1.2.6_amd64.deb || true"
-                    sh "rm -rf ${env.WORKSPACE}/packaging/bin/lake_linux_amd64.deb || true"
+                    sh "rm -rf /tmp/bin/lake_1.2.6_amd64.deb || true"
+                    sh "rm -rf /tmp/bin/lake_linux_amd64.deb || true"
 
                     sh "ls -lFa /tmp/bin"
-                    sh "cp /tmp/bin/lake_${env.VERSION}_${env.ARCH}.deb /tmp/packages/lake.deb"
+
+                    sh "ls -lFa ${env.WORKSPACE}/packaging/bin"
+                    //sh "cp /tmp/bin/lake_${env.VERSION}_${env.ARCH}.deb /tmp/packages/lake.deb"
                     sh "python3 bbtest/main.py"
                 }
             }
