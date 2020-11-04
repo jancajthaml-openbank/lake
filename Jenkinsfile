@@ -217,6 +217,8 @@ pipeline {
                     //def rtServer = Artifactory.server "artifactory"
                     //def rtDocker = Artifactory.docker server: rtServer
 
+                    echo DOCKER_IMAGE_AMD64.imageName()
+
                     rtDocker.push("${env.DOCKER_PRIVATE_REGISTRY}/openbank/lake:${env.VERSION}", "docker-local") //, buildInfo)
 
                     //rtServer.publishBuildInfo buildInfo
