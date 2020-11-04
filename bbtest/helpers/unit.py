@@ -74,7 +74,7 @@ class UnitHelper(object):
       self.install(target)
       return
 
-    os.makedirs(os.path.dirname(target), exist_ok=True)
+    os.makedirs(os.path.abspath(os.path.join(target, os.pardir)), exist_ok=True)
 
     failure = None
     image = 'openbank/lake:{}'.format(self.image_version)
