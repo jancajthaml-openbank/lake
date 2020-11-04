@@ -64,7 +64,7 @@ pipeline {
             steps {
                 script {
                     rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "docker-virtual")
-                    sh "docker images -a"
+                    sh "docker images"
                 }
             }
         }
