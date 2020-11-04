@@ -63,7 +63,7 @@ pipeline {
         stage('Probe') {
             steps {
                 script {
-                    docker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "docker-virtual")
+                    docker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106")
                     sh "docker images"
                 }
             }
