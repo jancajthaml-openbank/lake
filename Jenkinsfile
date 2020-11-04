@@ -31,8 +31,8 @@ def getVersion() {
 }
 
 def rtServer = Artifactory.server "artifactory"
-//def rtDocker = Artifactory.docker server: rtServer
-//def buildInfo = Artifactory.newBuildInfo()
+def rtDocker = Artifactory.docker server: rtServer
+def buildInfo = Artifactory.newBuildInfo()
 
 pipeline {
 
@@ -63,7 +63,9 @@ pipeline {
         stage('Probe') {
             steps {
                 script {
-                    docker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106")
+                    sh "docker rmi -f ${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106 || :"
+                    sh "docker images"
+                    rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "docker-virtual")
                     sh "docker images"
                 }
             }
@@ -224,7 +226,6 @@ pipeline {
         stage('Publish to Artifactory') {
             steps {
                 script {
-                    echo rtServer
                     rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-virtual", buildInfo)
                     rtServer.publishBuildInfo buildInfo
                 }
