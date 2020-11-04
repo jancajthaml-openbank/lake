@@ -52,13 +52,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                deleteDir()
-                //checkout(scm)
-            }
-        }
-
         stage('Probe') {
             steps {
                 script {
@@ -67,6 +60,14 @@ pipeline {
                 }
             }
         }
+
+        stage('Checkout') {
+            steps {
+                deleteDir()
+                checkout(scm)
+            }
+        }
+
 
         stage('Setup') {
             steps {
