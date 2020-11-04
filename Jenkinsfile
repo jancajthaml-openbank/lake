@@ -218,7 +218,7 @@ pipeline {
             agent {
                 docker {
                     image "jancajthaml/bbtest:${env.ARCH}"
-                    privileged true
+                    dir "/"
                     args """
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
