@@ -206,12 +206,16 @@ pipeline {
                 script {
                     //docker.withRegistry(env.DOCKER_LOCAL_REGISTRY, "jenkins-artifactory") {
                         //DOCKER_IMAGE_AMD64.push("artifactory/api/docker/docker-local")
-
+                    //def buildInfo = Artifactory.newBuildInfo()
                     def rtServer = Artifactory.server "artifactory"
                     def rtDocker = Artifactory.docker server: rtServer
 
-                    echo rtServer
-                    echo rtDocker
+                    pushInfo = rtDocker.push(DOCKER_IMAGE_AMD64)
+                    rtServer.publishBuildInfo pushInfo
+
+                    //echo rtServer
+                    //echo rtDocker
+
 
 
                     //}
