@@ -228,21 +228,32 @@ pipeline {
             }
             steps {
                 script {
-                    hostname = sh(
+                    bbtest = docker.image("jancajthaml/bbtest:${env.ARCH}")
+
+                    echo bbtest.imageName()
+
+                    cid = sh(
                         script: 'hostname',
                         returnStdout: true
                     ).trim()
 
-                    echo "docker hostname : ${hostname}"
-                    docker.image("jancajthaml/bbtest:${env.ARCH}").withRun("""
+                    echo "docker hostname : ${cid}"
+
+                    sh "docker inspect ${cid}"
+
+                    options = """
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
                         -e UNIT_ARCH=${env.ARCH}
                         -e NO_TTY=1
-                        --volumes-from ${hostname}
+                        --volumes-from ${cid}
                         -v ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
                         -u 0
-                    """) { c ->
+                    """
+
+                    echo options
+
+                    bbtest.withRun(options) { c ->
                         sh """
                             docker exec -t ${c.id} \
                             python3 bbtest/main.py
