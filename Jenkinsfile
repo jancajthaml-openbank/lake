@@ -214,7 +214,7 @@ pipeline {
         stage('BlackBox Test') {
             agent {
                 docker {
-                    image 'jancajthaml/debian-packager:latest'
+                    image "jancajthaml/bbtest:${env.ARCH}"
                     args """
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
