@@ -295,6 +295,12 @@ pipeline {
                 }
             }
             script {
+                dir("${env.WORKSPACE}/reports") {
+                    archiveArtifacts(
+                        allowEmptyArchive: true,
+                        artifacts: "**/*"
+                    )
+                }
                 publishHTML(target: [
                     allowMissing: true,
                     alwaysLinkToLastBuild: false,
