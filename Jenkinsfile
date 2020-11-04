@@ -201,25 +201,26 @@ pipeline {
         stage('Package Docker') {
             steps {
                 script {
-                    DOCKER_IMAGE = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}", dockerOptions())
+                    DOCKER_IMAGE = docker.build("openbank/lake:${env.VERSION}", dockerOptions())
                 }
             }
         }
 
-        stage('Publish to Artifactory') {
+        stage('Publish') {
             steps {
                 script {
                     docker.withRegistry("http://${env.ARTIFACTORY_DOCKER_REGISTRY}", 'jenkins-artifactory') {
-                        DOCKER_IMAGE.push()
+                        DOCKER_IMAGE.push("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}")
                     }
                     artifactory.upload spec: """
                     {
-                      "files": [
-                        {
-                          "pattern": "${env.WORKSPACE}/packaging/bin/lake-linux-amd64",
-                          "target": "generic-local/openbank/lake/linux/amd64/${env.VERSION}"
-                        }
-                      ]
+                        "files": [
+                            {
+                                "pattern": "${env.WORKSPACE}/packaging/bin/lake-(*)-(*)",
+                                "target": "generic-local/openbank/lake/{1}/{2}/${env.VERSION}",
+                                "recursive": "false"
+                            }
+                        ]
                     }
                     """
                 }
