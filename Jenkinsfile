@@ -60,13 +60,6 @@ pipeline {
         }
 
         stage('Probe') {
-            agent {
-                docker {
-                    image 'jancajthaml/go:latest'
-                    args "--entrypoint=''"
-                    reuseNode true
-                }
-            }
             steps {
                 script {
                     rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "docker-virtual")
@@ -96,7 +89,6 @@ pipeline {
                     echo "VERSION: ${VERSION}"
 
                     echo sh(script: 'env|sort', returnStdout: true)
-
                 }
             }
         }
