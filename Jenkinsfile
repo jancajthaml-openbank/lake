@@ -22,11 +22,11 @@ def getVersion() {
     String major = versions[0]
     String minor = versions[1]
     Integer patch = Integer.parseInt(versions[2], 10)
-    String sha = sh(
-        script: "TZ=UTC git log --pretty='format:%h' --abbrev=4 | head -1",
+    String[] log = sh(
+        script: "TZ=UTC git log --pretty='format:%cd,%h' --abbrev=4 --date=format-local:'%Y%m%d,%H%M' | head -1",
         returnStdout: true
-    ).trim()
-    String version = "${major}.${minor}.${patch + 1}b${Long.parseLong(sha, 16)}"
+    ).trim().split(',')
+    String version = "${major}.${minor}.${patch + 1}b${log[0]}${Integer.parseInt(log[1], 10)}${Long.parseLong(log[2], 16)}"
     return version
 }
 
@@ -215,7 +215,7 @@ pipeline {
         stage('Package Docker') {
             steps {
                 script {
-                    DOCKER_IMAGE_AMD64 = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-virtual/openbank/lake:${env.VERSION}", dockerOptions())
+                    DOCKER_IMAGE_AMD64 = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}", dockerOptions())
                 }
             }
         }
@@ -223,7 +223,7 @@ pipeline {
         stage('Publish to Artifactory') {
             steps {
                 script {
-                    rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-local", buildInfo)
+                    rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-virtual", buildInfo)
                     rtServer.publishBuildInfo buildInfo
                 }
             }
