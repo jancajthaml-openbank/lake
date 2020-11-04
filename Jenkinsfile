@@ -220,7 +220,7 @@ pipeline {
                       "files": [
                         {
                           "pattern": "${env.WORKSPACE}/packaging/bin/lake-linux-amd64",
-                          "target": "generic-local"
+                          "target": "generic-local/openbank/lake/linux/amd64/${env.VERSION}"
                         }
                       ]
                     }
