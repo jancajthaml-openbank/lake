@@ -240,17 +240,16 @@ pipeline {
                         |-e UNIT_VERSION=${env.VERSION}
                         |-e UNIT_ARCH=${env.ARCH}
                         |--volumes-from=${cid}
+                        |-v /var/run/docker.sock:/var/run/docker.sock:rw
+                        |-v /var/lib/docker/containers:/var/lib/docker/containers:rw
+                        |-v /sys/fs/cgroup:/sys/fs/cgroup:ro
                         |-u 0
                     """.stripMargin().stripIndent().replaceAll("[\\t\\n\\r]+"," ").stripMargin().stripIndent()
-                    echo options
                     docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
-                        sh "echo inside docker - ${c.id}"
-                        sh "pwd"
-                        sh "ls -la"
+                        sh "docker ps -a"
                         sh "docker exec -t ${c.id} python3 bbtest/main.py"
                     }
                     sh "echo outside docker 2"
-                    sh ""
                 }
             }
         }
