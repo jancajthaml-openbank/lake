@@ -46,7 +46,7 @@ class UnitHelper(object):
     if code != 0:
       raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
     else:
-      with open('reports/blackbox-tests/meta/debian.lake.txt', 'w') as fd:
+      with open('/tmp/reports/blackbox-tests/meta/debian.lake.txt', 'w') as fd:
         fd.write(result)
 
       result = [item for item in result.split(os.linesep)]
@@ -129,6 +129,8 @@ class UnitHelper(object):
       fd.write(str(os.linesep).join("LAKE_{!s}={!s}".format(k, v) for (k, v) in options.items()))
 
   def collect_logs(self):
+    os.makedirs('/tmp/reports', exist_ok=True)
+
     (code, result, error) = execute(['journalctl', '-o', 'cat', '--no-pager'])
     if code == 0:
       with open('/tmp/reports/blackbox-tests/logs/journal.log', 'w') as fd:
