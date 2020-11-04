@@ -226,14 +226,13 @@ pipeline {
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
                         -u 0
-                        --entrypoint /lib/systemd/systemd
                     """
                     reuseNode true
                 }
             }
             steps {
                 script {
-                    sh "sbin/init &"
+                    sh "/lib/systemd/systemd sbin/init &"
                     sh "ls -lFa /tmp/packages"
                     sh "rm -rf /tmp/packages/lake.deb || :"
                     sh "cp ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb /tmp/packages/lake.deb"
