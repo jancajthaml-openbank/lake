@@ -52,14 +52,6 @@ pipeline {
 
     stages {
 
-        stage('Probe') {
-            steps {
-                script {
-                    rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "docker-virtual")
-                    //sh "exit 1"
-                }
-            }
-        }
 
         stage('Checkout') {
             steps {
@@ -68,6 +60,14 @@ pipeline {
             }
         }
 
+        stage('Probe') {
+            steps {
+                script {
+                    rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "docker-virtual")
+                    //sh "exit 1"
+                }
+            }
+        }
 
         stage('Setup') {
             steps {
