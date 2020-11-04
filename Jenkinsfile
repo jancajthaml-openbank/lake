@@ -89,17 +89,23 @@ pipeline {
             parallel {
                 stage('jancajthaml/go') {
                     steps {
-                        docker.pull("jancajthaml/go:latest")
+                        script {
+                            sh "docker pull jancajthaml/go:latest"
+                        }
                     }
                 }
                 stage('jancajthaml/debian-packager') {
                     steps {
-                        docker.pull("jancajthaml/debian-packager:latest")
+                        script {
+                            sh "docker pull jancajthaml/debian-packager:latest"
+                        }
                     }
                 }
                 stage('jancajthaml/bbtest') {
                     steps {
-                        docker.pull("jancajthaml/bbtest:${env.ARCH}")
+                        script {
+                            sh "docker pull jancajthaml/bbtest:${env.ARCH}"
+                        }
                     }
                 }
             }
