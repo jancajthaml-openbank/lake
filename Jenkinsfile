@@ -226,7 +226,7 @@ pipeline {
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
                         -v ${env.WORKSPACE}/packaging/bin:/tmp/bin:ro
-                        -u root
+                        -u 0
                     """
                     reuseNode true
                 }
