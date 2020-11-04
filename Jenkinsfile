@@ -246,8 +246,6 @@ pipeline {
                         |-u 0
                     """.stripMargin().stripIndent().replaceAll("[\\t\\n\\r]+"," ").stripMargin().stripIndent()
                     docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
-                        sh "ls -lFa packaging/bin"
-
                         sh "docker exec -t ${c.id} python3 ${env.WORKSPACE}/bbtest/main.py"
                     }
                 }
