@@ -309,6 +309,11 @@ pipeline {
                     skipPublishingChecks: true,
                     testResults: "${env.WORKSPACE}/reports/unit-tests/lake-results.xml"
                 )
+                cucumber(
+                    allowEmptyResults: true,
+                    fileIncludePattern: '*',
+                    jsonReportDirectory: "${env.WORKSPACE}reports/blackbox-tests/cucumber"
+                )
             }
             cleanWs()
         }
