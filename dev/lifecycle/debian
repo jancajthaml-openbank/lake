@@ -25,8 +25,6 @@ done
 if [ -z "${VERSION}" ] ; then
   (>&2 echo "version not provided")
   exit 1
-else
-  git tag "${VERSION}"
 fi
 
 if [ -z "${SOURCE}" ] ; then
@@ -56,6 +54,8 @@ lifecycle::debian::generate_changelog() {
   fi
 
   touch ${target}
+
+  git tag "v${VERSION}"
 
   PAIRS=()
   tag=HEAD
