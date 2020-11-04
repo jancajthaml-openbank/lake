@@ -215,14 +215,14 @@ pipeline {
                     docker.withRegistry("http://${env.ARTIFACTORY_DOCKER_REGISTRY}", 'jenkins-artifactory') {
                         DOCKER_IMAGE.push()
                     }
-                    uploadSpec = {
+                    uploadSpec = [
                       files: [
                         {
-                          pattern: "${env.WORKSPACE}/packaging/bin/lake-linux-amd64"
+                          pattern: "${env.WORKSPACE}/packaging/bin/lake-linux-amd64",
                           target: "generic-local"
                         }
                       ]
-                    }
+                    ]
                     artifactory.upload spec: uploadSpec
 
                 }
