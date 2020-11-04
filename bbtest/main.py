@@ -20,7 +20,7 @@ if __name__ == "__main__":
     '-o reports/blackbox-tests/behave/results.json',
   ]
 
-  if sys.stdout.isatty() and (str(os.environ.get('CI', 'false')) == 'false'):
+  if str(os.environ.get('CI', 'false')) == 'false':
     args.append('-f pretty')
     args.append('--tags=~@wip')
   else:
