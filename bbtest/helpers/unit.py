@@ -7,7 +7,6 @@ import tarfile
 import tempfile
 import errno
 import os
-import path
 import subprocess
 from helpers.shell import execute
 
@@ -72,7 +71,7 @@ class UnitHelper(object):
     package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
     target = '/tmp/packages/lake.deb'
 
-    if path.exists(target):
+    if os.path.exists(target):
       self.install(target)
       return
 
