@@ -225,7 +225,7 @@ pipeline {
                         -e NO_TTY=1
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
-                        -v ${env.WORKSPACE}/packaging/bin:ro
+                        -v ${env.WORKSPACE}/packaging/bin:${env.WORKSPACE}/packaging/bin:ro
                         -u 0
                     """
                     reuseNode true
