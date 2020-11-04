@@ -56,6 +56,7 @@ class UnitHelper(object):
       self.units = result
 
   def download(self):
+    os.makedirs('../packaging/bin', exist_ok=True)
     os.makedirs('packaging/bin', exist_ok=True)
 
     self.image_version = os.environ.get('IMAGE_VERSION', '')
@@ -67,12 +68,12 @@ class UnitHelper(object):
     assert self.image_version, 'IMAGE_VERSION not provided'
     assert self.debian_version, 'UNIT_VERSION not provided'
 
-    image = 'openbank/lake:{}'.format(self.image_version)
-    package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
     target = '../packaging/bin/lake_{}_{}.deb'.format(self.debian_version, self.arch)
 
+    print(os.getcwd())
+    print(os.listdir('packaging/bin'))
     print(os.listdir('../packaging/bin'))
-    print(target)
+    #print(target)
 
     if os.path.exists(target):
       print('binary exists')
@@ -80,6 +81,8 @@ class UnitHelper(object):
       return
 
     failure = None
+    image = 'openbank/lake:{}'.format(self.image_version)
+    package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
     temp = tempfile.NamedTemporaryFile(delete=True)
     try:
       with open(temp.name, 'w') as fd:
