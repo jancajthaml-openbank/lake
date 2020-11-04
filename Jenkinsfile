@@ -239,7 +239,7 @@ pipeline {
                         -e UNIT_VERSION=${env.VERSION}
                         -e UNIT_ARCH=${env.ARCH}
                         -e NO_TTY=1
-                        -volumes-from ${hostname}
+                        --volumes-from ${hostname}
                         -v ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
                         -u 0
                     """) { c ->
