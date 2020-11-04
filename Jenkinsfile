@@ -226,14 +226,15 @@ pipeline {
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
                         -v ${env.WORKSPACE}/packaging/bin/lake_linux_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
+                        -u root
                     """
                     reuseNode true
                 }
             }
             steps {
                 script {
-                    sh "id"
                     sh "ls -la /etc"
+                    sh "id"
                     sh "python3 bbtest/main.py"
                 }
             }
