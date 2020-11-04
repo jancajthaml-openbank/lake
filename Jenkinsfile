@@ -217,10 +217,10 @@ pipeline {
                     }
                     uploadSpec = [
                       files: [
-                        {
+                       [
                           pattern: "${env.WORKSPACE}/packaging/bin/lake-linux-amd64",
                           target: "generic-local"
-                        }
+                        ]
                       ]
                     ]
                     artifactory.upload spec: uploadSpec
