@@ -69,7 +69,7 @@ pipeline {
                     env.LICENSE = "Apache-2.0"                           // fixme read from sources
                     env.PROJECT_NAME = "openbank lake"                   // fixme read from sources
                     env.PROJECT_DESCRIPTION = "OpenBanking lake service" // fixme read from sources
-                    env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
+                    env.PROJECT_AUTHOR = "${CHANGE_AUTHOR_DISPLAY_NAME} <${CHANGE_AUTHOR_EMAIL}>"
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
                     echo "VERSION: ${VERSION}"
@@ -202,7 +202,7 @@ pipeline {
         stage('Package Docker') {
             steps {
                 script {
-                    DOCKER_IMAGE_AMD64 = docker.build("${env.DOCKER_PRIVATE_REGISTRY}/openbank/lake:${env.VERSION}", dockerOptions())
+                    DOCKER_IMAGE_AMD64 = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/openbank/lake:${env.VERSION}", dockerOptions())
                 }
             }
         }
@@ -210,22 +210,11 @@ pipeline {
         stage('Publish to Artifactory') {
             steps {
                 script {
-
                     //docker.withRegistry(env.DOCKER_LOCAL_REGISTRY, "jenkins-artifactory") {
-                        //DOCKER_IMAGE_AMD64.push("artifactory/api/docker/docker-local")
-                    //def buildInfo = Artifactory.newBuildInfo()
-                    //def rtServer = Artifactory.server "artifactory"
-                    //def rtDocker = Artifactory.docker server: rtServer
+                    //DOCKER_IMAGE_AMD64.push("artifactory/api/docker/docker-local")
 
                     echo DOCKER_IMAGE_AMD64.imageName()
-
-                    rtDocker.push("${env.DOCKER_PRIVATE_REGISTRY}/openbank/lake:${env.VERSION}", "docker-local") //, buildInfo)
-
-                    //rtServer.publishBuildInfo buildInfo
-
-
-
-                    //}
+                    rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-local", Artifactory.newBuildInfo())
                 }
             }
         }
