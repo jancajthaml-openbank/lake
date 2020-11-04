@@ -222,8 +222,13 @@ pipeline {
                     {
                         "files": [
                             {
-                                "pattern": "${env.WORKSPACE}/packaging/bin/lake-(*)-(*)",
-                                "target": "generic-local/openbank/lake/{1}/{2}/${env.VERSION}",
+                                "pattern": "${env.WORKSPACE}/packaging/bin/lake-linux-(*)",
+                                "target": "generic-local/openbank/lake/linux/{1}/${env.VERSION}/lake",
+                                "recursive": "false"
+                            },
+                            {
+                                "pattern": "${env.WORKSPACE}/packaging/bin/lake_(*)_(*).deb",
+                                "target": "generic-local/openbank/lake/linux/{2}/{1}/lake.deb",
                                 "recursive": "false"
                             }
                         ]
