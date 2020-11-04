@@ -215,45 +215,24 @@ pipeline {
         }
 
         stage('BlackBox Test') {
-            agent {
-                docker {
-                    image "jancajthaml/bbtest:${env.ARCH}"
-                    args """
-                        -v ${env.WORKSPACE_TMP}:/tmp
-                        -v ${env.WORKSPACE}/reports:/tmp/reports
-                        -u 0
-                    """
-                    reuseNode true
-                }
-            }
             steps {
                 script {
                     bbtest = docker.image("jancajthaml/bbtest:${env.ARCH}")
-
-                    echo bbtest.imageName()
-
                     cid = sh(
                         script: 'hostname',
                         returnStdout: true
                     ).trim()
 
-                    echo "docker hostname : ${cid}"
-
-                    sh "docker inspect ${cid}"
-
-                    options = """
+                    bbtest.withRun("""
                         -e IMAGE_VERSION=${env.VERSION}
                         -e UNIT_VERSION=${env.VERSION}
                         -e UNIT_ARCH=${env.ARCH}
                         -e NO_TTY=1
-                        --volumes-from ${cid}
+                        -v ${env.WORKSPACE_TMP}:/tmp
+                        -v ${env.WORKSPACE}/reports:/tmp/reports
                         -v ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
                         -u 0
-                    """
-
-                    echo options
-
-                    bbtest.withRun(options) { c ->
+                    """) { c ->
                         sh """
                             docker exec -t ${c.id} \
                             python3 bbtest/main.py
