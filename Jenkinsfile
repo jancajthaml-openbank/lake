@@ -230,6 +230,9 @@ pipeline {
                     reuseNode true
                 }
             }
+            options {
+                timeout(time: 2, unit: 'MINUTES')
+            }
             steps {
                 script {
                     sh "python3 bbtest/main.py"
