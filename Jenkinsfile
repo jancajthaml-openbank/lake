@@ -39,7 +39,7 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         disableResume()
-        timeout(time: 30, unit: 'MINUTES')
+        timeout(time: 10, unit: 'MINUTES')
         timestamps()
     }
 
@@ -219,8 +219,7 @@ pipeline {
                 docker {
                     image "jancajthaml/bbtest:${env.ARCH}"
                     args """
-                        -v ${env.WORKSPACE_TMP}:/tmp
-                        -v ${env.WORKSPACE}/reports:/tmp/reports
+                        -v ${env.WORKSPACE_TMP}:/tmp:rw
                         -u 0
                     """
                     reuseNode true
@@ -249,7 +248,7 @@ pipeline {
                         sh "docker exec -t ${c.id} python3 ${env.WORKSPACE}/bbtest/main.py"
                         sh "ls -lFa /tmp/reports"
                     }
-                    sh "ls -lFa ${env.WORKSPACE}/reports"
+                    sh "ls -lFa ${env.WORKSPACE_TMP}/reports"
                 }
             }
         }
