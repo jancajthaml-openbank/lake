@@ -210,6 +210,8 @@ pipeline {
                         --pkg lake \
                         --source ${env.WORKSPACE}/packaging
                     """
+                    sh "rm -f lake_linux_amd64.deb || true"
+                    sh "ls -lFa ${env.WORKSPACE}/packaging"
                 }
             }
         }
