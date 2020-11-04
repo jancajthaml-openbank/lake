@@ -30,8 +30,7 @@ def getVersion() {
     return version
 }
 
-//def rtServer = Artifactory.server "artifactory"
-def rtServer = Artifactory.newServer url: "http://${ARTIFACTORY_DOCKER_REGISTRY}/artifactory", credentialsId: 'jenkins-artifactory'
+def rtServer = Artifactory.server "artifactory"
 
 def rtDocker = Artifactory.docker server: rtServer
 def buildInfo = Artifactory.newBuildInfo()
@@ -65,9 +64,9 @@ pipeline {
         stage('Probe') {
             steps {
                 script {
-                    sh "docker rmi -f ${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106 || :"
+                    sh "docker rmi -f docker-local.${env.ARTIFACTORY_DOCKER_REGISTRY}/openbank/lake:1.2.6b20201104102354106 || :"
                     sh "docker images"
-                    rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "docker-local")
+                    rtDocker.pull("docker-local.${env.ARTIFACTORY_DOCKER_REGISTRY}/openbank/lake:1.2.6b20201104102354106", "docker-local")
                     sh "docker images"
                 }
             }
@@ -220,7 +219,7 @@ pipeline {
         stage('Package Docker') {
             steps {
                 script {
-                    DOCKER_IMAGE_AMD64 = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}", dockerOptions())
+                    DOCKER_IMAGE_AMD64 = docker.build("docker-local.${env.ARTIFACTORY_DOCKER_REGISTRY}/openbank/lake:${env.VERSION}", dockerOptions())
                 }
             }
         }
