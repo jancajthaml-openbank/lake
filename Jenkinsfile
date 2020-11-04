@@ -22,11 +22,11 @@ def getVersion() {
     String major = versions[0]
     String minor = versions[1]
     Integer patch = Integer.parseInt(versions[2], 10)
-    String[] log = sh(
-        script: "TZ=UTC git log --pretty='format:%cd,%h' --abbrev=4 --date=format-local:'%Y%m%d,%H%M' | head -1",
+    String sha = sh(
+        script: "TZ=UTC git log --pretty='format:%h' --abbrev=4 | head -1",
         returnStdout: true
-    ).trim().split(',')
-    String version = "${major}.${minor}.${patch + 1}b${log[0]}${Integer.parseInt(log[1], 10)}${Long.parseLong(log[2], 16)}"
+    ).trim()
+    String version = "${major}.${minor}.${patch + 1}b${Long.parseLong(sha, 16)}"
     return version
 }
 
@@ -63,7 +63,7 @@ pipeline {
         stage('Probe') {
             steps {
                 script {
-                    rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "docker-virtual")
+                    rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "docker-local")
                     //sh "exit 1"
                 }
             }
@@ -224,7 +224,8 @@ pipeline {
         stage('Publish to Artifactory') {
             steps {
                 script {
-                    rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-virtual", buildInfo)
+                    rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-local", buildInfo)
+                    rtServer.publishBuildInfo buildInfo
                 }
             }
         }
