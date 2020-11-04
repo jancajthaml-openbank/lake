@@ -223,11 +223,6 @@ pipeline {
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
                         -v ${env.WORKSPACE}/packaging/bin/lake_linux_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
-                        -v /var/run/docker.sock:/var/run/docker.sock:rw
-                        -v /var/lib/docker/containers:/var/lib/docker/containers:rw
-                        -v /sys/fs/cgroup:/sys/fs/cgroup:ro
-                        -v /run:/run:rw
-                        -v /run/lock:/run/lock:rw
                     """
                     reuseNode true
                 }
