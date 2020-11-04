@@ -216,10 +216,10 @@ pipeline {
                         DOCKER_IMAGE.push()
                     }
                     uploadSpec = {
-                      "files": [
+                      files: [
                         {
-                          "pattern": "${env.WORKSPACE}/packaging/bin/lake-linux-amd64",
-                          "target": "generic-local"
+                          pattern: "${env.WORKSPACE}/packaging/bin/lake-linux-amd64",
+                          target: "generic-local"
                         }
                       ]
                     }
