@@ -56,10 +56,6 @@ class UnitHelper(object):
       self.units = result
 
   def download(self):
-
-
-    #os.makedirs('packaging/bin', exist_ok=True)
-
     self.image_version = os.environ.get('IMAGE_VERSION', '')
     self.debian_version = os.environ.get('UNIT_VERSION', '')
 
@@ -69,19 +65,14 @@ class UnitHelper(object):
     assert self.image_version, 'IMAGE_VERSION not provided'
     assert self.debian_version, 'UNIT_VERSION not provided'
 
-    target = '../packaging/bin/lake_{}_{}.deb'.format(self.debian_version, self.arch)
-
-    print(os.getcwd())
-    print(os.path.dirname(os.path.realpath(__file__)))
-    print(os.path.realpath(os.path.join(os.path.dirname(__file__), '../../packaging/bin')))
-    print(os.listdir(os.path.realpath(os.path.join(os.path.dirname(__file__), '../../packaging/bin'))))
+    target = os.listdir(os.path.realpath(os.path.join(os.path.dirname(__file__), '../../packaging/bin', 'lake_{}_{}.deb'.format(self.debian_version, self.arch))))
 
     if os.path.exists(target):
       print('binary exists')
       self.install(target)
       return
 
-    #os.makedirs(os.path.dirname(target), exist_ok=True)
+    os.makedirs(os.path.dirname(target), exist_ok=True)
 
     failure = None
     image = 'openbank/lake:{}'.format(self.image_version)
