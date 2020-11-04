@@ -73,8 +73,8 @@ class UnitHelper(object):
 
     print(os.getcwd())
     print(os.path.dirname(os.path.realpath(__file__)))
-    print(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../packaging/bin'))
-    print(os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../packaging/bin')))
+    print(os.path.realpath(os.path.join(os.path.dirname(__file__), '../../packaging/bin')))
+    print(os.listdir(os.path.realpath(os.path.join(os.path.dirname(__file__), '../../packaging/bin'))))
 
     if os.path.exists(target):
       print('binary exists')
