@@ -56,7 +56,7 @@ class UnitHelper(object):
       self.units = result
 
   def download(self):
-    os.makedirs('/tmp/packages', exist_ok=True)
+    os.makedirs('packaging/bin', exist_ok=True)
 
     self.image_version = os.environ.get('IMAGE_VERSION', '')
     self.debian_version = os.environ.get('UNIT_VERSION', '')
@@ -69,9 +69,10 @@ class UnitHelper(object):
 
     image = 'openbank/lake:{}'.format(self.image_version)
     package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
-    target = '/tmp/packages/lake.deb'
+    target = 'packaging/bin/lake_{}_{}.deb'.format(self.debian_version, self.arch)
 
     if os.path.exists(target):
+      print('binary exists')
       self.install(target)
       return
 

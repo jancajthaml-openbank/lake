@@ -225,6 +225,7 @@ pipeline {
                         -e NO_TTY=1
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
+                        -v ${env.WORKSPACE}/packaging/bin:ro
                         -u 0
                     """
                     reuseNode true
@@ -232,10 +233,6 @@ pipeline {
             }
             steps {
                 script {
-                    sh "/lib/systemd/systemd sbin/init &"
-                    sh "ls -lFa /tmp/packages"
-                    sh "rm -rf /tmp/packages/lake.deb || :"
-                    sh "cp ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb /tmp/packages/lake.deb"
                     sh "python3 bbtest/main.py"
                 }
             }
