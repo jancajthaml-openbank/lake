@@ -210,12 +210,7 @@ pipeline {
         stage('Publish to Artifactory') {
             steps {
                 script {
-                    docker.withRegistry(env.DOCKER_LOCAL_REGISTRY, "jenkins-artifactory") {
-                        DOCKER_IMAGE_AMD64.push()
-
-                        //echo DOCKER_IMAGE_AMD64.imageName()
-                        //rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-local", Artifactory.newBuildInfo())
-                    }
+                    rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-local", Artifactory.newBuildInfo())
                 }
             }
         }
