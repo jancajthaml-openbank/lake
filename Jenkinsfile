@@ -235,16 +235,6 @@ pipeline {
                         script: 'hostname',
                         returnStdout: true
                     ).trim()
-                    echo "cid ${cid}"
-                    /*
-
-                        bbtest = sh(
-                            script: "docker run -d --volumes-from=${cid} -u 0 jancajthaml/bbtest:${env.ARCH}",
-                            returnStdout: true
-                        ).trim()
-                        sh "docker exec -it ${bbtest} python3 ${env.WORKSPACE}/bbtest/main.py"
-                    */
-                    sh "echo outside docker 1"
                     options = """
                         |-e IMAGE_VERSION=${env.VERSION}
                         |-e UNIT_VERSION=${env.VERSION}
@@ -257,7 +247,7 @@ pipeline {
                         sh "echo inside docker - ${c.id}"
                         sh "pwd"
                         sh "ls -la"
-                        sh "docker exec -t python3 bbtest/main.py"
+                        sh "docker exec -t ${c.id} python3 bbtest/main.py"
                     }
                     sh "echo outside docker 2"
                     sh ""
