@@ -65,17 +65,13 @@ class UnitHelper(object):
     assert self.image_version, 'IMAGE_VERSION not provided'
     assert self.debian_version, 'UNIT_VERSION not provided'
 
-    print('A')
-    target = os.path.realpath('{}/../../packaging/bin/lake_{}_{}.deb'.format(os.path.dirname(__file__), self.debian_version, self.arch))
-    print('B')
-    print(target)
+    self.binary = os.path.realpath('{}/../../packaging/bin/lake_{}_{}.deb'.format(os.path.dirname(__file__), self.debian_version, self.arch))
 
-    if os.path.exists(target):
-      print('binary exists')
-      self.install(target)
+    if os.path.exists(self.binary):
+      self.install(self.binary)
       return
 
-    os.makedirs(os.path.abspath(os.path.join(target, os.pardir)), exist_ok=True)
+    os.makedirs(os.path.dirname(self.binary), exist_ok=True)
 
     failure = None
     image = 'openbank/lake:{}'.format(self.image_version)
@@ -85,7 +81,7 @@ class UnitHelper(object):
       with open(temp.name, 'w') as fd:
         fd.write(str(os.linesep).join([
           'FROM alpine',
-          'COPY --from={} {} {}'.format(image, package, target)
+          'COPY --from={} {} {}'.format(image, package, self.binary)
         ]))
 
       image, stream = self.docker.images.build(fileobj=temp, rm=True, pull=False, tag='bbtest_artifacts-scratch')
@@ -102,13 +98,13 @@ class UnitHelper(object):
 
       tar_name = tempfile.NamedTemporaryFile(delete=True)
       with open(tar_name.name, 'wb') as fd:
-        bits, stat = scratch.get_archive(target)
+        bits, stat = scratch.get_archive(self.binary)
         for chunk in bits:
           fd.write(chunk)
 
       archive = tarfile.TarFile(tar_name.name)
-      archive.extract(os.path.basename(target), os.path.dirname(target))
-      self.install(target)
+      archive.extract(os.path.basename(self.binary), os.path.dirname(self.binary))
+      self.install(self.binary)
       scratch.remove()
     except Exception as ex:
       failure = ex
