@@ -1,5 +1,4 @@
-def DOCKER_IMAGE_AMD64
-
+def DOCKER_IMAGE
 
 def dockerOptions() {
     String options = "--pull "
@@ -30,11 +29,6 @@ def getVersion() {
     return version
 }
 
-def rtServer = Artifactory.server "artifactory"
-
-def rtDocker = Artifactory.docker server: rtServer
-def buildInfo = Artifactory.newBuildInfo()
-
 pipeline {
 
     agent {
@@ -58,17 +52,6 @@ pipeline {
             steps {
                 deleteDir()
                 checkout(scm)
-            }
-        }
-
-        stage('Probe') {
-            steps {
-                script {
-                    sh "docker rmi -f ${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106 || :"
-                    sh "docker images"
-                    rtDocker.pull("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:1.2.6b20201104102354106", "artifactory")
-                    sh "docker images"
-                }
             }
         }
 
@@ -219,7 +202,7 @@ pipeline {
         stage('Package Docker') {
             steps {
                 script {
-                    DOCKER_IMAGE_AMD64 = docker.build("docker-local.${env.ARTIFACTORY_DOCKER_REGISTRY}/openbank/lake:${env.VERSION}", dockerOptions())
+                    DOCKER_IMAGE = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}", dockerOptions())
                 }
             }
         }
@@ -227,8 +210,9 @@ pipeline {
         stage('Publish to Artifactory') {
             steps {
                 script {
-                    rtDocker.push(DOCKER_IMAGE_AMD64.imageName(), "docker-local", buildInfo)
-                    rtServer.publishBuildInfo buildInfo
+                    docker.withRegistry("http://${env.ARTIFACTORY_DOCKER_REGISTRY}", 'jenkins-artifactory') {
+                        DOCKER_IMAGE.push()
+                    }
                 }
             }
         }
@@ -238,8 +222,8 @@ pipeline {
     post {
         always {
             script {
-                if (DOCKER_IMAGE_AMD64 != null) {
-                    sh "docker rmi -f ${DOCKER_IMAGE_AMD64.id} || :"
+                if (DOCKER_IMAGE != null) {
+                    sh "docker rmi -f ${DOCKER_IMAGE.id} || :"
                 }
             }
             script {
