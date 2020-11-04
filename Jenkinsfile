@@ -67,6 +67,11 @@ pipeline {
                         script: 'git ls-remote --get-url',
                         returnStdout: true
                     ).trim()
+                    env.ARCH = sh(
+                        script: 'dpkg --print-architecture',
+                        returnStdout: true
+                    ).trim()
+
                     env.VERSION = getVersion()
                     env.LICENSE = "Apache-2.0"                           // fixme read from sources
                     env.PROJECT_NAME = "openbank lake"                   // fixme read from sources
@@ -170,7 +175,7 @@ pipeline {
                 script {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/package \
-                        --arch linux/amd64 \
+                        --arch linux/${env.ARCH} \
                         --source ${env.WORKSPACE}/services/lake \
                         --output ${env.WORKSPACE}/packaging/bin
                     """
@@ -191,7 +196,7 @@ pipeline {
                     sh """
                         ${env.WORKSPACE}/dev/lifecycle/debian \
                         --version ${env.VERSION} \
-                        --arch amd64 \
+                        --arch ${env.ARCH} \
                         --pkg lake \
                         --source ${env.WORKSPACE}/packaging
                     """
@@ -202,7 +207,7 @@ pipeline {
         stage('Package Docker') {
             steps {
                 script {
-                    DOCKER_IMAGE = docker.build("openbank/lake:${env.VERSION}", dockerOptions())
+                    DOCKER_IMAGE = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}", dockerOptions())
                 }
             }
         }
@@ -211,7 +216,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry("http://${env.ARTIFACTORY_DOCKER_REGISTRY}", 'jenkins-artifactory') {
-                        DOCKER_IMAGE.push("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}")
+                        DOCKER_IMAGE.push()
                     }
                     artifactory.upload spec: """
                     {
