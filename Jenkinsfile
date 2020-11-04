@@ -225,7 +225,7 @@ pipeline {
                         -e NO_TTY=1
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
-                        -v ${env.WORKSPACE}/packaging/bin/lake_linux_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
+                        -v ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb:/tmp/packages/lake.deb:ro
                         -u root
                     """
                     reuseNode true
@@ -233,8 +233,6 @@ pipeline {
             }
             steps {
                 script {
-                    sh "ls -la /etc"
-                    sh "id"
                     sh "python3 bbtest/main.py"
                 }
             }
