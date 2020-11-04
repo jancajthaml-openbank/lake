@@ -201,6 +201,16 @@ pipeline {
             }
         }
 
+        stage('Publish to Artifactory') {
+            steps {
+                script {
+                    docker.withRegistry(env.ARTIFACTORY_REPOSITORY, "docker-local") {
+                        DOCKER_IMAGE_AMD64.push()
+                    }
+                }
+            }
+        }
+
     }
 
     post {
