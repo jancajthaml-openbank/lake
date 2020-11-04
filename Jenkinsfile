@@ -226,6 +226,7 @@ pipeline {
                         -v ${env.WORKSPACE_TMP}:/tmp
                         -v ${env.WORKSPACE}/reports:/tmp/reports
                         -u 0
+                        --entrypoint /lib/systemd/systemd
                     """
                     reuseNode true
                 }
