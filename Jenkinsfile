@@ -249,11 +249,11 @@ pipeline {
                     */
                     sh "echo outside docker 1"
                     options = """
-                        |-e IMAGE_VERSION=${env.VERSION}
-                        |-e UNIT_VERSION=${env.VERSION}
-                        |-e UNIT_ARCH=${env.ARCH}
-                        |--volumes-from=${cid}
-                        |-u 0
+                        | -e IMAGE_VERSION=${env.VERSION}
+                        | -e UNIT_VERSION=${env.VERSION}
+                        | -e UNIT_ARCH=${env.ARCH}
+                        | --volumes-from=${cid}
+                        | -u 0
                     """.stripMargin().stripIndent()
                     echo options
                     docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
