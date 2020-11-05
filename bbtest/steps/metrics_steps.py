@@ -25,23 +25,27 @@ def step_impl(context, path, permissions):
 
 @then('metrics file {path} should have following keys')
 def step_impl(context, path):
+  cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
+
   expected = []
   for row in context.table:
     expected.append(row['key'])
   expected = sorted(expected)
-  file_should_exist(context, path)
-  with open(path, 'r') as fd:
+  file_should_exist(context, '{}/{}'.join(cwd, path))
+  with open('{}/{}'.join(cwd, path), 'r') as fd:
     assert expected == sorted(json.loads(fd.read()).keys())
 
 
 @then('metrics file {path} reports')
 def step_impl(context, path):
-  file_should_exist(context, path)
+  cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
+
+  file_should_exist(context, '{}/{}'.join(cwd, path))
 
   @eventually(20)
   def wait_for_metrics_update():
     actual = dict()
-    with open(path, 'r') as fd:
+    with open('{}/{}'.join(cwd, path), 'r') as fd:
       actual.update(json.loads(fd.read()))
 
     for row in context.table:

@@ -66,7 +66,9 @@ class UnitHelper(object):
     assert self.image_version, 'IMAGE_VERSION not provided'
     assert self.debian_version, 'UNIT_VERSION not provided'
 
-    self.binary = os.path.realpath('{}/../../packaging/bin/lake_{}_{}.deb'.format(os.path.dirname(__file__), self.debian_version, self.arch))
+    cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
+
+    self.binary = '{}/packaging/bin/lake_{}_{}.deb'.format(cwd, self.debian_version, self.arch)
 
     if os.path.exists(self.binary):
       self.install(self.binary)
@@ -76,7 +78,7 @@ class UnitHelper(object):
 
     failure = None
     image = 'openbank/lake:{}'.format(self.image_version)
-    package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
+    package = '/tmp/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
     temp = tempfile.NamedTemporaryFile(delete=True)
     try:
       with open(temp.name, 'w') as fd:
@@ -130,18 +132,20 @@ class UnitHelper(object):
       fd.write(str(os.linesep).join("LAKE_{!s}={!s}".format(k, v) for (k, v) in options.items()))
 
   def collect_logs(self):
-    os.makedirs('/tmp/reports/blackbox-tests/logs', exist_ok=True)
+    cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
+
+    os.makedirs('{}/reports/blackbox-tests/logs'.format(cwd), exist_ok=True)
 
     (code, result, error) = execute(['journalctl', '-o', 'cat', '--no-pager'])
     if code == 0:
-      with open('/tmp/reports/blackbox-tests/logs/journal.log', 'w') as fd:
+      with open('{}/reports/blackbox-tests/logs/journal.log'.format(cwd), 'w') as fd:
         fd.write(result)
 
     for unit in set(self.__get_systemd_units() + self.units):
       (code, result, error) = execute(['journalctl', '-o', 'cat', '-u', unit, '--no-pager'])
       if code != 0 or not result:
         continue
-      with open('/tmp/reports/blackbox-tests/logs/{}.log'.format(unit), 'w') as fd:
+      with open('{}/reports/blackbox-tests/logs/{}.log'.format(cwd, unit), 'w') as fd:
         fd.write(result)
 
   def teardown(self):

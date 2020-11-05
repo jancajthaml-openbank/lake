@@ -37,6 +37,6 @@ def step_impl(context, unit):
           found = True
           break
 
-      assert found == True, 'message "{}" was not found in logs:\n{}'.format(context.text.strip(), '\n'.join(actual_lines))
+      assert found == True, 'message "{}" was not found in logs'.format(context.text.strip())
 
   impl()

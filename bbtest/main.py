@@ -31,13 +31,13 @@ if __name__ == "__main__":
   args.append('@{}/order.txt'.format(cwd))
 
   for path in [
-    '/tmp/reports/blackbox-tests/metrics',
-    '/tmp/reports/blackbox-tests/logs',
-    '/tmp/reports/blackbox-tests/meta',
-    '/tmp/reports/blackbox-tests/data',
-    '/tmp/reports/blackbox-tests/behave',
-    '/tmp/reports/blackbox-tests/cucumber',
-    '/tmp/reports/blackbox-tests/junit'
+    '{}/../reports/blackbox-tests/metrics'.format(cwd),
+    '{}/../reports/blackbox-tests/logs'.format(cwd),
+    '{}/../reports/blackbox-tests/meta'.format(cwd),
+    '{}/../reports/blackbox-tests/data'.format(cwd),
+    '{}/../reports/blackbox-tests/behave'.format(cwd),
+    '{}/../reports/blackbox-tests/cucumber'.format(cwd),
+    '{}/../reports/blackbox-tests/junit.format(cwd)'
   ]:
     os.system('mkdir -p {}'.format(path))
     os.system('rm -rf {}/*'.format(path))
@@ -46,17 +46,17 @@ if __name__ == "__main__":
 
   exit_code = behave_executable.main(args=' '.join(args))
 
-  with open('/tmp/reports/blackbox-tests/behave/results.json', 'r') as fd_behave:
+  with open('{}/../reports/blackbox-tests/behave/results.json'.format(cwd), 'r') as fd_behave:
     cucumber_data = None
-    with open('/tmp/reports/blackbox-tests/cucumber/results.json', 'w') as fd_cucumber:
+    with open('{}/../reports/blackbox-tests/cucumber/results.json'.format(cwd), 'w') as fd_cucumber:
       behave_data = json.loads(fd_behave.read())
       cucumber_data = json.dumps(behave2cucumber.convert(behave_data))
       fd_cucumber.write(cucumber_data)
 
   execute([
     'json_to_junit',
-    '/tmp/reports/blackbox-tests/cucumber/results.json',
-    '/tmp/reports/blackbox-tests/junit/results.xml'
+    '{}/../reports/blackbox-tests/cucumber/results.json'.format(cwd),
+    '{}/../reports/blackbox-tests/junit/results.xml'.format(cwd)
   ])
 
   sys.exit(exit_code)
