@@ -218,11 +218,7 @@ pipeline {
             agent {
                 docker {
                     image "jancajthaml/bbtest:${env.ARCH}"
-                    args """
-                        -v ${env.WORKSPACE_TMP}:/tmp
-                        -v ${env.WORKSPACE}/reports:/tmp/reports
-                        -u 0
-                    """
+                    args """-u 0"""
                     reuseNode true
                 }
             }
@@ -240,8 +236,6 @@ pipeline {
                         |-e UNIT_VERSION=${env.VERSION}
                         |-e UNIT_ARCH=${env.ARCH}
                         |--volumes-from=${cid}
-                        |-v ${env.WORKSPACE_TMP}:/tmp
-                        |-v ${env.WORKSPACE}/reports:/tmp/reports
                         |-v /var/run/docker.sock:/var/run/docker.sock:rw
                         |-v /var/lib/docker/containers:/var/lib/docker/containers:rw
                         |-v /sys/fs/cgroup:/sys/fs/cgroup:ro
@@ -251,7 +245,7 @@ pipeline {
                         sh "docker exec -t ${c.id} python3 ${env.WORKSPACE}/bbtest/main.py"
                         sh "ls -lFa /tmp/reports"
                     }
-                    sh "ls -lFa ${env.WORKSPACE}/reports"
+                    sh "ls -lFa ${env.WORKSPACE_TMP}/reports"
                 }
             }
         }
