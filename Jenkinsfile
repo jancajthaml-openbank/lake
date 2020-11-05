@@ -88,32 +88,6 @@ pipeline {
             }
         }
 
-        stage('Ensure images up to date') {
-            parallel {
-                stage('jancajthaml/go') {
-                    steps {
-                        script {
-                            sh "docker pull jancajthaml/go:latest"
-                        }
-                    }
-                }
-                stage('jancajthaml/debian-packager') {
-                    steps {
-                        script {
-                            sh "docker pull jancajthaml/debian-packager:latest"
-                        }
-                    }
-                }
-                stage('jancajthaml/bbtest') {
-                    steps {
-                        script {
-                            sh "docker pull jancajthaml/bbtest:${env.ARCH}"
-                        }
-                    }
-                }
-            }
-        }
-
         stage('Fetch Dependencies') {
             agent {
                 docker {
@@ -303,13 +277,24 @@ pipeline {
                     jsonReportDirectory: "${env.WORKSPACE}/reports/blackbox-tests/cucumber"
                 )
             }
-            cleanWs()
         }
         success {
-            echo 'Success'
+            dir("${env.WORKSPACE}/reports") {
+                archiveArtifacts(
+                    allowEmptyArchive: true,
+                    artifacts: 'blackbox-tests/**/*.log'
+                )
+            }
+            cleanWs()
         }
         failure {
-            echo 'Failure'
+            dir("${env.WORKSPACE}/reports") {
+                archiveArtifacts(
+                    allowEmptyArchive: true,
+                    artifacts: 'blackbox-tests/**/*.log'
+                )
+            }
+            cleanWs()
         }
     }
 }
