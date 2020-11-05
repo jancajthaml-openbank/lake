@@ -17,7 +17,7 @@ if __name__ == "__main__":
     '--no-capture',
     '--no-junit',
     '-f json',
-    '-o /tmp/reports/blackbox-tests/behave/results.json',
+    '-o {}/../reports/blackbox-tests/behave/results.json'.format(cwd),
   ]
 
   if str(os.environ.get('CI', 'false')) == 'false':
