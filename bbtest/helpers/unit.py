@@ -80,7 +80,7 @@ class UnitHelper(object):
 
     failure = None
     image = 'openbank/lake:{}'.format(self.image_version)
-    package = '/tmp/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
+    package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
     temp = tempfile.NamedTemporaryFile(delete=True)
     try:
       with open(temp.name, 'w') as fd:
