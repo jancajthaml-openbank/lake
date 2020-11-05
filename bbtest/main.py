@@ -37,7 +37,7 @@ if __name__ == "__main__":
     '{}/../reports/blackbox-tests/data'.format(cwd),
     '{}/../reports/blackbox-tests/behave'.format(cwd),
     '{}/../reports/blackbox-tests/cucumber'.format(cwd),
-    '{}/../reports/blackbox-tests/junit.format(cwd)'
+    '{}/../reports/blackbox-tests/junit'.format(cwd)
   ]:
     os.system('mkdir -p {}'.format(path))
     os.system('rm -rf {}/*'.format(path))
