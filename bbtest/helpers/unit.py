@@ -20,7 +20,7 @@ class UnitHelper(object):
       "PORT_PULL": "5562",
       "PORT_PUB": "5561",
       "METRICS_REFRESHRATE": "1h",
-      "METRICS_OUTPUT": "/tmp/reports/blackbox-tests/metrics",
+      "METRICS_OUTPUT": os.path.realpath('{}/../../reports/blackbox-tests/metrics'.format(os.path.dirname(__file__))),
       "METRICS_CONTINUOUS": "true",
     }
 
@@ -42,12 +42,14 @@ class UnitHelper(object):
     self.context = context
 
   def install(self, file):
+    cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
+
     (code, result, error) = execute(['dpkg', '-c', file])
     if code != 0:
       raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
     else:
-      os.makedirs('/tmp/reports/blackbox-tests/meta', exist_ok=True)
-      with open('/tmp/reports/blackbox-tests/meta/debian.lake.txt', 'w') as fd:
+      os.makedirs('{}/reports/blackbox-tests/meta'.format(cwd), exist_ok=True)
+      with open('{}/reports/blackbox-tests/meta/debian.lake.txt'.format(cwd), 'w') as fd:
         fd.write(result)
 
       result = [item for item in result.split(os.linesep)]
