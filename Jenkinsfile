@@ -299,14 +299,8 @@ pipeline {
                     reportFiles: 'lake-coverage.html',
                     reportName: 'Unit Test Coverage'
                 ])
-                junit(
-                    checksName: 'Unit Test',
-                    allowEmptyResults: true,
-                    skipPublishingChecks: true,
-                    testResults: "${env.WORKSPACE}/reports/unit-tests/lake-results.xml"
-                )
                 cucumber(
-                    allowEmptyResults: true,
+                    allowMissing: true,
                     fileIncludePattern: '*',
                     jsonReportDirectory: "${env.WORKSPACE}/reports/blackbox-tests/cucumber"
                 )
