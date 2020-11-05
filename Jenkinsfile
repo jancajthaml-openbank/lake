@@ -314,10 +314,8 @@ pipeline {
             cleanWs()
         }
         success {
-            echo 'Success'
         }
         failure {
-            echo 'Failure'
         }
     }
 }
