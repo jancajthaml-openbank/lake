@@ -292,7 +292,6 @@ pipeline {
             }
             script {
                 publishHTML(target: [
-                    allowMissing: true,
                     alwaysLinkToLastBuild: false,
                     keepAll: true,
                     reportDir: "${env.WORKSPACE}/reports/unit-tests",
@@ -300,7 +299,6 @@ pipeline {
                     reportName: 'Unit Test Coverage'
                 ])
                 cucumber(
-                    allowMissing: true,
                     fileIncludePattern: '*',
                     jsonReportDirectory: "${env.WORKSPACE}/reports/blackbox-tests/cucumber"
                 )
