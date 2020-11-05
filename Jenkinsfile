@@ -243,9 +243,7 @@ pipeline {
                     """.stripMargin().stripIndent().replaceAll("[\\t\\n\\r]+"," ").stripMargin().stripIndent()
                     docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
                         sh "docker exec -t ${c.id} python3 ${env.WORKSPACE}/bbtest/main.py"
-                        sh "ls -lFa ${env.WORKSPACE}/reports"
                     }
-                    sh "ls -lFa ${env.WORKSPACE}/reports"
                 }
             }
         }
@@ -293,12 +291,6 @@ pipeline {
                 }
             }
             script {
-                dir("${env.WORKSPACE}/reports") {
-                    archiveArtifacts(
-                        allowEmptyArchive: true,
-                        artifacts: "**/*"
-                    )
-                }
                 publishHTML(target: [
                     allowMissing: true,
                     alwaysLinkToLastBuild: false,
