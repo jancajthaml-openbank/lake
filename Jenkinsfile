@@ -240,6 +240,8 @@ pipeline {
                         |-e UNIT_VERSION=${env.VERSION}
                         |-e UNIT_ARCH=${env.ARCH}
                         |--volumes-from=${cid}
+                        |-v ${env.WORKSPACE_TMP}:/tmp
+                        |-v ${env.WORKSPACE}/reports:/tmp/reports
                         |-v /var/run/docker.sock:/var/run/docker.sock:rw
                         |-v /var/lib/docker/containers:/var/lib/docker/containers:rw
                         |-v /sys/fs/cgroup:/sys/fs/cgroup:ro
