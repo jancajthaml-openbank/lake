@@ -2,7 +2,7 @@ def DOCKER_IMAGE
 
 def dockerOptions() {
     String options = "--pull "
-    options += "--label 'org.opencontainers.image.source=${env.GIT_URL}#${env.CHANGE_BRANCH}' "
+    options += "--label 'org.opencontainers.image.source=${env.GIT_URL}#${env.GIT_BRANCH}' "
     options += "--label 'org.opencontainers.image.created=${env.RFC3339_DATETIME}' "
     options += "--label 'org.opencontainers.image.revision=${env.GIT_COMMIT}' "
     options += "--label 'org.opencontainers.image.licenses=${env.LICENSE}' "
@@ -48,7 +48,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    currentBuild.displayName = "#${currentBuild.number} - ${env.CHANGE_BRANCH} (?)"
+                    currentBuild.displayName = "#${currentBuild.number} - ? (?)"
                 }
                 deleteDir()
                 checkout(scm)
@@ -70,6 +70,10 @@ pipeline {
                         script: 'git ls-remote --get-url',
                         returnStdout: true
                     ).trim()
+                    env.GIT_BRANCH = sh(
+                        script: 'git name-rev --name-only HEAD',
+                        returnStdout: true
+                    ).trim()
                     env.ARCH = sh(
                         script: 'dpkg --print-architecture',
                         returnStdout: true
@@ -82,8 +86,8 @@ pipeline {
                     env.PROJECT_AUTHOR = "${env.CHANGE_AUTHOR_DISPLAY_NAME} <${env.CHANGE_AUTHOR_EMAIL}>"
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
-
-                    currentBuild.displayName = "#${currentBuild.number} - ${env.CHANGE_BRANCH} (${env.VERSION})"
+					
+                    currentBuild.displayName = "#${currentBuild.number} - ${env.GIT_BRANCH} (${env.VERSION})"
                 }
             }
         }
