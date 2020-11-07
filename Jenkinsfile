@@ -198,6 +198,7 @@ pipeline {
             }
             steps {
                 script {
+                    sh "ls -la ${env.WORKSPACE}"
                     withCredentials([string(credentialsId: 'sign-key', variable: 'SIGN_KEY')]) {
                         sh """
                             debsigs \
