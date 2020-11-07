@@ -254,7 +254,6 @@ pipeline {
                 label 'docker'
             }
             steps {
-                unstash 'signed-deb'
                 script {
                     DOCKER_IMAGE = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}", dockerOptions())
                 }
