@@ -189,6 +189,14 @@ pipeline {
                         --source ${env.WORKSPACE}/packaging
                     """
                 }
+            }
+        }
+
+        stage('Sign Debian') {
+            agent {
+                label 'master'
+            }
+            steps {
                 script {
                     withCredentials([string(credentialsId: 'sign-key', variable: 'SIGN_KEY')]) {
                         sh """
