@@ -87,6 +87,8 @@ pipeline {
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
 
+                    echo sh(script: 'env|sort', returnStdout: true)
+
                     currentBuild.displayName = "#${currentBuild.number} - ${env.GIT_BRANCH} (${env.VERSION})"
                 }
             }
