@@ -71,7 +71,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     env.GIT_BRANCH = sh(
-                        script: 'git branch --show-current',
+                        script: 'git name-rev --name-only HEAD',
                         returnStdout: true
                     ).trim()
                     env.ARCH = sh(
