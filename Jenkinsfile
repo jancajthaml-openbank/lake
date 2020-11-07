@@ -71,9 +71,9 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     env.GIT_BRANCH = sh(
-                        script: 'git symbolic-ref -q --short HEAD',
+                        script: 'git rev-parse --abbrev-ref HEAD',
                         returnStdout: true
-                    ).trim()
+                    ).trim() - 'remote/origin/'
                     env.ARCH = sh(
                         script: 'dpkg --print-architecture',
                         returnStdout: true
