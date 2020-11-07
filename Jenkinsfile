@@ -263,9 +263,9 @@ pipeline {
                 publishHTML(target: [
                     alwaysLinkToLastBuild: false,
                     keepAll: true,
-                    reportDir: "${env.WORKSPACE}/reports/unit-tests",
-                    reportFiles: 'lake-coverage.html',
-                    reportName: 'Unit Test Coverage'
+                    reportDir: "${env.WORKSPACE}/reports/unit-tests/lake-coverage",
+                    reportFiles: '*',
+                    reportName: 'Unit Test Coverage (Lake)'
                 ])
                 cucumber(
                     fileIncludePattern: '*',
