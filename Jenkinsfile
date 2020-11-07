@@ -229,6 +229,17 @@ pipeline {
             }
         }
 
+        stage('Package Docker') {
+            agent {
+                label 'docker'
+            }
+            steps {
+                script {
+                    DOCKER_IMAGE = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}", dockerOptions())
+                }
+            }
+        }
+
         stage('Sign Debian') {
             agent {
                 label 'master'
@@ -245,17 +256,6 @@ pipeline {
                         """
                     }
                     stash includes: "packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb", name: 'signed-deb'
-                }
-            }
-        }
-
-        stage('Package Docker') {
-            agent {
-                label 'docker'
-            }
-            steps {
-                script {
-                    DOCKER_IMAGE = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}", dockerOptions())
                 }
             }
         }
