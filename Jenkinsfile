@@ -87,8 +87,6 @@ pipeline {
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
 
-                    echo sh(script: 'env|sort', returnStdout: true)
-
                     currentBuild.displayName = "#${currentBuild.number} - ${env.GIT_BRANCH} (${env.VERSION})"
                 }
             }
@@ -183,15 +181,17 @@ pipeline {
             }
             steps {
                 script {
-                    sh """
-                        ${env.WORKSPACE}/dev/lifecycle/debian \
-                        --version ${env.VERSION} \
-                        --arch ${env.ARCH} \
-                        --pkg lake \
-                        --source ${env.WORKSPACE}/packaging
-                    """
+                    withCredentials([string(credentialsId: 'sign-key', variable: 'SIGN_KEY')]) {
+                        sh """
+                            ${env.WORKSPACE}/dev/lifecycle/debian \
+                            --version ${env.VERSION} \
+                            --arch ${env.ARCH} \
+                            --pkg lake \
+                            --sign ${SIGN_KEY} \
+                            --source ${env.WORKSPACE}/packaging
+                        """
+                    }
                 }
-                stash includes: "packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb", name: 'deb'
             }
         }
 
@@ -230,9 +230,6 @@ pipeline {
         }
 
         stage('Package Docker') {
-            agent {
-                label 'docker'
-            }
             steps {
                 script {
                     DOCKER_IMAGE = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}", dockerOptions())
@@ -240,36 +237,12 @@ pipeline {
             }
         }
 
-        stage('Sign Debian') {
-            agent {
-                label 'master'
-            }
-            steps {
-                script {
-                    unstash 'deb'
-                    withCredentials([string(credentialsId: 'sign-key', variable: 'SIGN_KEY')]) {
-                        sh """
-                            debsigs \
-                            --sign=origin \
-                            -k ${SIGN_KEY} \
-                            ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb
-                        """
-                    }
-                    stash includes: "packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb", name: 'signed-deb'
-                }
-            }
-        }
-
         stage('Publish') {
-            agent {
-                label 'docker'
-            }
             steps {
                 script {
                     docker.withRegistry("http://${env.ARTIFACTORY_DOCKER_REGISTRY}", 'jenkins-artifactory') {
                         DOCKER_IMAGE.push()
                     }
-                    unstash 'signed-deb'
                     artifactory.upload spec: """
                     {
                         "files": [
@@ -280,7 +253,7 @@ pipeline {
                             },
                             {
                                 "pattern": "${env.WORKSPACE}/packaging/bin/lake_(*)_(*).deb",
-                                "target": "generic-local/openbank/lake/{1}/linux/{2}/lake_{1}_{2}.deb",
+                                "target": "generic-local/openbank/lake/{1}/linux/{2}/lake.deb",
                                 "recursive": "false"
                             }
                         ]

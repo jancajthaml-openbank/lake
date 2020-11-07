@@ -9,6 +9,7 @@ VERSION=""
 SOURCE=""
 TARGET_ARCHITECTURE=""
 TARGET_PACKAGE=""
+SIGN_KEY=""
 while [ $# -gt 0 ] ; do
 key="$1"
 case $key in
@@ -16,6 +17,7 @@ case $key in
   --arch)     TARGET_ARCHITECTURE="$2"; shift; shift; ;;
   --pkg)      TARGET_PACKAGE="$2";      shift; shift; ;;
   --version)  VERSION="$2";             shift; shift; ;;
+  --sign)     SIGN_KEY="$2";            shift; shift; ;;
   *)                                    shift;        ;;
 esac
 done
@@ -110,9 +112,16 @@ lifecycle::debian::package() {
   CC=${CC} \
     dpkg-buildpackage \
     --host-arch=${TARGET_ARCHITECTURE} \
-    -tc -uc -b -rfakeroot
+    -rfakeroot \
+    -tc -uc -b
 
   find ".." -name "${TARGET_PACKAGE}_*_${TARGET_ARCHITECTURE}.*" -exec mv {} bin/ \;
+}
+
+lifecycle::debian::sign() {
+  if [ -n "${SIGN_KEY}" ] ; then
+    fakeroot find bin -name "${TARGET_PACKAGE}_*_${TARGET_ARCHITECTURE}.deb" -exec dpkg-sig -k "${SIGN_KEY}" --sign {} \;
+  fi
 }
 
 lifecycle::lintian() {
@@ -124,4 +133,5 @@ lifecycle::lintian() {
 
 lifecycle::debian::generate_changelog
 lifecycle::debian::package
+lifecycle::debian::sign
 lifecycle::lintian
