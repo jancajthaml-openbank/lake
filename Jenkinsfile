@@ -73,7 +73,7 @@ pipeline {
                     env.GIT_BRANCH = sh(
                         script: 'git name-rev --name-only HEAD',
                         returnStdout: true
-                    ).trim() - 'remote/origin/'
+                    ).trim() - 'remotes/origin/'
                     env.ARCH = sh(
                         script: 'dpkg --print-architecture',
                         returnStdout: true
