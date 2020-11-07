@@ -105,7 +105,7 @@ services:
   perf:
     image: jancajthaml/bbtest:amd64
     environment:
-      IMAGE_VERSION: ${VERSION:-latest}-${META:-master}
+      IMAGE_VERSION: ${VERSION:-latest}-${META:-main}
       UNIT_VERSION: ${VERSION:-latest}
       UNIT_ARCH: amd64
       MESSAGES_PUSHED: 10000
