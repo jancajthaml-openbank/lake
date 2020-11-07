@@ -190,13 +190,14 @@ pipeline {
                     """
                 }
                 script {
-                    sh """
-                        debsigs \
-                        --sign=origin \
-                        -k ${env.PG_SIGN_KEY} \
-                        ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb
-                    """
-
+                    withCredentials([string(credentialsId: 'sign-key', variable: 'SIGN_KEY')]) {
+                        sh """
+                            debsigs \
+                            --sign=origin \
+                            -k ${SIGN_KEY} \
+                            ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb
+                        """
+                    }
                     sh "ls -la ${env.WORKSPACE}/packaging/bin"
                 }
             }
