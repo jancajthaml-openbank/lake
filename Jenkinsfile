@@ -71,7 +71,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     env.GIT_BRANCH = sh(
-                        script: 'git name-rev --name-only HEAD',
+                        script: 'git symbolic-ref -q --short HEAD',
                         returnStdout: true
                     ).trim()
                     env.ARCH = sh(
