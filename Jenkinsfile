@@ -191,29 +191,7 @@ pipeline {
                         --source ${env.WORKSPACE}/packaging
                     """
                 }
-                sh "ls -la ${env.WORKSPACE}"
                 stash includes: "packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb", name: 'deb'
-            }
-        }
-
-        stage('Sign Debian') {
-            agent {
-                label 'master'
-            }
-            steps {
-                script {
-                    unstash 'deb'
-                    sh "ls -la ${env.WORKSPACE}"
-                    withCredentials([string(credentialsId: 'sign-key', variable: 'SIGN_KEY')]) {
-                        sh """
-                            debsigs \
-                            --sign=origin \
-                            -k ${SIGN_KEY} \
-                            ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb
-                        """
-                    }
-                    sh "ls -la ${env.WORKSPACE}/packaging/bin"
-                }
             }
         }
 
@@ -251,8 +229,32 @@ pipeline {
             }
         }
 
-        stage('Package Docker') {
+        stage('Sign Debian') {
+            agent {
+                label 'master'
+            }
             steps {
+                script {
+                    unstash 'deb'
+                    withCredentials([string(credentialsId: 'sign-key', variable: 'SIGN_KEY')]) {
+                        sh """
+                            debsigs \
+                            --sign=origin \
+                            -k ${SIGN_KEY} \
+                            ${env.WORKSPACE}/packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb
+                        """
+                    }
+                    stash includes: "packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb", name: 'signed-deb'
+                }
+            }
+        }
+
+        stage('Package Docker') {
+            agent {
+                label 'docker'
+            }
+            steps {
+                unstash 'signed-deb'
                 script {
                     DOCKER_IMAGE = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}", dockerOptions())
                 }
@@ -260,11 +262,15 @@ pipeline {
         }
 
         stage('Publish') {
+            agent {
+                label 'docker'
+            }
             steps {
                 script {
                     docker.withRegistry("http://${env.ARTIFACTORY_DOCKER_REGISTRY}", 'jenkins-artifactory') {
                         DOCKER_IMAGE.push()
                     }
+                    unstash 'signed-deb'
                     artifactory.upload spec: """
                     {
                         "files": [
@@ -275,7 +281,7 @@ pipeline {
                             },
                             {
                                 "pattern": "${env.WORKSPACE}/packaging/bin/lake_(*)_(*).deb",
-                                "target": "generic-local/openbank/lake/{1}/linux/{2}/lake.deb",
+                                "target": "generic-local/openbank/lake/{1}/linux/{2}/lake_{1}_{2}.deb",
                                 "recursive": "false"
                             }
                         ]
