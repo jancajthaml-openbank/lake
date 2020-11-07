@@ -189,6 +189,8 @@ pipeline {
                         --source ${env.WORKSPACE}/packaging
                     """
                 }
+                sh "ls -la ${env.WORKSPACE}"
+                stash includes: "packaging/bin/lake_${env.VERSION}_${env.ARCH}.deb", name: 'deb'
             }
         }
 
@@ -198,6 +200,7 @@ pipeline {
             }
             steps {
                 script {
+                    unstash 'deb'
                     sh "ls -la ${env.WORKSPACE}"
                     withCredentials([string(credentialsId: 'sign-key', variable: 'SIGN_KEY')]) {
                         sh """
