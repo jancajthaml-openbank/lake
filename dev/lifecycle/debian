@@ -120,7 +120,7 @@ lifecycle::debian::package() {
 
 lifecycle::debian::sign() {
   if [ -n "${SIGN_KEY}" ] ; then
-    fakeroot find bin -name "${TARGET_PACKAGE}_*_${TARGET_ARCHITECTURE}.deb" -exec dpkg-sig -k "${SIGN_KEY}" --sign {} \;
+    fakeroot find bin -name "${TARGET_PACKAGE}_*_${TARGET_ARCHITECTURE}.deb" -exec dpkg-sig -k "${SIGN_KEY}" --sign builder {} \;
   fi
 }
 
