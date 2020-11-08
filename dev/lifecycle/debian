@@ -120,8 +120,10 @@ lifecycle::debian::package() {
 
 lifecycle::debian::sign() {
   if [ -n "${SIGN_KEY}" ] ; then
+    echo "[info] (${TARGET_PACKAGE}_${TARGET_ARCHITECTURE}) sign package"
     fakeroot find bin -name "${TARGET_PACKAGE}_*_${TARGET_ARCHITECTURE}.deb" -exec dpkg-sig -k "${SIGN_KEY}" --sign builder {} \;
   fi
+  fakeroot find bin -name "${TARGET_PACKAGE}_*_${TARGET_ARCHITECTURE}.deb" -exec dpkg-sig --verify {} \;
 }
 
 lifecycle::lintian() {
