@@ -17,6 +17,7 @@ package config
 import (
   "testing"
   "os"
+  "time"
 )
 
 func TestEnvBoolean(t *testing.T) {
@@ -78,6 +79,37 @@ func TestEnvInteger(t *testing.T) {
     }
   }
 }
+
+func TestEnvDuration(t *testing.T) {
+
+  t.Log("LAKE_TEST_DUR missing")
+  {
+    if envDuration("LAKE_TEST_DUR", time.Second) != time.Second {
+      t.Errorf("envDuration did not provide default value")
+    }
+  }
+
+  t.Log("LAKE_TEST_DUR present and valid")
+  {
+    os.Setenv("LAKE_TEST_DUR", "2s")
+    defer os.Unsetenv("LAKE_TEST_DUR")
+
+    if envDuration("LAKE_TEST_DUR", time.Second) != 2*time.Second {
+      t.Errorf("envDuration did not obtain env value")
+    }
+  }
+
+  t.Log("LAKE_TEST_DUR present and invalid")
+  {
+    os.Setenv("LAKE_TEST_DUR", "x")
+    defer os.Unsetenv("LAKE_TEST_DUR")
+
+    if envDuration("LAKE_TEST_DUR", time.Second) != time.Second {
+      t.Errorf("envDuration did not obtain fallback to default value")
+    }
+  }
+}
+
 
 func TestEnvString(t *testing.T) {
 
