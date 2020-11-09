@@ -19,16 +19,20 @@ import (
   "net"
   "bytes"
   "testing"
+  "io/ioutil"
 )
 
 func TestNotifyServiceStatus(t *testing.T) {
-  // FIXME tempfile
-  name := "testgram"
+  f, err := ioutil.TempFile("/tmp", "unixgram-*")
+  if err != nil {
+    t.Fatal(err)
+  }
+  os.Remove(f.Name())
 
-  os.Setenv("NOTIFY_SOCKET", name)
+  os.Setenv("NOTIFY_SOCKET", f.Name())
   defer os.Unsetenv("NOTIFY_SOCKET")
 
-  ta, err := net.ResolveUnixAddr("unixgram", name)
+  ta, err := net.ResolveUnixAddr("unixgram", f.Name())
   if err != nil {
     t.Fatal(err)
   }
@@ -36,9 +40,9 @@ func TestNotifyServiceStatus(t *testing.T) {
   if err != nil {
     t.Fatal(err)
   }
-  defer func() {
+  defer func(){
     l.Close()
-    os.Remove(name)
+    os.Remove(f.Name())
   }()
 
   t.Log("NotifyServiceReady")
