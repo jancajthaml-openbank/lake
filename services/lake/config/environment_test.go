@@ -78,3 +78,23 @@ func TestEnvInteger(t *testing.T) {
     }
   }
 }
+
+func TestEnvString(t *testing.T) {
+
+  t.Log("LAKE_TEST_STR missing")
+  {
+    if envString("LAKE_TEST_STR", "x") != "x" {
+      t.Errorf("envString did not provide default value")
+    }
+  }
+
+  t.Log("LAKE_TEST_STR present")
+  {
+    os.Setenv("LAKE_TEST_STR", "y")
+    defer os.Unsetenv("LAKE_TEST_STR")
+
+    if envString("LAKE_TEST_STR", "x") != "y" {
+      t.Errorf("envString did not obtain env value")
+    }
+  }
+}
