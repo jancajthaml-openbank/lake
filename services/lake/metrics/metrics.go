@@ -66,7 +66,7 @@ func (metrics *Metrics) MemoryAllocatedSnapshot() {
 }
 
 // Start handles everything needed to start metrics daemon
-func (metrics Metrics) Start() {
+func (metrics *Metrics) Start() {
 	ticker := time.NewTicker(metrics.refreshRate)
 	defer ticker.Stop()
 
