@@ -42,6 +42,7 @@ func envFilename(key string, fallback string) string {
 	}
 	value = filepath.Clean(value)
 	if os.MkdirAll(value, os.ModePerm) != nil {
+		log.Error().Msgf("invalid value of variable %s", key)
 		return fallback
 	}
 	return value

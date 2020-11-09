@@ -20,6 +20,26 @@ import (
   "time"
 )
 
+func TestEnvString(t *testing.T) {
+
+  t.Log("LAKE_TEST_STR missing")
+  {
+    if envString("LAKE_TEST_STR", "x") != "x" {
+      t.Errorf("envString did not provide default value")
+    }
+  }
+
+  t.Log("LAKE_TEST_STR present")
+  {
+    os.Setenv("LAKE_TEST_STR", "y")
+    defer os.Unsetenv("LAKE_TEST_STR")
+
+    if envString("LAKE_TEST_STR", "x") != "y" {
+      t.Errorf("envString did not obtain env value")
+    }
+  }
+}
+
 func TestEnvBoolean(t *testing.T) {
 
   t.Log("LAKE_TEST_BOOL missing")
@@ -110,23 +130,33 @@ func TestEnvDuration(t *testing.T) {
   }
 }
 
+func TestEnvFilename(t *testing.T) {
 
-func TestEnvString(t *testing.T) {
-
-  t.Log("LAKE_TEST_STR missing")
+  t.Log("LAKE_TEST_FILE missing")
   {
-    if envString("LAKE_TEST_STR", "x") != "x" {
-      t.Errorf("envString did not provide default value")
+    if envFilename("LAKE_TEST_FILE", "/tmp/stub") != "/tmp/stub" {
+      t.Errorf("envFilename did not provide default value")
     }
   }
 
-  t.Log("LAKE_TEST_STR present")
+  t.Log("LAKE_TEST_FILE present and valid")
   {
-    os.Setenv("LAKE_TEST_STR", "y")
-    defer os.Unsetenv("LAKE_TEST_STR")
+    os.Setenv("LAKE_TEST_FILE", "/tmp")
+    defer os.Unsetenv("LAKE_TEST_FILE")
 
-    if envString("LAKE_TEST_STR", "x") != "y" {
-      t.Errorf("envString did not obtain env value")
+    if envFilename("LAKE_TEST_FILE", "/tmp/stub") != "/tmp" {
+      t.Errorf("envFilename did not obtain env value")
+    }
+  }
+
+  t.Log("LAKE_TEST_FILE present and invalid")
+  {
+    os.Setenv("LAKE_TEST_FILE", "/dev/null")
+    defer os.Unsetenv("LAKE_TEST_FILE")
+
+    if envFilename("LAKE_TEST_FILE", "/tmp/stub") != "/tmp/stub" {
+      t.Errorf("envFilename did not obtain fallback to default value")
     }
   }
 }
+
