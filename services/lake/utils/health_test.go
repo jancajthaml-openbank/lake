@@ -22,6 +22,25 @@ import (
   "io/ioutil"
 )
 
+func TestSystemNotifyValidation(t *testing.T) {
+  t.Log("NOTIFY_SOCKET is not defined")
+  {
+    os.Unsetenv("NOTIFY_SOCKET")
+    if systemNotify("foo") == nil {
+      t.Fatalf("expected to return error")
+    }
+  }
+
+  t.Log("NOTIFY_SOCKET is set to invalid value")
+  {
+    os.Setenv("NOTIFY_SOCKET", "/dev/null")
+    defer os.Unsetenv("NOTIFY_SOCKET")
+    if systemNotify("foo") == nil {
+      t.Fatalf("expected to return error")
+    }
+  }
+}
+
 func TestNotifyServiceStatus(t *testing.T) {
   f, err := ioutil.TempFile("/tmp", "unixgram-*")
   if err != nil {
