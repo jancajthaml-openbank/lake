@@ -31,6 +31,10 @@ func (prog Program) WaitReady(deadline time.Duration) error {
 
 	var wg sync.WaitGroup
 	waitWithDeadline := func(support utils.Daemon) {
+		if support == nil {
+			wg.Done()
+			return
+		}
 		go func() {
 			err := support.WaitReady(deadline)
 			if err != nil {
@@ -82,6 +86,9 @@ func (prog Program) Stop() {
 // Start runs the application
 func (prog Program) Start() {
 	for idx, _ := range prog.daemons {
+		if prog.daemons[idx] == nil {
+			continue
+		}
 		go prog.daemons[idx].Start()
 	}
 

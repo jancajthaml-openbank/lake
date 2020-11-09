@@ -50,16 +50,25 @@ func NewMetrics(ctx context.Context, continuous bool, output string, refreshRate
 
 // MessageEgress increment number of outcomming messages
 func (metrics *Metrics) MessageEgress() {
+	if metrics == nil {
+		return
+	}
 	atomic.AddUint64(&(metrics.messageEgress), 1)
 }
 
 // MessageIngress increment number of incomming messages
 func (metrics *Metrics) MessageIngress() {
+	if metrics == nil {
+		return
+	}
 	atomic.AddUint64(&(metrics.messageIngress), 1)
 }
 
 // MemoryAllocatedSnapshot updates memory allocated snapshot
 func (metrics *Metrics) MemoryAllocatedSnapshot() {
+	if metrics == nil {
+		return
+	}
 	var stats = new(runtime.MemStats)
 	runtime.ReadMemStats(stats)
 	atomic.StoreUint64(&(metrics.memoryAllocated), stats.Sys)
@@ -67,6 +76,9 @@ func (metrics *Metrics) MemoryAllocatedSnapshot() {
 
 // Start handles everything needed to start metrics daemon
 func (metrics *Metrics) Start() {
+	if metrics == nil {
+		return
+	}
 	ticker := time.NewTicker(metrics.refreshRate)
 	defer ticker.Stop()
 
