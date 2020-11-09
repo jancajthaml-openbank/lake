@@ -21,17 +21,14 @@ import (
   "time"
 )
 
-func TestMain(m *testing.M) {
+func TestGetConfig(t *testing.T) {
   for _, v := range os.Environ() {
     k := strings.Split(v, "=")[0]
     if strings.HasPrefix(k, "LAKE") {
       os.Unsetenv(k)
     }
   }
-  os.Exit(m.Run())
-}
 
-func TestGetConfig(t *testing.T) {
   t.Log("has defaults for all values")
   {
     config := GetConfig()
