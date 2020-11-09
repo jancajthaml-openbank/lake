@@ -21,7 +21,7 @@ import (
 	"os"
 	//"runtime"
 	"strconv"
-	//"sync/atomic"
+	"sync/atomic"
 )
 
 // MarshalJSON serializes Metrics as json bytes
@@ -58,8 +58,8 @@ func (metrics *Metrics) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	metrics.messageEgress = aux.MessageEgress
-	metrics.messageIngress = aux.MessageIngress
+	atomic.StoreUint64(&(metrics.messageEgress), aux.MessageEgress)
+	atomic.StoreUint64(&(metrics.messageIngress), aux.MessageIngress)
 
 	return nil
 }
