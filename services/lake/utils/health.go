@@ -33,7 +33,8 @@ func systemNotify(state string) error {
 		return err
 	}
 	defer conn.Close()
-	return conn.Write([]byte(state))
+	_, err = conn.Write([]byte(state))
+	return err
 }
 
 // NotifyServiceReady notify underlying os that service is ready

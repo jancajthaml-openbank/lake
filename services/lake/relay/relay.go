@@ -75,7 +75,7 @@ func (relay Relay) Start() {
 				alive = false
 				relay.MarkDone()
 				if ctx.Term() != nil {
-					log.Info().Error("Stop relay-daemon (failed to terminate context)")
+					log.Error().Msg("Stop relay-daemon (failed to terminate context)")
 				} else {
 					log.Info().Msg("Stop relay-daemon")
 				}
