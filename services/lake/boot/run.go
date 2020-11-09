@@ -43,8 +43,8 @@ func (prog Program) WaitReady(deadline time.Duration) error {
 	}
 
 	wg.Add(len(prog.daemons))
-	for _, daemon := range prog.daemons {
-		waitWithDeadline(daemon)
+	for idx, _ := range prog.daemons {
+		waitWithDeadline(prog.daemons[idx])
 	}
 	wg.Wait()
 
@@ -81,8 +81,8 @@ func (prog Program) Stop() {
 
 // Start runs the application
 func (prog Program) Start() {
-	for _, daemon := range prog.daemons {
-		go daemon.Start()
+	for idx, _ := range prog.daemons {
+		go prog.daemons[idx].Start()
 	}
 
 	if err := prog.WaitReady(5 * time.Second); err != nil {
