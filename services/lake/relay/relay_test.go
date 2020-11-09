@@ -3,12 +3,12 @@ package relay
 import (
 	"context"
 	"fmt"
+	"github.com/jancajthaml-openbank/lake/metrics"
 	"runtime"
+	"strings"
 	"sync"
 	"testing"
 	"time"
-	"strings"
-	"github.com/jancajthaml-openbank/lake/metrics"
 
 	zmq "github.com/pebbe/zmq4"
 )

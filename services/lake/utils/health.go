@@ -15,8 +15,8 @@
 package utils
 
 import (
-	"net"
 	"fmt"
+	"net"
 	"os"
 )
 
@@ -33,8 +33,7 @@ func systemNotify(state string) error {
 		return err
 	}
 	defer conn.Close()
-	conn.Write([]byte(state))
-	return nil
+	return conn.Write([]byte(state))
 }
 
 // NotifyServiceReady notify underlying os that service is ready

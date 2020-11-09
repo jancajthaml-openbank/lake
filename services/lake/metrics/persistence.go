@@ -16,35 +16,28 @@ package metrics
 
 import (
 	"bytes"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"os"
-	"runtime"
+	//"runtime"
 	"strconv"
-	"sync/atomic"
+	//"sync/atomic"
 )
 
 // MarshalJSON serializes Metrics as json bytes
 func (metrics *Metrics) MarshalJSON() ([]byte, error) {
 	if metrics == nil {
-		return nil, fmt.Errorf("cannot marshal nil")
+		return nil, fmt.Errorf("cannot marshal to nil")
 	}
-
-	if metrics.messageEgress == nil || metrics.messageIngress == nil {
-		return nil, fmt.Errorf("cannot marshal nil references")
-	}
-
-	var stats = new(runtime.MemStats)
-	runtime.ReadMemStats(stats)
 
 	var buffer bytes.Buffer
 
 	buffer.WriteString("{\"messageEgress\":")
-	buffer.WriteString(strconv.FormatUint(*metrics.messageEgress, 10))
+	buffer.WriteString(strconv.FormatUint(metrics.messageEgress, 10))
 	buffer.WriteString(",\"messageIngress\":")
-	buffer.WriteString(strconv.FormatUint(*metrics.messageIngress, 10))
+	buffer.WriteString(strconv.FormatUint(metrics.messageIngress, 10))
 	buffer.WriteString(",\"memoryAllocated\":")
-	buffer.WriteString(strconv.FormatUint(stats.Sys, 10))
+	buffer.WriteString(strconv.FormatUint(metrics.memoryAllocated, 10))
 	buffer.WriteString("}")
 
 	return buffer.Bytes(), nil
@@ -56,10 +49,6 @@ func (metrics *Metrics) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("cannot unmarshal to nil")
 	}
 
-	if metrics.messageEgress == nil || metrics.messageIngress == nil {
-		return fmt.Errorf("cannot unmarshal to nil references")
-	}
-
 	aux := &struct {
 		MessageEgress  uint64 `json:"messageEgress"`
 		MessageIngress uint64 `json:"messageIngress"`
@@ -69,8 +58,8 @@ func (metrics *Metrics) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	atomic.StoreUint64(metrics.messageEgress, aux.MessageEgress)
-	atomic.StoreUint64(metrics.messageIngress, aux.MessageIngress)
+	metrics.messageEgress = aux.MessageEgress
+	metrics.messageIngress = aux.MessageIngress
 
 	return nil
 }

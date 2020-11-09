@@ -2,58 +2,44 @@ package metrics
 
 import (
 	"encoding/json"
+	"fmt"
+	localfs "github.com/jancajthaml-openbank/local-fs"
 	"io/ioutil"
 	"os"
 	"testing"
-	localfs "github.com/jancajthaml-openbank/local-fs"
 )
 
 func TestMarshalJSON(t *testing.T) {
-
-	t.Log("error when values are nil")
-	{
-		entity := Metrics{}
-		_, err := json.Marshal(entity)
-		if err == nil {
-			t.Errorf("extected error")
-		}
-	}
-
 	t.Log("happy path")
 	{
-		egress := uint64(10)
-		ingress := uint64(20)
-
 		entity := Metrics{
-			messageEgress:  &egress,
-			messageIngress: &ingress,
+			messageEgress:   10,
+			messageIngress:  20,
+			memoryAllocated: 30,
 		}
 
 		actual, err := json.Marshal(&entity)
 		if err != nil {
 			t.Fatalf("unexpected error when calling json.Marshal %+v", err)
 		}
+		fmt.Println(string(actual))
 
-		aux := &struct {
-			MessageEgress  uint64 `json:"messageEgress"`
-			MessageIngress uint64 `json:"messageIngress"`
-		}{}
+		aux := new(Metrics)
 
-		if json.Unmarshal(actual, &aux) != nil {
+		if json.Unmarshal(actual, aux) != nil {
 			t.Errorf("unexpected error when calling json.Unmarshal %+v", err)
 		}
 
-		if egress != aux.MessageEgress {
-			t.Errorf("extected MessageEgress %d actual %d", egress, aux.MessageEgress)
+		if 10 != aux.messageEgress {
+			t.Errorf("extected MessageEgress %d actual %d", 10, aux.messageEgress)
 		}
-		if ingress != aux.MessageIngress {
-			t.Errorf("extected MessageIngress %d actual %d", egress, aux.MessageIngress)
+		if 20 != aux.messageIngress {
+			t.Errorf("extected MessageIngress %d actual %d", 20, aux.messageIngress)
 		}
 	}
 }
 
 func TestUnmarshalJSON(t *testing.T) {
-
 	t.Log("error when caller is nil")
 	{
 		var entity *Metrics
@@ -62,22 +48,11 @@ func TestUnmarshalJSON(t *testing.T) {
 		}
 	}
 
-	t.Log("error when values are nil")
-	{
-		entity := Metrics{}
-		if json.Unmarshal([]byte(""), entity) == nil {
-			t.Errorf("extected error")
-		}
-	}
-
 	t.Log("error on malformed data")
 	{
-		egress := uint64(10)
-		ingress := uint64(20)
-
 		entity := Metrics{
-			messageEgress:  &egress,
-			messageIngress: &ingress,
+			messageEgress:  10,
+			messageIngress: 20,
 		}
 
 		if json.Unmarshal([]byte("{"), &entity) == nil {
@@ -87,12 +62,9 @@ func TestUnmarshalJSON(t *testing.T) {
 
 	t.Log("happy path")
 	{
-		egress := uint64(10)
-		ingress := uint64(20)
-
 		entity := Metrics{
-			messageEgress:  &egress,
-			messageIngress: &ingress,
+			messageEgress:  10,
+			messageIngress: 20,
 		}
 
 		data := []byte("{\"messageEgress\":32,\"messageIngress\":77}")
@@ -101,12 +73,12 @@ func TestUnmarshalJSON(t *testing.T) {
 			t.Fatalf("unexpected error when calling UnmarshalJSON %+v", err)
 		}
 
-		if int(*entity.messageEgress) != 32 {
-			t.Errorf("extected MessageEgress 32 actual %d", int(*entity.messageEgress))
+		if entity.messageEgress != 32 {
+			t.Errorf("extected MessageEgress 32 actual %d", entity.messageEgress)
 		}
 
-		if int(*entity.messageIngress) != 77 {
-			t.Errorf("extected MessageIngress 77 actual %d", int(*entity.messageIngress))
+		if entity.messageIngress != 77 {
+			t.Errorf("extected MessageIngress 77 actual %d", entity.messageIngress)
 		}
 	}
 }
@@ -121,25 +93,14 @@ func TestPersist(t *testing.T) {
 		}
 	}
 
-	t.Log("error when marshaling fails")
-	{
-		entity := Metrics{}
-		if entity.Persist() == nil {
-			t.Errorf("extected error")
-		}
-	}
-
 	t.Log("happy path")
 	{
 		defer os.Remove("/tmp/metrics.json")
 
-		egress := uint64(10)
-		ingress := uint64(20)
-
 		entity := Metrics{
 			storage:        localfs.NewPlaintextStorage("/tmp"),
-			messageEgress:  &egress,
-			messageIngress: &ingress,
+			messageEgress:  10,
+			messageIngress: 20,
 		}
 
 		if entity.Persist() != nil {
@@ -172,17 +133,24 @@ func TestHydrate(t *testing.T) {
 		}
 	}
 
+	t.Log("error when set to invalid storage")
+	{
+		entity := Metrics{
+			storage: localfs.NewPlaintextStorage("/tmp"),
+		}
+		if entity.Hydrate() == nil {
+			t.Errorf("extected error")
+		}
+	}
+
 	t.Log("happy path")
 	{
 		defer os.Remove("/tmp/metrics.json")
 
-		egressOld := uint64(10)
-		ingressOld := uint64(20)
-
 		old := Metrics{
 			storage:        localfs.NewPlaintextStorage("/tmp"),
-			messageEgress:  &egressOld,
-			messageIngress: &ingressOld,
+			messageEgress:  10,
+			messageIngress: 20,
 		}
 
 		data, err := json.Marshal(&old)
@@ -194,25 +162,22 @@ func TestHydrate(t *testing.T) {
 			t.Fatalf("unexpected error when writing /tmp/metrics.json")
 		}
 
-		egress := uint64(0)
-		ingress := uint64(0)
-
 		entity := Metrics{
 			storage:        localfs.NewPlaintextStorage("/tmp"),
-			messageEgress:  &egress,
-			messageIngress: &ingress,
+			messageEgress:  0,
+			messageIngress: 0,
 		}
 
 		if entity.Hydrate() != nil {
 			t.Fatalf("unexpected error when calling Hydrate")
 		}
 
-		if int(*entity.messageEgress) != 10 {
-			t.Errorf("extected MessageEgress 10 actual %d", int(*entity.messageEgress))
+		if entity.messageEgress != 10 {
+			t.Errorf("extected MessageEgress 10 actual %d", entity.messageEgress)
 		}
 
-		if int(*entity.messageIngress) != 20 {
-			t.Errorf("extected MessageIngress 20 actual %d", int(*entity.messageIngress))
+		if entity.messageIngress != 20 {
+			t.Errorf("extected MessageIngress 20 actual %d", entity.messageIngress)
 		}
 	}
 }
