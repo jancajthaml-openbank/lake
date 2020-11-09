@@ -38,6 +38,7 @@ func NewMetrics(ctx context.Context, continuous bool, output string, refreshRate
 	egress := uint64(0)
 	ingress := uint64(0)
 
+	// FIXME can panic
 	return Metrics{
 		DaemonSupport:  utils.NewDaemonSupport(ctx, "metrics"),
 		storage:        localfs.NewPlaintextStorage(output),
