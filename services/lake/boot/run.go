@@ -61,14 +61,20 @@ func (prog Program) WaitReady(deadline time.Duration) error {
 
 // GreenLight daemons
 func (prog Program) GreenLight() {
-	for _, daemon := range prog.daemons {
+	for idx, _ := range prog.daemons {
+		if prog.daemons[idx] == nil {
+			continue
+		}
 		daemon.GreenLight()
 	}
 }
 
 // WaitStop wait for daemons to stop
 func (prog Program) WaitStop() {
-	for _, daemon := range prog.daemons {
+	for idx, _ := range prog.daemons {
+		if prog.daemons[idx] == nil {
+			continue
+		}
 		daemon.WaitStop()
 	}
 }
