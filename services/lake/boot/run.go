@@ -65,7 +65,7 @@ func (prog Program) GreenLight() {
 		if prog.daemons[idx] == nil {
 			continue
 		}
-		daemon.GreenLight()
+		prog.daemons[idx].GreenLight()
 	}
 }
 
@@ -75,7 +75,7 @@ func (prog Program) WaitStop() {
 		if prog.daemons[idx] == nil {
 			continue
 		}
-		daemon.WaitStop()
+		prog.daemons[idx].WaitStop()
 	}
 }
 
