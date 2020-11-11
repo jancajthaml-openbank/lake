@@ -27,7 +27,7 @@ import (
 // Metrics holds metrics counters
 type Metrics struct {
 	utils.DaemonSupport
-	storage         localfs.PlaintextStorage
+	storage         localfs.Storage
 	continuous      bool
 	refreshRate     time.Duration
 	messageEgress   uint64
@@ -36,10 +36,15 @@ type Metrics struct {
 }
 
 // NewMetrics returns blank metrics holder
-func NewMetrics(ctx context.Context, continuous bool, output string, refreshRate time.Duration) Metrics {
-	return Metrics{
+func NewMetrics(ctx context.Context, continuous bool, output string, refreshRate time.Duration) *Metrics {
+	storage, err := localfs.NewPlaintextStorage(output)
+	if err != nil {
+		log.Error().Msgf("Failed to ensure storage %+v", err)
+		return nil
+	}
+	return &Metrics{
 		DaemonSupport:   utils.NewDaemonSupport(ctx, "metrics"),
-		storage:         localfs.NewPlaintextStorage(output),
+		storage:         storage,
 		continuous:      continuous,
 		refreshRate:     refreshRate,
 		messageEgress:   uint64(0),
@@ -98,7 +103,7 @@ func (metrics *Metrics) Start() {
 		return
 	}
 
-	log.Info().Msgf("Start metrics daemon, update each %v into %v", metrics.refreshRate, metrics.storage.Root)
+	log.Info().Msgf("Start metrics daemon, update file each %v", metrics.refreshRate)
 
 	go func() {
 		for {

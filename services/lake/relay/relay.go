@@ -35,8 +35,8 @@ type Relay struct {
 }
 
 // NewRelay returns new instance of Relay
-func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) Relay {
-	return Relay{
+func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) *Relay {
+	return &Relay{
 		DaemonSupport: utils.NewDaemonSupport(ctx, "relay"),
 		pullPort:      fmt.Sprintf("tcp://127.0.0.1:%d", pull),
 		pubPort:       fmt.Sprintf("tcp://127.0.0.1:%d", pub),

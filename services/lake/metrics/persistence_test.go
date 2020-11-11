@@ -98,12 +98,26 @@ func TestPersist(t *testing.T) {
 		}
 	}
 
+	t.Log("error when storage is not valid")
+	{
+		storage, _ := localfs.NewPlaintextStorage("/dev/null")
+		entity := Metrics{
+			storage:        storage,
+			messageEgress:  10,
+			messageIngress: 20,
+		}
+		if entity.Persist() == nil {
+			t.Errorf("extected error")
+		}
+	}
+
 	t.Log("happy path")
 	{
 		defer os.Remove("/tmp/metrics.json")
 
+		storage, _ := localfs.NewPlaintextStorage("/tmp")
 		entity := Metrics{
-			storage:        localfs.NewPlaintextStorage("/tmp"),
+			storage:        storage,
 			messageEgress:  10,
 			messageIngress: 20,
 		}
@@ -140,8 +154,27 @@ func TestHydrate(t *testing.T) {
 
 	t.Log("error when set to invalid storage")
 	{
+		storage, _ := localfs.NewPlaintextStorage("/tmp/a")
+		defer os.Remove("/tmp/a")
+
 		entity := Metrics{
-			storage: localfs.NewPlaintextStorage("/tmp"),
+			storage: storage,
+		}
+		if entity.Hydrate() == nil {
+			t.Errorf("extected error")
+		}
+	}
+
+	t.Log("error when file is corrupted")
+	{
+		defer os.Remove("/tmp/b")
+
+		storage, _ := localfs.NewPlaintextStorage("/tmp/b")
+		entity := Metrics{
+			storage: storage,
+		}
+		if ioutil.WriteFile("/tmp/metrics.json", []byte("{"), 0444) != nil {
+			t.Fatalf("unexpected error when writing /tmp/a/metrics.json")
 		}
 		if entity.Hydrate() == nil {
 			t.Errorf("extected error")
@@ -150,10 +183,10 @@ func TestHydrate(t *testing.T) {
 
 	t.Log("happy path")
 	{
-		defer os.Remove("/tmp/metrics.json")
-
+		storage, _ := localfs.NewPlaintextStorage("/tmp/c")
+		defer os.Remove("/tmp/c")
 		old := Metrics{
-			storage:        localfs.NewPlaintextStorage("/tmp"),
+			storage:        storage,
 			messageEgress:  10,
 			messageIngress: 20,
 		}
@@ -163,12 +196,12 @@ func TestHydrate(t *testing.T) {
 			t.Fatalf("unexpected error when calling MarshalJSON %+v", err)
 		}
 
-		if ioutil.WriteFile("/tmp/metrics.json", data, 0444) != nil {
-			t.Fatalf("unexpected error when writing /tmp/metrics.json")
+		if ioutil.WriteFile("/tmp/c/metrics.json", data, 0444) != nil {
+			t.Fatalf("unexpected error when writing /tmp/c/metrics.json")
 		}
 
 		entity := Metrics{
-			storage:        localfs.NewPlaintextStorage("/tmp"),
+			storage:        storage,
 			messageEgress:  0,
 			messageIngress: 0,
 		}
