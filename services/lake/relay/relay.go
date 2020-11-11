@@ -45,7 +45,10 @@ func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) 
 }
 
 // Start handles everything needed to start relay
-func (relay Relay) Start() {
+func (relay *Relay) Start() {
+	if relay == nil {
+		return
+	}
 	var (
 		chunk    string
 		receiver *zmq.Socket
