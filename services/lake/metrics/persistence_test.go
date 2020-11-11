@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"encoding/json"
-	"fmt"
 	localfs "github.com/jancajthaml-openbank/local-fs"
 	"io/ioutil"
 	"os"
@@ -10,6 +9,16 @@ import (
 )
 
 func TestMarshalJSON(t *testing.T) {
+
+	t.Log("does not panic on nil")
+	{
+		var entity *Metrics
+		_, err := entity.MarshalJSON()
+		if err == nil {
+			t.Errorf("extected error")
+		}
+	}
+
 	t.Log("happy path")
 	{
 		entity := Metrics{
@@ -22,7 +31,6 @@ func TestMarshalJSON(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error when calling json.Marshal %+v", err)
 		}
-		fmt.Println(string(actual))
 
 		aux := new(Metrics)
 
@@ -40,22 +48,19 @@ func TestMarshalJSON(t *testing.T) {
 }
 
 func TestUnmarshalJSON(t *testing.T) {
+
 	t.Log("error when caller is nil")
 	{
 		var entity *Metrics
-		if json.Unmarshal([]byte(""), entity) == nil {
+		if entity.UnmarshalJSON([]byte("")) == nil {
 			t.Errorf("extected error")
 		}
 	}
 
 	t.Log("error on malformed data")
 	{
-		entity := Metrics{
-			messageEgress:  10,
-			messageIngress: 20,
-		}
-
-		if json.Unmarshal([]byte("{"), &entity) == nil {
+		var entity = new(Metrics)
+		if entity.UnmarshalJSON([]byte("{")) == nil {
 			t.Errorf("extected error")
 		}
 	}
