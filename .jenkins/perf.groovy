@@ -55,6 +55,7 @@ pipeline {
                     sh "ls -lFa ${env.WORKSPACE}/packaging/bin"
 
                     artifactory.download spec: """{
+                        "flat": true,
                         "files": [
                             {
                                 "pattern": "generic-local/openbank/lake/${params.VERSION}/linux/amd64/lake.deb",
