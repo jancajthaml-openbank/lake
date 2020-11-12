@@ -20,8 +20,7 @@ class MemoryMonitor(threading.Thread):
     self.__rountrip()
 
   def __rountrip(self) -> None:
-    tot_m, used_m, free_m = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
-    print_daemon('memory total: {}, used: {}, free: {}'.format(tot_m, used_m, free_m))
+    print_daemon('memory {}'.format(os.popen('free -th').readlines()[-1].split()[1:]))
 
   def run(self) -> None:
     self.__rountrip()
