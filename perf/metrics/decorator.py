@@ -34,14 +34,15 @@ class metrics():
     if os.path.exists(file):
       os.remove(file)
 
-    self.__metrics = MetricsAggregator(file)
+    #del self.__metrics
+    #self.__metrics = MetricsAggregator(file)
     self.__manager.start()
-    self.__metrics.start()
+    #self.__metrics.start()
 
   def __exit__(self, *args):
     self.__manager.stop()
-    self.__metrics.stop()
-    self.__persist()
+    #self.__metrics.stop()
+    #self.__persist()
 
   def __persist(self) -> None:
     filename = os.path.realpath('{}/../../reports/perf-tests/metrics/metrics.{}.json'.format(os.path.dirname(os.path.abspath(__file__)), self.__label))
