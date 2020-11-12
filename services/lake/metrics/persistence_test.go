@@ -167,14 +167,14 @@ func TestHydrate(t *testing.T) {
 
 	t.Log("error when file is corrupted")
 	{
-		defer os.Remove("/tmp/b")
+		defer os.Remove("/tmp/c/metrics.json")
 
-		storage, _ := localfs.NewPlaintextStorage("/tmp/b")
+		storage, _ := localfs.NewPlaintextStorage("/tmp/c")
 		entity := Metrics{
 			storage: storage,
 		}
-		if ioutil.WriteFile("/tmp/metrics.json", []byte("{"), 0444) != nil {
-			t.Fatalf("unexpected error when writing /tmp/a/metrics.json")
+		if ioutil.WriteFile("/tmp/c/metrics.json", []byte("{"), 0644) != nil {
+			t.Fatalf("unexpected error when writing /tmp/c/metrics.json")
 		}
 		if entity.Hydrate() == nil {
 			t.Errorf("extected error")
@@ -183,8 +183,9 @@ func TestHydrate(t *testing.T) {
 
 	t.Log("happy path")
 	{
+		defer os.Remove("/tmp/c/metrics.json")
+
 		storage, _ := localfs.NewPlaintextStorage("/tmp/c")
-		defer os.Remove("/tmp/c")
 		old := Metrics{
 			storage:        storage,
 			messageEgress:  10,
