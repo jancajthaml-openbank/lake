@@ -48,7 +48,7 @@ pipeline {
     post {
         always {
             script {
-                echo "stub"
+                echo "will perf test ${params.VERSION}"
             }
         }
         success {
