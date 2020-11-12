@@ -48,7 +48,20 @@ pipeline {
                 script {
                     echo "will perf test ${params.VERSION}"
 
-                    artifactory.download("generic-local/openbank/lake/${params.VERSION}/linux/amd64/lake.deb")
+                    echo "before download"
+                    sh "ls -la ${env.WORKSPACE}/packaging/bin"
+
+                    artifactory.download spec: {
+                        "files": [
+                            {
+                                "pattern": "generic-local/openbank/lake/${params.VERSION}/linux/amd64/lake.deb",
+                                "target": "${env.WORKSPACE}/packaging/bin"
+                            }
+                        ]
+                    }
+
+                    echo "after download"
+                    sh "ls -la ${env.WORKSPACE}/packaging/bin"
                 }
             }
         }
