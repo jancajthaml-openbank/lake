@@ -33,7 +33,7 @@ class ApplianceManager(object):
     self.download()
 
   def install(self, file):
-    filename = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
+    filename = os.path.realpath('{}/..'.format(os.path.dirname(__file__)))
 
     progress('installing lake {}'.format(filename))
 
@@ -64,9 +64,9 @@ class ApplianceManager(object):
     assert self.image_version, 'IMAGE_VERSION not provided'
     assert self.debian_version, 'UNIT_VERSION not provided'
 
-    cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
+    self.binary = os.path.realpath('{}/../packaging/bin/lake_{}_{}.deb'.format(os.path.dirname(__file__), self.debian_version, self.arch))
 
-    self.binary = '{}/packaging/bin/lake_{}_{}.deb'.format(cwd, self.debian_version, self.arch)
+    print(self.binary)
 
     if os.path.exists(self.binary):
       self.install(self.binary)
