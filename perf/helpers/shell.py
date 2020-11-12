@@ -29,7 +29,7 @@ class Deadline(threading.Thread):
     self.join()
 
 
-def execute(command, timeout=20, silent=False) -> None:
+def execute(command, timeout=360, silent=False) -> None:
   if not silent:
     print_daemon(' '.join(command))
 
