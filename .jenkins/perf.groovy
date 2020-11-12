@@ -18,7 +18,7 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         disableResume()
-        timeout(time: 1, unit: 'HOURS')
+        timeout(time: 3, unit: 'HOURS')
         timestamps()
     }
 
@@ -69,7 +69,7 @@ pipeline {
                 }
             }
             options {
-                timeout(time: 5, unit: 'MINUTES')
+                timeout(time: 2, unit: 'HOURS')
             }
             steps {
                 script {
