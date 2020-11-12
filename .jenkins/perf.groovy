@@ -62,7 +62,7 @@ pipeline {
         stage('Performance Test') {
             agent {
                 docker {
-                    image "jancajthaml/bbtest:${env.ARCH}"
+                    image "jancajthaml/bbtest:amd64"
                     args """-u 0"""
                     reuseNode true
                 }
@@ -87,7 +87,7 @@ pipeline {
                         |-v /sys/fs/cgroup:/sys/fs/cgroup:ro
                         |-u 0
                     """.stripMargin().stripIndent().replaceAll("[\\t\\n\\r]+"," ").stripMargin().stripIndent()
-                    docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
+                    docker.image("jancajthaml/bbtest:amd64").withRun(options) { c ->
                         sh "docker exec -t ${c.id} python3 ${env.WORKSPACE}/perf/main.py"
                     }
                 }
