@@ -6,7 +6,6 @@ import threading
 import signal
 import time
 import os
-import gc
 from utils import print_daemon
 
 
@@ -62,8 +61,6 @@ def execute(command, timeout=30, silent=False) -> None:
     code = p.returncode
 
     del p
-
-    gc.collect()
 
     return (code, result, error)
   except subprocess.CalledProcessError:

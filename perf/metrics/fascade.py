@@ -5,7 +5,6 @@ import glob
 import json
 import os
 import re
-import gc
 import collections
 import numpy
 from utils import print_daemon
@@ -116,7 +115,6 @@ class Metrics():
       materialised_dataset[str(second)] = collections.OrderedDict(stash)
 
       del stash
-      gc.collect()
 
     last = dataset[(list(dataset.keys()))[-1]]
 

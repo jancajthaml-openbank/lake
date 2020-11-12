@@ -5,6 +5,7 @@ import time
 import os
 import threading
 from utils import print_daemon
+import gc
 
 
 class MemoryMonitor(threading.Thread):
@@ -25,6 +26,7 @@ class MemoryMonitor(threading.Thread):
       lines = fd.readlines()
       mem_free = lines[1].split(':')[1].strip()
     print_daemon('memory free: {}'.format(mem_free))
+    gc.collect()
 
   def run(self) -> None:
     self.__rountrip()
