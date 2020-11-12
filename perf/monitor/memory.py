@@ -9,7 +9,7 @@ from utils import print_daemon
 
 class MemoryMonitor(threading.Thread):
 
-  def __init__(self, path):
+  def __init__(self):
     super(MemoryMonitor, self).__init__()
     self._stop_event = threading.Event()
 
