@@ -1,8 +1,14 @@
 
+def artifactory = Artifactory.server "artifactory"
+
 pipeline {
 
     agent {
         label 'docker'
+    }
+
+    parameters {
+        stringParam(defaultValue: null, description: 'version to test', name: 'VERSION')
     }
 
     options {
@@ -17,10 +23,18 @@ pipeline {
 
     stages {
 
+        stage('Verify') {
+            script {
+                if (params.VERSION == null) {
+                    error('missing parameter VERSION')
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 script {
-                    currentBuild.displayName = "#${currentBuild.number} - ? (?)"
+                    currentBuild.displayName = "#${currentBuild.number} - main (${params.VERSION})"
                 }
                 deleteDir()
                 checkout(scm)
