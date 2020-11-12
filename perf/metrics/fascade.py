@@ -127,6 +127,8 @@ class Metrics():
     return materialised_dataset
 
   def __load_file(self, filename):
+    if not os.path.exists(filename):
+      return {}
     with open(filename, 'r') as contents:
       return json.load(contents, object_pairs_hook=collections.OrderedDict)
     raise RuntimeError('no metric {0} found'.format(filename))
