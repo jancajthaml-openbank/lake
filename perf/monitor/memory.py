@@ -20,9 +20,9 @@ class MemoryMonitor(threading.Thread):
     time.sleep(0.5)
     self.__rountrip()
 
-  def __sizeof_fmt(num, suffix='B'):
+  def __sizeof_fmt(self, num, suffix='B'):
     for unit in ['','K','M','G','T','P','E','Z']:
-      if num < 1024.0:
+      if abs(num) < 1024.0:
         return "%3.1f%s%s" % (num, unit, suffix)
       num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
