@@ -26,7 +26,7 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    if (params.VERSION == null) {
+                    if (params.VERSION == null || params.VERSION == "") {
                         error('missing parameter VERSION')
                     }
                 }
