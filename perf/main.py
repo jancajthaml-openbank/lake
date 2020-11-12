@@ -20,21 +20,24 @@ import time
 
 
 def main():
+
+  cwd = os.path.dirname(os.path.abspath(__file__))
+
   info("starting")
 
   for folder in [
-    '/tmp/reports',
-    '/tmp/reports/perf-tests',
-    '/tmp/reports/perf-tests/logs',
-    '/tmp/reports/perf-tests/graphs',
-    '/tmp/reports/perf-tests/metrics'
+    '{}/../reports'.format(cwd),
+    '{}/../reports/perf-tests'.format(cwd),
+    '{}/../reports/perf-tests/logs'.format(cwd),
+    '{}/../reports/perf-tests/graphs'.format(cwd),
+    '{}/../reports/perf-tests/metrics'.format(cwd)
   ]:
     os.system('mkdir -p {}'.format(folder))
 
   for folder in [
-    '/tmp/reports/perf-tests/metrics/*.json',
-    '/tmp/reports/perf-tests/logs/*.log',
-    '/tmp/reports/perf-tests/graphs/*.png'
+    '{}/../reports/perf-tests/metrics/*.json'.format(cwd),,
+    '{}/../reports/perf-tests/logs/*.log'.format(cwd),,
+    '{}/../reports/perf-tests/graphs/*.png'.format(cwd),
   ]:
     os.system('rm -rf {}'.format(folder))
 
@@ -60,7 +63,7 @@ def main():
 
     info('generating graph for {:,.0f} messages'.format(i))
     with timeit('{:,.0f} graph'.format(i)):
-      Graph(Metrics('/tmp/reports/perf-tests/metrics/metrics.count_{}.json'.format(i)))
+      Graph(Metrics('{}/../reports/perf-tests/metrics/metrics.count_{}.json'.format(cwd, i)))
 
     i *= 10
 

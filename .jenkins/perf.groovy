@@ -99,7 +99,7 @@ pipeline {
     post {
         always {
             script {
-                sh "ls -lFa ${env.WORKSPACE}/reports"
+                sh "ls -lFa ${env.WORKSPACE}"
 
                 dir("${env.WORKSPACE}/reports") {
                     archiveArtifacts(

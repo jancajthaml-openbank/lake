@@ -33,8 +33,6 @@ class ApplianceManager(object):
     self.__download()
 
   def __install(self, filename):
-    print_daemon('installing {}'.format(filename))
-
     (code, result, error) = execute([
       "apt-get", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "-o=Dpkg::Options::=--force-confdef", "-o=Dpkg::Options::=--force-confnew", filename
     ])

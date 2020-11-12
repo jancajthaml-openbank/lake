@@ -103,5 +103,7 @@ class Graph(object):
     ax3.set_yticklabels([human_readable_count(x) for x in ax3.get_yticks()])
 
     plt.tight_layout()
-    fig.savefig('/tmp/reports/perf-tests/graphs/{}'.format(self.name), bbox_inches='tight', dpi=300, pad_inches=0)
+
+    filename = os.path.realpath('{}/../../reports/perf-tests/graphs/{}'.format(os.path.dirname(os.path.abspath(__file__)), self.name))
+    fig.savefig(filename, bbox_inches='tight', dpi=300, pad_inches=0)
     plt.close(fig)
