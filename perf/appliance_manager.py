@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import docker
-from utils import progress, info, print_daemon
+from utils import info, print_daemon
 from helpers.shell import execute
 from systemd.lake import Lake
 import platform
@@ -33,7 +33,7 @@ class ApplianceManager(object):
     self.__download()
 
   def __install(self, filename):
-    progress('installing lake {}'.format(filename))
+    print_daemon('installing {}'.format(filename))
 
     (code, result, error) = execute([
       "apt-get", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "-o=Dpkg::Options::=--force-confdef", "-o=Dpkg::Options::=--force-confnew", filename
