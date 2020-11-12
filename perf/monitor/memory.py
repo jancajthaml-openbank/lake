@@ -20,13 +20,19 @@ class MemoryMonitor(threading.Thread):
     time.sleep(0.5)
     self.__rountrip()
 
+  def __sizeof_fmt(num, suffix='B'):
+    for unit in ['','K','M','G','T','P','E','Z']:
+      if abs(num) < 1024.0:
+        return "%3.1f%s%s" % (num, unit, suffix)
+      num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
+
   def __rountrip(self) -> None:
     mem_free = '0 kB'
     with open("/proc/meminfo", "r") as fd:
       lines = fd.readlines()
-      mem_total = int(lines[0].split(':')[1].strip().split('kB')[0])
-      mem_free = int(lines[1].split(':')[1].strip().split('kB')[0])
-    print_daemon('memory used: {} kB , free: {} kB'.format(mem_total-mem_free, mem_free))
+      mem_total = int(lines[0].split(':')[1].strip().split('kB')[0]) * 1000
+    print_daemon('memory used: {}'.format(__sizeof_fmt(mem_total-mem_free)))
     gc.collect()
 
   def run(self) -> None:
