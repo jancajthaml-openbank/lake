@@ -46,13 +46,9 @@ pipeline {
         stage('Download') {
             steps {
                 script {
-                    echo "will perf test ${params.VERSION}"
+                    //echo "will perf test ${params.VERSION}"
 
-                    sh "mkdir -p ${env.WORKSPACE}/packaging/bin"
-
-                    echo "${env.WORKSPACE}/packaging/bin"
-                    echo "before download"
-                    sh "ls -lFa ${env.WORKSPACE}/packaging/bin"
+                    //sh "mkdir -p ${env.WORKSPACE}/packaging/bin"
 
                     artifactory.download spec: """{
                         "files": [
@@ -64,7 +60,7 @@ pipeline {
                         ]
                     }"""
 
-                    echo "after download"
+                    //echo "after download"
                     sh "ls -lFa ${env.WORKSPACE}/packaging/bin"
                 }
             }
