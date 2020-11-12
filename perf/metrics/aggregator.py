@@ -34,6 +34,7 @@ class MetricsAggregator(threading.Thread):
         if value != self.__last_value:
           self.__store[str(int(time.time()*1000))] = value
           self.__last_value = value
+        del value
     except:
       pass
 
