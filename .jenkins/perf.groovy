@@ -48,8 +48,9 @@ pipeline {
                 script {
                     echo "will perf test ${params.VERSION}"
 
+                    echo "${env.WORKSPACE}/packaging/bin"
                     echo "before download"
-                    sh "ls -la ${env.WORKSPACE}/packaging/bin"
+                    sh "ls -lFa ${env.WORKSPACE}/packaging/bin"
 
                     artifactory.download spec: """{
                         "files": [
@@ -61,7 +62,7 @@ pipeline {
                     }"""
 
                     echo "after download"
-                    sh "ls -la ${env.WORKSPACE}/packaging/bin"
+                    sh "ls -lFa ${env.WORKSPACE}/packaging/bin"
                 }
             }
         }
