@@ -5,6 +5,7 @@ import time
 import os
 import threading
 from utils import print_daemon
+import psutil
 
 
 class MemoryMonitor(threading.Thread):
@@ -20,7 +21,8 @@ class MemoryMonitor(threading.Thread):
     self.__rountrip()
 
   def __rountrip(self) -> None:
-    print_daemon('memory {}'.format(os.popen('free -th').readlines()))
+    process = psutil.Process(os.getpid())
+    print_daemon('memory {}'.format(process.memory_info()))
 
   def run(self) -> None:
     self.__rountrip()
