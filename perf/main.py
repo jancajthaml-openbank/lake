@@ -35,8 +35,8 @@ def main():
     os.system('mkdir -p {}'.format(folder))
 
   for folder in [
-    '{}/../reports/perf-tests/metrics/*.json'.format(cwd),,
-    '{}/../reports/perf-tests/logs/*.log'.format(cwd),,
+    '{}/../reports/perf-tests/metrics/*.json'.format(cwd),
+    '{}/../reports/perf-tests/logs/*.log'.format(cwd),
     '{}/../reports/perf-tests/graphs/*.png'.format(cwd),
   ]:
     os.system('rm -rf {}'.format(folder))
