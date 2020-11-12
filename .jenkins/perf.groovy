@@ -36,7 +36,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    currentBuild.displayName = "#${currentBuild.number} - main (${params.VERSION})"
+                    currentBuild.displayName = "#${currentBuild.number} - ${params.VERSION}"
                 }
                 deleteDir()
                 checkout(scm)
@@ -47,6 +47,8 @@ pipeline {
             steps {
                 script {
                     echo "will perf test ${params.VERSION}"
+
+                    artifactory.download("generic-local/openbank/lake/${params.VERSION}/linux/amd64/lake.deb")
                 }
             }
         }
