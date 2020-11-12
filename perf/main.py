@@ -47,12 +47,12 @@ def main():
 
   memory_monitor = MemoryMonitor()
 
-  logs_collector = LogsCollector()
+  #logs_collector = LogsCollector()
 
   manager = ApplianceManager()
   manager.bootstrap()
 
-  logs_collector.start()
+  #logs_collector.start()
   memory_monitor.start()
 
   info("start")
@@ -74,7 +74,7 @@ def main():
 
   info("stopping")
 
-  logs_collector.stop()
+  #logs_collector.stop()
   memory_monitor.stop()
   manager.teardown()
 

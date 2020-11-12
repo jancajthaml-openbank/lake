@@ -24,8 +24,9 @@ class MemoryMonitor(threading.Thread):
     mem_free = '0 kB'
     with open("/proc/meminfo", "r") as fd:
       lines = fd.readlines()
-      mem_free = lines[1].split(':')[1].strip()
-    print_daemon('memory free: {}'.format(mem_free))
+      mem_total = int(lines[0].split(':')[1].strip().split('kB')[0])
+      mem_free = int(lines[1].split(':')[1].strip().split('kB')[0])
+    print_daemon('memory used: {} kB , free: {} kB'.format(mem_total-mem_free, mem_free))
     gc.collect()
 
   def run(self) -> None:
