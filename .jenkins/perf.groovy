@@ -23,10 +23,12 @@ pipeline {
 
     stages {
 
-        stage('Verify') {
-            script {
-                if (params.VERSION == null) {
-                    error('missing parameter VERSION')
+        stage('Setup') {
+            steps {
+                script {
+                    if (params.VERSION == null) {
+                        error('missing parameter VERSION')
+                    }
                 }
             }
         }
