@@ -43,12 +43,20 @@ pipeline {
             }
         }
 
+        stage('Download') {
+            steps {
+                script {
+                    echo "will perf test ${params.VERSION}"
+                }
+            }
+        }
+
     }
 
     post {
         always {
             script {
-                echo "will perf test ${params.VERSION}"
+                echo "stub"
             }
         }
         success {
