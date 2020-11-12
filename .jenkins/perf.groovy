@@ -99,6 +99,12 @@ pipeline {
     post {
         always {
             script {
+                dir("${env.WORKSPACE}/reports") {
+                    archiveArtifacts(
+                        allowEmptyArchive: true,
+                        artifacts: 'perf-tests/**/*'
+                    )
+                }
                 echo "stub"
             }
         }
