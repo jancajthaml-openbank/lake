@@ -45,8 +45,7 @@ pipeline {
 
         stage('Download') {
             steps {
-                //script {
-
+                script {
                     artifactory.download spec: """{
                         "files": [
                             {
@@ -56,10 +55,7 @@ pipeline {
                             }
                         ]
                     }"""
-
-                    //echo "after download"
-                    //sh "ls -lFa ${env.WORKSPACE}/packaging/bin"
-                //}
+                }
             }
         }
 
