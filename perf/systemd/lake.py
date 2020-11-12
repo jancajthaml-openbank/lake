@@ -35,7 +35,7 @@ class Lake(object):
     (code, result, error) = execute(['systemctl', 'restart', 'lake-relay'])
     assert code == 0, str(result) + ' ' + str(error)
 
-    @eventually(5)
+    @eventually(30)
     def wait_for_running():
       (code, result, error) = execute([
         "systemctl", "show", "-p", "SubState", 'lake-relay'
@@ -52,7 +52,7 @@ class Lake(object):
     (code, result, error) = execute(['systemctl', 'start', 'lake-relay'])
     assert code == 0, str(result) + ' ' + str(error)
 
-    @eventually(5)
+    @eventually(30)
     def wait_for_running():
       (code, result, error) = execute([
         "systemctl", "show", "-p", "SubState", 'lake-relay'

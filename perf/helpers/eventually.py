@@ -6,7 +6,7 @@ import time
 
 class eventually():
 
-  def __init__(self, timeout=2):
+  def __init__(self, timeout=30):
     self.__inblock = False
     self.__last_exception = None
     self.__timeout = timeout
@@ -27,6 +27,6 @@ class eventually():
         return self.__block(*args, **kwargs)
       except (Exception, AssertionError) as ex:
         self.__last_exception = ex
-        time.sleep(0.5)
+        time.sleep(1)
     if self.__last_exception:
       raise self.__last_exception

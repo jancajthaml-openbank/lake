@@ -10,26 +10,7 @@ import gc
 from utils import print_daemon
 
 
-class Deadline(threading.Thread):
-
-  def __init__(self, timeout, callback):
-    super().__init__(daemon=True)
-    self.__timeout = timeout
-    self.__callback = callback
-    self.__cancelled = threading.Event()
-
-  def run(self) -> None:
-    deadline = time.monotonic() + self.__timeout
-    while not self.__cancelled.wait(deadline - time.monotonic()):
-      if not self.__cancelled.is_set() and deadline <= time.monotonic():
-        return self.__callback()
-
-  def cancel(self) -> None:
-    self.__cancelled.set()
-    self.join()
-
-
-def execute(command, timeout=360, silent=False) -> None:
+def execute(command, silent=False) -> None:
   if not silent:
     print_daemon(' '.join(command))
 
@@ -52,13 +33,11 @@ def execute(command, timeout=360, silent=False) -> None:
         except OSError:
           break
 
-    deadline = Deadline(timeout, callback=kill)
-    deadline.start()
     (result, error) = p.communicate()
-    deadline.cancel()
 
     result = result.decode('utf-8').strip() if result else ''
     error = error.decode('utf-8').strip() if error else ''
+
     code = p.returncode
 
     del p
