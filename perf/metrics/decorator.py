@@ -42,10 +42,10 @@ class metrics():
     self.__manager.stop()
     self.__metrics.stop()
 
+    self.__persist()
+
     del self.__manager
     del self.__metrics
-
-    self.__persist()
 
   def __persist(self) -> None:
     filename = os.path.realpath('{}/../../reports/perf-tests/metrics/metrics.{}.json'.format(os.path.dirname(os.path.abspath(__file__)), self.__label))
