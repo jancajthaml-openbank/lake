@@ -23,15 +23,16 @@ class ApplianceManager(object):
   def __init__(self):
     self.configure()
     self.arch = self.get_arch()
+
     self.store = {}
     self.image_version = None
     self.debian_version = None
     self.units = {}
     self.services = []
-    self.docker = docker.APIClient(base_url='unix://var/run/docker.sock')
-    self.__download()
+    self.docker = docker.from_env()
+    self.download()
 
-  def __install(self, file):
+  def install(self, file):
     filename = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
 
     progress('installing lake {}'.format(filename))
@@ -53,7 +54,7 @@ class ApplianceManager(object):
     self.services = set([x.split(' ')[0].split('@')[0].split('.service')[0] for x in result.splitlines()])
 
 
-  def __download(self):
+  def download(self):
     self.image_version = os.environ.get('IMAGE_VERSION', '')
     self.debian_version = os.environ.get('UNIT_VERSION', '')
 
@@ -68,7 +69,7 @@ class ApplianceManager(object):
     self.binary = '{}/packaging/bin/lake_{}_{}.deb'.format(cwd, self.debian_version, self.arch)
 
     if os.path.exists(self.binary):
-      self.__install(self.binary)
+      self.install(self.binary)
       return
 
     os.makedirs(os.path.dirname(self.binary), exist_ok=True)
