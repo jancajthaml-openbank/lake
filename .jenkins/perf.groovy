@@ -100,15 +100,12 @@ pipeline {
     post {
         always {
             script {
-                sh "ls -lFa ${env.WORKSPACE}/reports"
-
                 dir("${env.WORKSPACE}/reports") {
                     archiveArtifacts(
                         allowEmptyArchive: true,
                         artifacts: 'perf-tests/**/*'
                     )
                 }
-                echo "stub"
             }
         }
         success {
