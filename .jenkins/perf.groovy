@@ -9,6 +9,7 @@ pipeline {
 
     parameters {
         string(defaultValue: null, description: 'version to test', name: 'VERSION')
+        xxx(defaultValue: null, description: 'number of messages to be relayed', name: 'MESSAGES_RELAYED')
     }
 
     options {
@@ -80,7 +81,7 @@ pipeline {
                         |-e IMAGE_VERSION=${params.VERSION}
                         |-e UNIT_VERSION=${params.VERSION}
                         |-e UNIT_ARCH=amd64
-                        |-e MESSAGES_PUSHED=100
+                        |-e MESSAGES_PUSHED=${params.MESSAGES_RELAYED}
                         |--volumes-from=${cid}
                         |-v /var/run/docker.sock:/var/run/docker.sock:rw
                         |-v /var/lib/docker/containers:/var/lib/docker/containers:rw
