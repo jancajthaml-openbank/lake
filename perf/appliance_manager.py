@@ -72,6 +72,7 @@ class ApplianceManager(object):
     image = 'openbank/lake:{}'.format(self.image_version)
     package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
     temp = tempfile.NamedTemporaryFile(delete=True)
+
     try:
       with open(temp.name, 'w') as fd:
         fd.write(str(os.linesep).join([
@@ -98,12 +99,19 @@ class ApplianceManager(object):
 
       archive = tarfile.TarFile(tar_name.name)
       archive.extract(os.path.basename(self.binary), os.path.dirname(self.binary))
+
+      del archive
+
       self.__install(self.binary)
       scratch.remove()
+
+      del scratch
+
     except Exception as ex:
       failure = ex
     finally:
       temp.close()
+      del temp
       try:
         self.docker.images.remove('perf_artifacts-scratch', force=True)
       except:
@@ -143,7 +151,6 @@ class ApplianceManager(object):
       for k, v in sorted(options.items()):
         fd.write('LAKE_{}={}\n'.format(k, v))
 
-  # fixme __iter__
   def items(self) -> list:
     return self.units.items()
 

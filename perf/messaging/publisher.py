@@ -29,7 +29,10 @@ def Publisher(number_of_messages):
   number_of_messages = int(number_of_messages)
 
   for _ in itertools.repeat(None, number_of_messages):
-    push.send(msg, 0)
+    try:
+      push.send(msg, 0)
+    except:
+      pass
 
   for _ in itertools.repeat(None, number_of_messages):
     try:

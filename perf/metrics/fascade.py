@@ -78,6 +78,8 @@ class Metrics():
 
       materialised_fps[str(second)] = collections.OrderedDict(stash)
 
+      del stash
+
     return materialised_fps
 
   def __normalise_series(self, dataset):
@@ -116,19 +118,21 @@ class Metrics():
 
       del stash
 
-    last = dataset[(list(dataset.keys()))[-1]]
+    #last = dataset[(list(dataset.keys()))[-1]]
 
-    materialised_dataset[(list(materialised_dataset.keys()))[-1]] = {
-      'messageIngress': int(last.split('/')[0]),
-      'messageEgress': int(last.split('/')[1]),
-      'memoryAllocated': int(last.split('/')[2]),
-    }
+    #materialised_dataset[(list(materialised_dataset.keys()))[-1]] = {
+    #  'messageIngress': int(last.split('/')[0]),
+    #  'messageEgress': int(last.split('/')[1]),
+    #  'memoryAllocated': int(last.split('/')[2]),
+    #}
+
+    #del last
 
     return materialised_dataset
 
   def __load_file(self, filename):
     if not os.path.exists(filename):
-      return {}
+      return dict()
     with open(filename, 'r') as contents:
       return json.load(contents, object_pairs_hook=collections.OrderedDict)
     raise RuntimeError('no metric {0} found'.format(filename))

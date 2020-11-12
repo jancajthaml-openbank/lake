@@ -34,8 +34,6 @@ class metrics():
     if os.path.exists(file):
       os.remove(file)
 
-    del self.__metrics
-
     self.__metrics = MetricsAggregator(file)
     self.__manager.start()
     self.__metrics.start()
@@ -43,6 +41,10 @@ class metrics():
   def __exit__(self, *args):
     self.__manager.stop()
     self.__metrics.stop()
+
+    del self.__manager
+    del self.__metrics
+
     self.__persist()
 
   def __persist(self) -> None:
@@ -51,3 +53,6 @@ class metrics():
     with open(filename, mode='w', encoding='ascii') as fd:
       store = self.__metrics.get_metrics()
       json.dump(store, fd, indent=4, sort_keys=True)
+      del store
+
+    del filename

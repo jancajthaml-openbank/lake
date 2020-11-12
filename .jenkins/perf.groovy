@@ -80,6 +80,10 @@ pipeline {
                         |-e UNIT_ARCH=amd64
                         |-e MESSAGES_PUSHED=${params.MESSAGES_RELAYED}
                         |--volumes-from=${cid}
+                        |--cpus=1
+                        |--memory=2g
+                        |--memory-swappiness=0
+                        |--oom-kill-disable
                         |-v /var/run/docker.sock:/var/run/docker.sock:rw
                         |-v /var/lib/docker/containers:/var/lib/docker/containers:rw
                         |-v /sys/fs/cgroup:/sys/fs/cgroup:ro
