@@ -9,7 +9,7 @@ pipeline {
 
     parameters {
         string(defaultValue: null, description: 'version to test', name: 'VERSION')
-        xxx(defaultValue: null, description: 'number of messages to be relayed', name: 'MESSAGES_RELAYED')
+        string(defaultValue: '1000', description: 'number of messages to be relayed', name: 'MESSAGES_RELAYED')
     }
 
     options {
