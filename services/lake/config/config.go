@@ -14,7 +14,10 @@
 
 package config
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // Configuration of application
 type Configuration struct {
@@ -34,5 +37,12 @@ type Configuration struct {
 
 // GetConfig loads application configuration
 func GetConfig() Configuration {
-	return loadConfFromEnv()
+	return Configuration{
+		PullPort:           envInteger("LAKE_PORT_PULL", 5562),
+		PubPort:            envInteger("LAKE_PORT_PUB", 5561),
+		LogLevel:           strings.ToUpper(envString("LAKE_LOG_LEVEL", "INFO")),
+		MetricsContinuous:  envBoolean("LAKE_METRICS_CONTINUOUS", true),
+		MetricsRefreshRate: envDuration("LAKE_METRICS_REFRESHRATE", time.Second),
+		MetricsOutput:      envFilename("LAKE_METRICS_OUTPUT", "/tmp/lake-metrics"),
+	}
 }

@@ -51,7 +51,7 @@ func Initialize() Program {
 		ctx,
 		cfg.PullPort,
 		cfg.PubPort,
-		&metricsDaemon,
+		metricsDaemon,
 	)
 
 	var daemons = make([]utils.Daemon, 0)

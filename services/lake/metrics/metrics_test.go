@@ -2,44 +2,80 @@ package metrics
 
 import (
 	"context"
-	"sync/atomic"
 	"testing"
 	"time"
 )
 
 func TestMetrics(t *testing.T) {
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	entity := NewMetrics(ctx, false, "/tmp", time.Hour)
-
-	t.Log("MessageEgress properly updates egress messages")
+	t.Log("does not panic on invalid root")
 	{
-		if uint64(0) != atomic.LoadUint64(entity.messageEgress) {
-			t.Errorf("extected MessageEgress 0 actual %d", atomic.LoadUint64(entity.messageEgress))
-		}
-
-		for i := 1; i <= 10000; i++ {
-			entity.MessageEgress()
-		}
-
-		if uint64(10000) != atomic.LoadUint64(entity.messageEgress) {
-			t.Errorf("extected MessageEgress 10000 actual %d", atomic.LoadUint64(entity.messageEgress))
-		}
+		NewMetrics(ctx, false, "/dev/null", time.Hour)
 	}
 
-	t.Log("MessageIngress properly updates ingress messages")
+	t.Log("does not panic on nil reference function calls")
 	{
-		if uint64(0) != atomic.LoadUint64(entity.messageIngress) {
-			t.Errorf("extected MessageIngress 0 actual %d", atomic.LoadUint64(entity.messageIngress))
-		}
+		var entity *Metrics
+		entity.MessageIngress()
+		entity.MessageEgress()
+		entity.MemoryAllocatedSnapshot()
+	}
+}
 
-		for i := 1; i <= 10000; i++ {
-			entity.MessageIngress()
-		}
+func TestMetricsIngress(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-		if uint64(10000) != atomic.LoadUint64(entity.messageIngress) {
-			t.Errorf("extected MessageIngress 10000 actual %d", atomic.LoadUint64(entity.messageIngress))
-		}
+	entity := NewMetrics(ctx, false, "/tmp/ingress", time.Hour)
+
+	if uint64(0) != entity.messageIngress {
+		t.Errorf("extected messageIngress 0 actual %d", entity.messageIngress)
+	}
+
+	for i := 1; i <= 1000; i++ {
+		entity.MessageIngress()
+	}
+
+	if uint64(1000) != entity.messageIngress {
+		t.Errorf("extected messageIngress 10000 actual %d", entity.messageIngress)
+	}
+}
+
+func TestMetricsEgress(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	entity := NewMetrics(ctx, false, "/tmp/egress", time.Hour)
+
+	if uint64(0) != entity.messageEgress {
+		t.Errorf("extected messageEgress 0 actual %d", entity.messageEgress)
+	}
+
+	for i := 1; i <= 1000; i++ {
+		entity.MessageEgress()
+	}
+
+	if uint64(1000) != entity.messageEgress {
+		t.Errorf("extected messageEgress 10000 actual %d", entity.messageEgress)
+	}
+}
+
+func TestMetricsMemory(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	entity := NewMetrics(ctx, false, "/tmp/memory", time.Hour)
+
+	if uint64(0) != entity.memoryAllocated {
+		t.Errorf("extected memoryAllocated 0 actual %d", entity.memoryAllocated)
+	}
+
+	entity.MemoryAllocatedSnapshot()
+
+	if uint64(0) == entity.memoryAllocated {
+		t.Errorf("extected memoryAllocated to be non zero after snapshot")
 	}
 }

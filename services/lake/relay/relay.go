@@ -35,8 +35,8 @@ type Relay struct {
 }
 
 // NewRelay returns new instance of Relay
-func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) Relay {
-	return Relay{
+func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) *Relay {
+	return &Relay{
 		DaemonSupport: utils.NewDaemonSupport(ctx, "relay"),
 		pullPort:      fmt.Sprintf("tcp://127.0.0.1:%d", pull),
 		pubPort:       fmt.Sprintf("tcp://127.0.0.1:%d", pub),
@@ -45,7 +45,10 @@ func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) 
 }
 
 // Start handles everything needed to start relay
-func (relay Relay) Start() {
+func (relay *Relay) Start() {
+	if relay == nil {
+		return
+	}
 	var (
 		chunk    string
 		receiver *zmq.Socket
@@ -74,8 +77,11 @@ func (relay Relay) Start() {
 				}
 				alive = false
 				relay.MarkDone()
-				ctx.Term()
-				log.Info().Msg("Stop relay-daemon")
+				if ctx.Term() != nil {
+					log.Error().Msg("Stop relay-daemon (failed to terminate context)")
+				} else {
+					log.Info().Msg("Stop relay-daemon")
+				}
 			}
 		}
 	}()

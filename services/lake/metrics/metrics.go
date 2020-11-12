@@ -16,6 +16,7 @@ package metrics
 
 import (
 	"context"
+	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -26,40 +27,63 @@ import (
 // Metrics holds metrics counters
 type Metrics struct {
 	utils.DaemonSupport
-	storage        localfs.PlaintextStorage
-	continuous     bool
-	refreshRate    time.Duration
-	messageEgress  *uint64
-	messageIngress *uint64
+	storage         localfs.Storage
+	continuous      bool
+	refreshRate     time.Duration
+	messageEgress   uint64
+	messageIngress  uint64
+	memoryAllocated uint64
 }
 
 // NewMetrics returns blank metrics holder
-func NewMetrics(ctx context.Context, continuous bool, output string, refreshRate time.Duration) Metrics {
-	egress := uint64(0)
-	ingress := uint64(0)
-
-	return Metrics{
-		DaemonSupport:  utils.NewDaemonSupport(ctx, "metrics"),
-		storage:        localfs.NewPlaintextStorage(output),
-		continuous:     continuous,
-		refreshRate:    refreshRate,
-		messageEgress:  &egress,
-		messageIngress: &ingress,
+func NewMetrics(ctx context.Context, continuous bool, output string, refreshRate time.Duration) *Metrics {
+	storage, err := localfs.NewPlaintextStorage(output)
+	if err != nil {
+		log.Error().Msgf("Failed to ensure storage %+v", err)
+		return nil
+	}
+	return &Metrics{
+		DaemonSupport:   utils.NewDaemonSupport(ctx, "metrics"),
+		storage:         storage,
+		continuous:      continuous,
+		refreshRate:     refreshRate,
+		messageEgress:   uint64(0),
+		messageIngress:  uint64(0),
+		memoryAllocated: uint64(0),
 	}
 }
 
 // MessageEgress increment number of outcomming messages
 func (metrics *Metrics) MessageEgress() {
-	atomic.AddUint64(metrics.messageEgress, 1)
+	if metrics == nil {
+		return
+	}
+	atomic.AddUint64(&(metrics.messageEgress), 1)
 }
 
 // MessageIngress increment number of incomming messages
 func (metrics *Metrics) MessageIngress() {
-	atomic.AddUint64(metrics.messageIngress, 1)
+	if metrics == nil {
+		return
+	}
+	atomic.AddUint64(&(metrics.messageIngress), 1)
+}
+
+// MemoryAllocatedSnapshot updates memory allocated snapshot
+func (metrics *Metrics) MemoryAllocatedSnapshot() {
+	if metrics == nil {
+		return
+	}
+	var stats = new(runtime.MemStats)
+	runtime.ReadMemStats(stats)
+	atomic.StoreUint64(&(metrics.memoryAllocated), stats.Sys)
 }
 
 // Start handles everything needed to start metrics daemon
-func (metrics Metrics) Start() {
+func (metrics *Metrics) Start() {
+	if metrics == nil {
+		return
+	}
 	ticker := time.NewTicker(metrics.refreshRate)
 	defer ticker.Stop()
 
@@ -67,6 +91,7 @@ func (metrics Metrics) Start() {
 		metrics.Hydrate()
 	}
 
+	metrics.MemoryAllocatedSnapshot()
 	metrics.Persist()
 	metrics.MarkReady()
 
@@ -78,16 +103,18 @@ func (metrics Metrics) Start() {
 		return
 	}
 
-	log.Info().Msgf("Start metrics daemon, update each %v into %v", metrics.refreshRate, metrics.storage.Root)
+	log.Info().Msgf("Start metrics daemon, update file each %v", metrics.refreshRate)
 
 	go func() {
 		for {
 			select {
 			case <-metrics.Done():
+				metrics.MemoryAllocatedSnapshot()
 				metrics.Persist()
 				metrics.MarkDone()
 				return
 			case <-ticker.C:
+				metrics.MemoryAllocatedSnapshot()
 				metrics.Persist()
 			}
 		}
