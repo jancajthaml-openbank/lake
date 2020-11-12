@@ -86,7 +86,7 @@ pipeline {
                     env.PROJECT_AUTHOR = "${env.CHANGE_AUTHOR_DISPLAY_NAME} <${env.CHANGE_AUTHOR_EMAIL}>"
                     env.GOPATH = "${env.WORKSPACE}/go"
                     env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
-					
+
                     currentBuild.displayName = "#${currentBuild.number} - ${env.GIT_BRANCH} (${env.VERSION})"
                 }
             }
