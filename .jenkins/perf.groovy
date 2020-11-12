@@ -8,7 +8,7 @@ pipeline {
     }
 
     parameters {
-        stringParam(defaultValue: null, description: 'version to test', name: 'VERSION')
+        text(defaultValue: null, description: 'version to test', name: 'VERSION')
     }
 
     options {
