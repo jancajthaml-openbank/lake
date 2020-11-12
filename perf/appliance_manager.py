@@ -30,11 +30,9 @@ class ApplianceManager(object):
     self.units = {}
     self.services = []
     self.docker = docker.from_env()
-    self.download()
+    self.__download()
 
-  def install(self, file):
-    filename = os.path.realpath('{}/..'.format(os.path.dirname(__file__)))
-
+  def __install(self, filename):
     progress('installing lake {}'.format(filename))
 
     (code, result, error) = execute([
@@ -54,7 +52,7 @@ class ApplianceManager(object):
     self.services = set([x.split(' ')[0].split('@')[0].split('.service')[0] for x in result.splitlines()])
 
 
-  def download(self):
+  def __download(self):
     self.image_version = os.environ.get('IMAGE_VERSION', '')
     self.debian_version = os.environ.get('UNIT_VERSION', '')
 
@@ -66,10 +64,8 @@ class ApplianceManager(object):
 
     self.binary = os.path.realpath('{}/../packaging/bin/lake_{}_{}.deb'.format(os.path.dirname(__file__), self.debian_version, self.arch))
 
-    print(self.binary)
-
     if os.path.exists(self.binary):
-      self.install(self.binary)
+      self.__install(self.binary)
       return
 
     os.makedirs(os.path.dirname(self.binary), exist_ok=True)
@@ -93,7 +89,6 @@ class ApplianceManager(object):
           l = line.strip(os.linesep)
           if not len(l):
             continue
-          print(l)
 
       scratch = self.docker.containers.run('perf_artifacts-scratch', ['/bin/true'], detach=True)
 
@@ -105,7 +100,7 @@ class ApplianceManager(object):
 
       archive = tarfile.TarFile(tar_name.name)
       archive.extract(os.path.basename(self.binary), os.path.dirname(self.binary))
-      self.install(self.binary)
+      self.__install(self.binary)
       scratch.remove()
     except Exception as ex:
       failure = ex
