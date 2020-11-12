@@ -32,7 +32,7 @@ class MemoryMonitor(threading.Thread):
     with open("/proc/meminfo", "r") as fd:
       lines = fd.readlines()
       #mem_total = int(lines[].split(':')[1].strip().split('kB')[])
-      mem_avail = int(lines[2].split(':')[1].strip().split('kB')[0])
+      mem_avail = float(lines[2].split(':')[1].strip().split('kB')[0]) * 1024
       #mem_used = float((mem_total-mem_free))
     print_daemon('memory available: {}'.format(self.__sizeof_fmt(mem_avail)))
     gc.collect()
