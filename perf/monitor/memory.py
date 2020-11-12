@@ -33,7 +33,9 @@ class MemoryMonitor(threading.Thread):
       lines = fd.readlines()
       mem_total = int(lines[0].split(':')[1].strip().split('kB')[0])
       mem_free = int(lines[1].split(':')[1].strip().split('kB')[0])
-    print_daemon('memory used: {}'.format(self.__sizeof_fmt((mem_total-mem_free) * 1000)))
+      mem_used = (mem_total-mem_free) * 1000
+      print_daemon('mem used 1 : {}'.format(mem_used))
+    print_daemon('memory used: {}'.format(self.__sizeof_fmt(mem_used)))
     gc.collect()
 
   def run(self) -> None:
