@@ -35,6 +35,7 @@ class metrics():
       os.remove(file)
 
     #del self.__metrics
+
     #self.__metrics = MetricsAggregator(file)
     self.__manager.start()
     #self.__metrics.start()
