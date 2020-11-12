@@ -20,7 +20,11 @@ class MemoryMonitor(threading.Thread):
     self.__rountrip()
 
   def __rountrip(self) -> None:
-    print_daemon('memory {}'.format(os.popen('cat /proc/meminfo').readlines()))
+    mem_free = '0 kB'
+    with open("/proc/meminfo", "r") as fd:
+      lines = fd.readlines()
+      mem_free = lines[1].split(':')[1].strip()
+    print_daemon('memory free: {}'.format(mem_free))
 
   def run(self) -> None:
     self.__rountrip()
