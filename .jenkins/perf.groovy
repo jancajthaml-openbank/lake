@@ -45,10 +45,7 @@ pipeline {
 
         stage('Download') {
             steps {
-                script {
-                    //echo "will perf test ${params.VERSION}"
-
-                    //sh "mkdir -p ${env.WORKSPACE}/packaging/bin"
+                //script {
 
                     artifactory.download spec: """{
                         "files": [
@@ -61,7 +58,42 @@ pipeline {
                     }"""
 
                     //echo "after download"
-                    sh "ls -lFa ${env.WORKSPACE}/packaging/bin"
+                    //sh "ls -lFa ${env.WORKSPACE}/packaging/bin"
+                //}
+            }
+        }
+
+        stage('Performance Test') {
+            agent {
+                docker {
+                    image "jancajthaml/bbtest:${env.ARCH}"
+                    args """-u 0"""
+                    reuseNode true
+                }
+            }
+            options {
+                timeout(time: 5, unit: 'MINUTES')
+            }
+            steps {
+                script {
+                    cid = sh(
+                        script: 'hostname',
+                        returnStdout: true
+                    ).trim()
+                    options = """
+                        |-e IMAGE_VERSION=${params.VERSION}
+                        |-e UNIT_VERSION=${params.VERSION}
+                        |-e UNIT_ARCH=amd64
+                        |-e MESSAGES_PUSHED=100
+                        |--volumes-from=${cid}
+                        |-v /var/run/docker.sock:/var/run/docker.sock:rw
+                        |-v /var/lib/docker/containers:/var/lib/docker/containers:rw
+                        |-v /sys/fs/cgroup:/sys/fs/cgroup:ro
+                        |-u 0
+                    """.stripMargin().stripIndent().replaceAll("[\\t\\n\\r]+"," ").stripMargin().stripIndent()
+                    docker.image("jancajthaml/bbtest:${env.ARCH}").withRun(options) { c ->
+                        sh "docker exec -t ${c.id} python3 ${env.WORKSPACE}/perf/main.py"
+                    }
                 }
             }
         }
