@@ -31,10 +31,10 @@ class MemoryMonitor(threading.Thread):
     mem_free = '0 kB'
     with open("/proc/meminfo", "r") as fd:
       lines = fd.readlines()
-      mem_total = int(lines[0].split(':')[1].strip().split('kB')[])
-      mem_free = int(lines[1].split(':')[1].strip().split('kB')[0])
-      mem_used = float((mem_total-mem_free))
-    print_daemon('memory used: {}'.format(self.__sizeof_fmt(mem_used)))
+      #mem_total = int(lines[].split(':')[1].strip().split('kB')[])
+      mem_avail = int(lines[2].split(':')[1].strip().split('kB')[0])
+      #mem_used = float((mem_total-mem_free))
+    print_daemon('memory available: {}'.format(self.__sizeof_fmt(mem_avail)))
     gc.collect()
 
   def run(self) -> None:
