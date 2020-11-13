@@ -32,7 +32,7 @@ class MemoryMonitor(threading.Thread):
     mem_avail = float(0)
     with open("/proc/meminfo", "r") as fd:
       lines = fd.readlines()
-      mem_avail = float(lines[2].split(':')[1].strip().split('kB')[0]) * 1024
+      mem_avail = float(lines[1].split(':')[1].strip().split('kB')[0]) * 1024
 
     print_daemon('memory available: %s' % (self.__sizeof_fmt(mem_avail)))
 
