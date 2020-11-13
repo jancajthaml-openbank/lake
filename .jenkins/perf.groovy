@@ -18,7 +18,7 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         disableConcurrentBuilds()
         disableResume()
-        timeout(time: 3, unit: 'HOURS')
+        timeout(time: 5, unit: 'HOURS')
         timestamps()
     }
 
@@ -99,20 +99,22 @@ pipeline {
     }
 
     post {
-        always {
-            script {
-                dir("${env.WORKSPACE}/reports") {
-                    archiveArtifacts(
-                        allowEmptyArchive: true,
-                        artifacts: 'perf-tests/**/*'
-                    )
-                }
-            }
-        }
         success {
+            dir("${env.WORKSPACE}/reports") {
+                archiveArtifacts(
+                    allowEmptyArchive: true,
+                    artifacts: 'perf-tests/graphs/*.png'
+                )
+            }
             cleanWs()
         }
         failure {
+            dir("${env.WORKSPACE}/reports") {
+                archiveArtifacts(
+                    allowEmptyArchive: true,
+                    artifacts: 'perf-tests/**/*'
+                )
+            }
             cleanWs()
         }
     }
