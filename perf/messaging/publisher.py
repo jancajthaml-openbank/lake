@@ -29,13 +29,14 @@ def Publisher(number_of_messages):
   messages_sent = 0
 
   while messages_sent < number_of_messages:
-    for _ in itertools.repeat(None, 100):
+    for _ in itertools.repeat(None, 1000):
       push.send(msg)
-    for _ in itertools.repeat(None, 100):
+    for _ in itertools.repeat(None, 1000):
       try:
         sub.recv(zmq.BLOCK)
       except:
         break
+    messages_sent += 1000
 
   time.sleep(2)
 
