@@ -14,7 +14,6 @@ from metrics.plot import Graph
 from appliance_manager import ApplianceManager
 from messaging.publisher import Publisher
 from logs.collector import LogsCollector
-from monitor.memory import MemoryMonitor
 
 import multiprocessing
 import traceback
@@ -45,14 +44,12 @@ def main():
 
   info("setup")
 
-  memory_monitor = MemoryMonitor()
-
-  #logs_collector = LogsCollector()
+  logs_collector = LogsCollector()
 
   manager = ApplianceManager()
   manager.bootstrap()
 
-  #logs_collector.start()
+  logs_collector.start()
   memory_monitor.start()
 
   info("start")
@@ -74,7 +71,7 @@ def main():
 
   info("stopping")
 
-  #logs_collector.stop()
+  logs_collector.stop()
   memory_monitor.stop()
   manager.teardown()
 

@@ -7,6 +7,11 @@ import itertools
 
 
 def Publisher(number_of_messages):
+  for i in range(0, number_of_messages, 1000):
+    PublisherWorker(i + 1000)
+
+
+def PublisherWorker(number_of_messages):
 
   push_url = 'tcp://127.0.0.1:5562'
   sub_url = 'tcp://127.0.0.1:5561'
