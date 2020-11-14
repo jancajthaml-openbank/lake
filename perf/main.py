@@ -50,7 +50,6 @@ def main():
   manager.bootstrap()
 
   logs_collector.start()
-  memory_monitor.start()
 
   info("start")
 
@@ -72,7 +71,6 @@ def main():
   info("stopping")
 
   logs_collector.stop()
-  memory_monitor.stop()
   manager.teardown()
 
   info("stop")
