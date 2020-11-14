@@ -26,14 +26,10 @@ def Publisher(number_of_messages):
   push.connect(push_url)
 
   number_of_messages = int(number_of_messages)
-  messages_sent = 0
 
-  while messages_sent < number_of_messages:
-    for _ in itertools.repeat(None, 1000):
-      push.send(msg)
-    for _ in itertools.repeat(None, 1000):
-      sub.recv()
-    messages_sent += 1000
+  for _ in itertools.repeat(None, number_of_messages):
+    push.send(msg)
+    sub.recv()
 
   time.sleep(2)
 

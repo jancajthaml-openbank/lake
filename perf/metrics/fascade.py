@@ -118,15 +118,15 @@ class Metrics():
 
       del stash
 
-    #last = dataset[(list(dataset.keys()))[-1]]
+    last = dataset[(list(dataset.keys()))[-1]]
 
-    #materialised_dataset[(list(materialised_dataset.keys()))[-1]] = {
-    #  'messageIngress': int(last.split('/')[0]),
-    #  'messageEgress': int(last.split('/')[1]),
-    #  'memoryAllocated': int(last.split('/')[2]),
-    #}
+    materialised_dataset[(list(materialised_dataset.keys()))[-1]] = {
+      'messageIngress': int(last.split('/')[0]),
+      'messageEgress': int(last.split('/')[1]),
+      'memoryAllocated': int(last.split('/')[2]),
+    }
 
-    #del last
+    del last
 
     return materialised_dataset
 
