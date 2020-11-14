@@ -21,21 +21,21 @@ def Publisher(number_of_messages):
   sub = ctx.socket(zmq.SUB)
   sub.connect(sub_url)
   sub.setsockopt(zmq.SUBSCRIBE, topic)
-  sub.set_hwm(number_of_messages)
 
   push = ctx.socket(zmq.PUSH)
   push.connect(push_url)
 
   number_of_messages = int(number_of_messages)
+  messages_sent = 0
 
-  for _ in itertools.repeat(None, number_of_messages):
-    push.send(msg)
-
-  for _ in itertools.repeat(None, number_of_messages):
-    try:
-      sub.recv(zmq.BLOCK)
-    except:
-      break
+  while messages_sent < number_of_messages:
+    for _ in itertools.repeat(None, 100):
+      push.send(msg)
+    for _ in itertools.repeat(None, 100):
+      try:
+        sub.recv(zmq.BLOCK)
+      except:
+        break
 
   time.sleep(2)
 
