@@ -8,7 +8,7 @@ from multiprocessing import Process
 
 
 def Publisher(number_of_messages):
-  tasks = [lambda: PublisherWorker(i + 1000) for i in range(0, number_of_messages, 1000)]
+  tasks = [lambda: PublisherWorker(1000) for i in range(0, number_of_messages, 1000)]
   running_tasks = [Process(target=task) for task in tasks]
   for running_task in running_tasks:
     running_task.start()
