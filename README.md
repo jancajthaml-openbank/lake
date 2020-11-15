@@ -13,7 +13,9 @@ Build for partition tolerance and availability, consumer is to take care of work
 
 ## Performance
 
-*messages throughput in time*
+messages throughput in time, approximately 500 000 messages / sec
+
+(2GB RAM 1 CPU)
 
 ![graph_metrics_count]
 

@@ -113,8 +113,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - /var/lib/docker/containers:/var/lib/docker/containers:rw
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - ./perf:/opt/app
-      - ./reports:/tmp/reports
+      - .:/opt/app
     working_dir: /opt/app
 
 # ---------------------------------------------------------------------------- #

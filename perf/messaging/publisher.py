@@ -4,9 +4,19 @@
 import time
 import zmq
 import itertools
+from multiprocessing import Process
 
 
 def Publisher(number_of_messages):
+  tasks = [lambda: PublisherWorker(1000) for i in range(0, number_of_messages, 1000)]
+  running_tasks = [Process(target=task) for task in tasks]
+  for running_task in running_tasks:
+    running_task.start()
+  for running_task in running_tasks:
+    running_task.join()
+
+
+def PublisherWorker(number_of_messages):
 
   push_url = 'tcp://127.0.0.1:5562'
   sub_url = 'tcp://127.0.0.1:5561'
@@ -21,7 +31,6 @@ def Publisher(number_of_messages):
   sub = ctx.socket(zmq.SUB)
   sub.connect(sub_url)
   sub.setsockopt(zmq.SUBSCRIBE, topic)
-  sub.set_hwm(0)
 
   push = ctx.socket(zmq.PUSH)
   push.connect(push_url)
@@ -29,18 +38,8 @@ def Publisher(number_of_messages):
   number_of_messages = int(number_of_messages)
 
   for _ in itertools.repeat(None, number_of_messages):
-    for _ in itertools.repeat(None, 1000):
-      try:
-        push.send(msg, zmq.NOBLOCK)
-        break
-      except:
-        pass
-
-  for _ in itertools.repeat(None, number_of_messages):
-    try:
-      sub.recv(zmq.BLOCK)
-    except:
-      break
+    push.send(msg)
+    sub.recv()
 
   time.sleep(2)
 

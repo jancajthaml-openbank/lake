@@ -6,7 +6,6 @@ import threading
 import signal
 import time
 import os
-import gc
 
 
 class Deadline(threading.Thread):
@@ -58,8 +57,6 @@ def execute(command, timeout=60) -> None:
     code = p.returncode
 
     del p
-
-    gc.collect()
 
     return (code, result, error)
   except subprocess.CalledProcessError:

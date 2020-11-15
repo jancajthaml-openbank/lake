@@ -11,13 +11,14 @@ class LogsCollector(threading.Thread):
   def __init__(self):
     super(LogsCollector, self).__init__()
     self._stop_event = threading.Event()
+
     self.__command = ' '.join([
       'journalctl',
       '-o', 'cat',
       '-t', 'lake',
       '-u', 'lake-relay.service',
       '--no-pager',
-      '>', '/tmp/reports/perf-tests/logs/lake-relay.log'
+      '>', os.path.realpath('{}/../../reports/perf-tests/logs/lake-relay.log'.format(os.path.dirname(os.path.abspath(__file__))))
     ])
 
   def stop(self) -> None:

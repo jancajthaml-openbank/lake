@@ -50,13 +50,6 @@ def print_daemon(msg) -> None:
   sys.stdout.write('\033[0m   |  {0}\033[0m  \n'.format(msg))
   sys.stdout.flush()
 
-def progress(msg) -> None:
-  if not __TTY:
-    return
-  this.__progress_running = True
-  sys.stdout.write('\033[37m   |  {0}\033[0m\r'.format(msg.rstrip()))
-  sys.stdout.flush()
-
 def error(msg) -> None:
   this.__progress_running = False
   sys.stdout.write('\033[31m  [+] {0}\033[0m  \n'.format(msg))

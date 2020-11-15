@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import docker
-from utils import progress, info, print_daemon
+from utils import info, print_daemon
 from helpers.shell import execute
 from systemd.lake import Lake
 import platform
@@ -29,72 +29,12 @@ class ApplianceManager(object):
     self.debian_version = None
     self.units = {}
     self.services = []
-    self.docker = docker.APIClient(base_url='unix://var/run/docker.sock')
+    self.docker = docker.from_env()
+    self.__download()
 
-    try:
-      os.mkdir("/opt/artifacts")
-    except OSError as exc:
-      if exc.errno != errno.EEXIST:
-        raise
-      pass
-
-    self.image_version = os.environ.get('IMAGE_VERSION', '')
-    self.debian_version = os.environ.get('UNIT_VERSION', '')
-
-    if self.debian_version.startswith('v'):
-      self.debian_version = self.debian_version[1:]
-
-    scratch_docker_cmd = ['FROM alpine']
-
-    image = 'openbank/lake:{}'.format(self.image_version)
-    package = 'lake_{}_{}'.format(self.debian_version, self.arch)
-    scratch_docker_cmd.append('COPY --from={} /opt/artifacts/{}.deb /opt/artifacts/lake.deb'.format(image, package))
-
-    temp = tempfile.NamedTemporaryFile(delete=True)
-    try:
-      with open(temp.name, 'w') as f:
-        for item in scratch_docker_cmd:
-          f.write("%s\n" % item)
-
-      for chunk in self.docker.build(fileobj=temp, rm=True, decode=True, tag='perf_artifacts-scratch'):
-        if 'stream' in chunk:
-          for line in chunk['stream'].splitlines():
-            if len(line):
-              print_daemon(line.strip('\r\n'))
-
-      scratch = self.docker.create_container('perf_artifacts-scratch', '/bin/true')
-
-      if scratch['Warnings']:
-        raise Exception(scratch['Warnings'])
-
-      tar_name = '/opt/artifacts/lake.tar'
-      tar_stream, stat = self.docker.get_archive(scratch['Id'], '/opt/artifacts/lake.deb')
-      with open(tar_name, 'wb') as destination:
-        total_bytes = 0
-        for chunk in tar_stream:
-          total_bytes += len(chunk)
-          progress('extracting {} {:.2f}%'.format(stat['name'], min(100, 100 * (total_bytes/stat['size']))))
-          destination.write(chunk)
-      archive = tarfile.TarFile(tar_name)
-      archive.extract('lake.deb', '/opt/artifacts')
-      os.remove(tar_name)
-
-      (code, result, error) = execute([
-        'dpkg', '-c', '/opt/artifacts/lake.deb'
-      ])
-
-      if code != 0:
-        raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
-
-      self.docker.remove_container(scratch['Id'])
-    finally:
-      temp.close()
-      self.docker.remove_image('perf_artifacts-scratch', force=True)
-
-    progress('installing lake {}'.format(self.image_version))
-
+  def __install(self, filename):
     (code, result, error) = execute([
-      "apt-get", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "-o=Dpkg::Options::=--force-confdef", "-o=Dpkg::Options::=--force-confnew", '/opt/artifacts/lake.deb'
+      "apt-get", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "-o=Dpkg::Options::=--force-confdef", "-o=Dpkg::Options::=--force-confnew", filename
     ])
 
     if code != 0:
@@ -108,6 +48,77 @@ class ApplianceManager(object):
       raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
 
     self.services = set([x.split(' ')[0].split('@')[0].split('.service')[0] for x in result.splitlines()])
+
+
+  def __download(self):
+    self.image_version = os.environ.get('IMAGE_VERSION', '')
+    self.debian_version = os.environ.get('UNIT_VERSION', '')
+
+    if self.debian_version.startswith('v'):
+      self.debian_version = self.debian_version[1:]
+
+    assert self.image_version, 'IMAGE_VERSION not provided'
+    assert self.debian_version, 'UNIT_VERSION not provided'
+
+    self.binary = os.path.realpath('{}/../packaging/bin/lake_{}_{}.deb'.format(os.path.dirname(__file__), self.debian_version, self.arch))
+
+    if os.path.exists(self.binary):
+      self.__install(self.binary)
+      return
+
+    os.makedirs(os.path.dirname(self.binary), exist_ok=True)
+
+    failure = None
+    image = 'openbank/lake:{}'.format(self.image_version)
+    package = '/opt/artifacts/lake_{}_{}.deb'.format(self.debian_version, self.arch)
+    temp = tempfile.NamedTemporaryFile(delete=True)
+
+    try:
+      with open(temp.name, 'w') as fd:
+        fd.write(str(os.linesep).join([
+          'FROM alpine',
+          'COPY --from={} {} {}'.format(image, package, self.binary)
+        ]))
+
+      image, stream = self.docker.images.build(fileobj=temp, rm=True, pull=False, tag='perf_artifacts-scratch')
+      for chunk in stream:
+        if not 'stream' in chunk:
+          continue
+        for line in chunk['stream'].splitlines():
+          l = line.strip(os.linesep)
+          if not len(l):
+            continue
+
+      scratch = self.docker.containers.run('perf_artifacts-scratch', ['/bin/true'], detach=True)
+
+      tar_name = tempfile.NamedTemporaryFile(delete=True)
+      with open(tar_name.name, 'wb') as fd:
+        bits, stat = scratch.get_archive(self.binary)
+        for chunk in bits:
+          fd.write(chunk)
+
+      archive = tarfile.TarFile(tar_name.name)
+      archive.extract(os.path.basename(self.binary), os.path.dirname(self.binary))
+
+      del archive
+
+      self.__install(self.binary)
+      scratch.remove()
+
+      del scratch
+
+    except Exception as ex:
+      failure = ex
+    finally:
+      temp.close()
+      del temp
+      try:
+        self.docker.images.remove('perf_artifacts-scratch', force=True)
+      except:
+        pass
+
+    if failure:
+      raise failure
 
   def __len__(self):
     return sum([len(x) for x in self.units.values()])
@@ -140,7 +151,6 @@ class ApplianceManager(object):
       for k, v in sorted(options.items()):
         fd.write('LAKE_{}={}\n'.format(k, v))
 
-  # fixme __iter__
   def items(self) -> list:
     return self.units.items()
 
