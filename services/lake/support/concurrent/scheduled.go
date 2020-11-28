@@ -19,12 +19,14 @@ import (
 	"time"
 )
 
+// ScheduledDaemon represent work happening repeatedly in given interval
 type ScheduledDaemon struct {
 	Worker
 	name          string
 	interval      time.Duration
 }
 
+// NewScheduledDaemon returns new daemon with given name for periodic work
 func NewScheduledDaemon(name string, worker Worker, interval time.Duration) Daemon {
 	return ScheduledDaemon{
 		Worker:        worker,
@@ -33,29 +35,32 @@ func NewScheduledDaemon(name string, worker Worker, interval time.Duration) Daem
 	}
 }
 
-
+// Done returns signal when worker has finished work
 func (daemon ScheduledDaemon) Done() <- chan interface{} {
 	return daemon.Worker.Done()
 }
 
+// Setup prepares worker for work
 func (daemon ScheduledDaemon) Setup() error {
 	return daemon.Worker.Setup()
 }
 
+// Stop cancels worker's work
 func (daemon ScheduledDaemon) Stop() {
 	daemon.Worker.Cancel()
 }
 
+// Start starts worker's work in given interval and on termination
 func (daemon ScheduledDaemon) Start(parentContext context.Context, cancelFunction context.CancelFunc) {
 	defer cancelFunction()
 	ticker := time.NewTicker(daemon.interval)
 	defer ticker.Stop()
 	err := daemon.Setup()
 	if err != nil {
-		log.Error().Msgf("Setup error %s daemon %+v", daemon.name, err.Error())
+		log.Error().Msgf("Setup daemon %s error %+v", daemon.name, err.Error())
 		return
 	}
-	log.Info().Msgf("Start %s daemon", daemon.name)
+	log.Info().Msgf("Start daemon %s", daemon.name)
 	for {
 		select {
 		case <-parentContext.Done():
@@ -66,5 +71,5 @@ func (daemon ScheduledDaemon) Start(parentContext context.Context, cancelFunctio
 	}
 	daemon.Work()
 	daemon.Cancel()
-	log.Info().Msgf("Stop %s daemon", daemon.name)
+	log.Info().Msgf("Stop daemon %s", daemon.name)
 }

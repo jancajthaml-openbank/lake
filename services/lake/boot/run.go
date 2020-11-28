@@ -20,9 +20,12 @@ import (
 	"os/signal"
 	"syscall"
 	"github.com/jancajthaml-openbank/lake/support/host"
+	"github.com/jancajthaml-openbank/lake/support/concurrent"
 )
 
+// Done retutrns signal when all daemons are done
 func (prog Program) Done() <- chan interface{} {
+	log.Info().Msg("Program Stopping all daemons")
 	out := make(chan interface{})
 	var wg sync.WaitGroup
 	wg.Add(len(prog.daemons))
@@ -30,32 +33,34 @@ func (prog Program) Done() <- chan interface{} {
 		if prog.daemons[idx] == nil {
 			wg.Done()
 		}
-		go func(c <-chan interface{}) {
-			for v := range c {
+		go func(c concurrent.Daemon) {
+			log.Info().Msgf("Program Waiting for %+v to Stop", c)
+			for v := range c.Done() {
 				out <- v
 			}
 			wg.Done()
-		}(prog.daemons[idx].Done())
+		}(prog.daemons[idx])
 	}
 	go func() {
 		wg.Wait()
+		log.Info().Msg("Program Stopped all daemons")
 		close(out)
 	}()
 	return out
 }
 
-// Stop stops the application
+// Stop stops all daemons
 func (prog Program) Stop() {
 	for idx := range prog.daemons {
 		if prog.daemons[idx] == nil {
 			continue
 		}
-		go prog.daemons[idx].Stop()
+		prog.daemons[idx].Stop()
 	}
 	close(prog.interrupt)
 }
 
-// Start runs the application
+// Start starts all daemons and blocks until INT or TERM signal is received
 func (prog Program) Start(parentContext context.Context, cancelFunction context.CancelFunc) {
 	for idx := range prog.daemons {
 		if prog.daemons[idx] == nil {
@@ -71,5 +76,8 @@ func (prog Program) Start(parentContext context.Context, cancelFunction context.
 	if err := host.NotifyServiceStopping(); err != nil {
 		log.Error().Msg(err.Error())
 	}
+	cancelFunction()
+	log.Info().Msg("Program Daemon Termination")
 	<-prog.Done()
+	log.Info().Msg("Program Stopped")
 }

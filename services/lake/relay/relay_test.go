@@ -201,7 +201,8 @@ func TestRelayInOrder(t *testing.T) {
 			}()
 
 			for {
-				accumulatedData = append(accumulatedData, <-subChannel)
+				msg := <-subChannel
+				accumulatedData = append(accumulatedData, msg)
 				if ctx.Err() == nil && len(expectedData) != len(accumulatedData) {
 					continue
 				}

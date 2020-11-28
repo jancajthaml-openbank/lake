@@ -77,7 +77,7 @@ func (metrics *Metrics) Setup() error {
 		return nil
 	}
 	if metrics.continuous {
-		metrics.Hydrate()
+		return metrics.Hydrate()
 	}
 	return nil
 }

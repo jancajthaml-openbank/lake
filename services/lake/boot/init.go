@@ -31,6 +31,14 @@ type Program struct {
 	daemons   []concurrent.Daemon
 }
 
+// Register daemon into program
+func (prog *Program) Register(daemon concurrent.Daemon) {
+	if prog == nil {
+		return
+	}
+	prog.daemons = append(prog.daemons, daemon)
+}
+
 // NewProgram returns new program
 func NewProgram() Program {
 
@@ -39,27 +47,24 @@ func NewProgram() Program {
 	logging.SetupLogger(cfg.LogLevel)
 
 	metricsWorker := metrics.NewMetrics(cfg.MetricsOutput, cfg.MetricsContinuous)
+	relayWorker := relay.NewRelay(cfg.PullPort, cfg.PubPort, metricsWorker)
 
-	relayWorker := relay.NewRelay(
-		cfg.PullPort,
-		cfg.PubPort,
-		metricsWorker,
-	)
+	program := Program{
+		interrupt: make(chan os.Signal, 1),
+		cfg:       cfg,
+		daemons:   make([]concurrent.Daemon, 0),
+	}
 
-	var daemons = make([]concurrent.Daemon, 0)
-	daemons = append(daemons, concurrent.NewScheduledDaemon(
+	program.Register(concurrent.NewScheduledDaemon(
 		"metrics",
 		metricsWorker,
 		cfg.MetricsRefreshRate,
 	))
-	daemons = append(daemons, concurrent.NewOneShotDaemon(
+
+	program.Register(concurrent.NewOneShotDaemon(
 		"relay",
 		relayWorker,
 	))
 
-	return Program{
-		interrupt: make(chan os.Signal, 1),
-		cfg:       cfg,
-		daemons:   daemons,
-	}
+	return program
 }

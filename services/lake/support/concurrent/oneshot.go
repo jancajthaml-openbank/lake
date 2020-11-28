@@ -19,11 +19,13 @@ import (
 	"context"
 )
 
+// ScheduledDaemon represent work happening only once
 type OneShotDaemon struct {
 	Worker
 	name string
 }
 
+// NewOneShotDaemon returns new daemon with given name for single work
 func NewOneShotDaemon(name string, worker Worker) Daemon {
 	return OneShotDaemon{
 		Worker: worker,
@@ -31,18 +33,22 @@ func NewOneShotDaemon(name string, worker Worker) Daemon {
 	}
 }
 
+// Done returns signal when worker has finished work
 func (daemon OneShotDaemon) Done() <- chan interface{} {
 	return daemon.Worker.Done()
 }
 
+// Setup prepares worker for work
 func (daemon OneShotDaemon) Setup() error {
 	return daemon.Worker.Setup()
 }
 
+// Stop cancels worker's work
 func (daemon OneShotDaemon) Stop() {
 	daemon.Worker.Cancel()
 }
 
+// Start starts worker's work once
 func (daemon OneShotDaemon) Start(parentContext context.Context, cancelFunction context.CancelFunc) {
 	defer cancelFunction()
 	runtime.LockOSThread()
@@ -52,7 +58,7 @@ func (daemon OneShotDaemon) Start(parentContext context.Context, cancelFunction 
 	}()
 	err := daemon.Setup()
 	if err != nil {
-		log.Error().Msgf("Setup error %s daemon %+v", daemon.name, err.Error())
+		log.Error().Msgf("Setup daemon %s error %+v", daemon.name, err.Error())
 		return
 	}
 	go func() {
@@ -64,8 +70,8 @@ func (daemon OneShotDaemon) Start(parentContext context.Context, cancelFunction 
 			}
 		}
 	}()
-	log.Info().Msgf("Start %s daemon", daemon.name)
+	log.Info().Msgf("Start daemon %s", daemon.name)
 	daemon.Work()
 	<-daemon.Done()
-	log.Info().Msgf("Stop %s daemon", daemon.name)
+	log.Info().Msgf("Stop daemon %s", daemon.name)
 }
