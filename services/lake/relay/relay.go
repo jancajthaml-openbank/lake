@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"time"
 	"github.com/jancajthaml-openbank/lake/metrics"
-	"github.com/jancajthaml-openbank/lake/support/concurrent"
 
 	zmq "github.com/pebbe/zmq4"
 )
@@ -35,12 +34,12 @@ type Relay struct {
 }
 
 // NewRelay returns new instance of Relay
-func NewRelay(pull int, pub int, metrics *metrics.Metrics) concurrent.Worker {
+func NewRelay(pull int, pub int, metrics *metrics.Metrics) *Relay {
 	return &Relay{
 		pullPort:      fmt.Sprintf("tcp://127.0.0.1:%d", pull),
 		pubPort:       fmt.Sprintf("tcp://127.0.0.1:%d", pub),
 		metrics:       metrics,
-		done:          make(chan interface{}),
+		done:          nil,
 	}
 }
 
@@ -94,6 +93,9 @@ func (relay *Relay) Setup() error {
 }
 
 func (relay *Relay) Cancel() {
+	if relay == nil {
+		return
+	}
 	if relay.sender != nil {
 		relay.sender.Unbind(relay.pubPort)
 		relay.sender.Close()
@@ -104,6 +106,8 @@ func (relay *Relay) Cancel() {
 	}
 	if relay.ctx != nil {
 		for relay.ctx.Term() != nil {}
+	} else if relay.done != nil {
+		close(relay.done)
 	}
 	relay.sender = nil
 	relay.receiver = nil
@@ -111,6 +115,11 @@ func (relay *Relay) Cancel() {
 }
 
 func (relay *Relay) Done() <- chan interface{} {
+	if relay == nil || relay.done == nil {
+		done := make(chan interface{})
+		close(done)
+		return done
+	}
 	return relay.done
 }
 
@@ -119,6 +128,8 @@ func (relay *Relay) Work() {
 	if relay == nil {
 		return
 	}
+
+	relay.done = make(chan interface{})
 
 	defer func() {
 		recover()

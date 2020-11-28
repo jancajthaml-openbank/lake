@@ -18,13 +18,11 @@ import (
 	"runtime"
 	"sync/atomic"
 
-	"github.com/jancajthaml-openbank/lake/support/concurrent"
 	localfs "github.com/jancajthaml-openbank/local-fs"
 )
 
 // Metrics holds metrics counters
 type Metrics struct {
-	concurrent.Worker
 	storage         localfs.Storage
 	continuous      bool
 	messageEgress   uint64
@@ -82,6 +80,12 @@ func (metrics *Metrics) Setup() error {
 		metrics.Hydrate()
 	}
 	return nil
+}
+
+func (metrics *Metrics) Done() <- chan interface{} {
+	done := make(chan interface{})
+	close(done)
+	return done
 }
 
 func (metrics *Metrics) Cancel() {
