@@ -14,8 +14,6 @@
 
 package config
 
-import (
-	"github.com/jancajthaml-openbank/lake/logging"
-)
+import "github.com/jancajthaml-openbank/lake/logging"
 
 var log = logging.New("config")
