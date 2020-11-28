@@ -19,7 +19,7 @@ import (
 	"context"
 )
 
-// ScheduledDaemon represent work happening only once
+// OneShotDaemon represent work happening only once
 type OneShotDaemon struct {
 	Worker
 	name string
