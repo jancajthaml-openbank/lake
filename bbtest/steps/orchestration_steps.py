@@ -50,7 +50,7 @@ def step_impl(context):
   result = [item.split(' ')[0].strip() for item in result.split(os.linesep)]
   result = [item for item in result if item in items]
 
-  assert len(result) == 0, 'units found'
+  assert len(result) == 0, '{} units found'.format(result)
 
 
 @given('unit "{unit}" is running')
@@ -70,7 +70,7 @@ def unit_running(context, unit):
 def unit_not_running(context, unit):
   (code, result, error) = execute(["systemctl", "show", "-p", "SubState", unit])
   assert code == 0, str(result) + ' ' + str(error)
-  assert 'SubState=dead' in result, str(result) + ' ' + str(error)
+  assert 'SubState=running' not in result, str(result) + ' ' + str(error)
 
 
 @given('{operation} unit "{unit}"')

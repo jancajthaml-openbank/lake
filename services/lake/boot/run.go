@@ -25,16 +25,11 @@ import (
 
 // Done retutrns signal when all daemons are done
 func (prog Program) Done() <- chan interface{} {
-	log.Info().Msg("Program Stopping all daemons")
 	out := make(chan interface{})
 	var wg sync.WaitGroup
 	wg.Add(len(prog.daemons))
 	for idx := range prog.daemons {
-		if prog.daemons[idx] == nil {
-			wg.Done()
-		}
 		go func(c concurrent.Daemon) {
-			log.Info().Msgf("Program Waiting for %+v to Stop", c)
 			for v := range c.Done() {
 				out <- v
 			}
@@ -43,7 +38,6 @@ func (prog Program) Done() <- chan interface{} {
 	}
 	go func() {
 		wg.Wait()
-		log.Info().Msg("Program Stopped all daemons")
 		close(out)
 	}()
 	return out
@@ -52,9 +46,6 @@ func (prog Program) Done() <- chan interface{} {
 // Stop stops all daemons
 func (prog Program) Stop() {
 	for idx := range prog.daemons {
-		if prog.daemons[idx] == nil {
-			continue
-		}
 		prog.daemons[idx].Stop()
 	}
 	close(prog.interrupt)
@@ -63,9 +54,6 @@ func (prog Program) Stop() {
 // Start starts all daemons and blocks until INT or TERM signal is received
 func (prog Program) Start(parentContext context.Context, cancelFunction context.CancelFunc) {
 	for idx := range prog.daemons {
-		if prog.daemons[idx] == nil {
-			continue
-		}
 		go prog.daemons[idx].Start(parentContext, cancelFunction)
 	}
 	host.NotifyServiceReady()
@@ -77,7 +65,5 @@ func (prog Program) Start(parentContext context.Context, cancelFunction context.
 		log.Error().Msg(err.Error())
 	}
 	cancelFunction()
-	log.Info().Msg("Program Daemon Termination")
 	<-prog.Done()
-	log.Info().Msg("Program Stopped")
 }

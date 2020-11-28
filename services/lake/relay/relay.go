@@ -19,7 +19,7 @@ import (
 	"time"
 	"github.com/jancajthaml-openbank/lake/metrics"
 
-	zmq "github.com/pebbe/zmq4"
+	"github.com/pebbe/zmq4"
 )
 
 // Relay fascade
@@ -27,9 +27,9 @@ type Relay struct {
 	pullPort string
 	pubPort  string
 	metrics  *metrics.Metrics
-	receiver *zmq.Socket
-	sender   *zmq.Socket
-	ctx      *zmq.Context
+	receiver *zmq4.Socket
+	sender   *zmq4.Socket
+	ctx      *zmq4.Context
 	done     chan(interface{})
 }
 
@@ -49,12 +49,12 @@ func (relay *Relay) Setup() error {
 	}
 
 	var err error
-	relay.ctx, err = zmq.NewContext()
+	relay.ctx, err = zmq4.NewContext()
 	if err != nil {
 		return fmt.Errorf("unable to create ZMQ context %+v", err)
 	}
 
-	relay.receiver, err = relay.ctx.NewSocket(zmq.PULL)
+	relay.receiver, err = relay.ctx.NewSocket(zmq4.PULL)
 	if err != nil {
 		return fmt.Errorf("unable create ZMQ PULL %v", err)
 	}
@@ -64,14 +64,14 @@ func (relay *Relay) Setup() error {
 	relay.receiver.SetLinger(-1)
 	relay.receiver.SetRcvhwm(0)
 
-	relay.sender, err = relay.ctx.NewSocket(zmq.PUB)
+	relay.sender, err = relay.ctx.NewSocket(zmq4.PUB)
 	if err != nil {
 		return fmt.Errorf("unable create ZMQ PUB %v", err)
 	}
 
 	relay.sender.SetConflate(false)
 	relay.sender.SetImmediate(true)
-	relay.sender.SetLinger(0)
+	relay.sender.SetLinger(-1)
 	relay.sender.SetSndhwm(0)
 
 	for {
@@ -97,17 +97,17 @@ func (relay *Relay) Cancel() {
 		return
 	}
 	if relay.sender != nil {
+		relay.sender.SetLinger(0)
 		relay.sender.Unbind(relay.pubPort)
 		relay.sender.Close()
 	}
 	if relay.receiver != nil {
+		relay.receiver.SetLinger(0)
 		relay.receiver.Unbind(relay.pullPort)
 		relay.receiver.Close()
 	}
 	if relay.ctx != nil {
 		for relay.ctx.Term() != nil {}
-	} else if relay.done != nil {
-		close(relay.done)
 	}
 	relay.sender = nil
 	relay.receiver = nil
@@ -136,15 +136,15 @@ func (relay *Relay) Work() {
 		close(relay.done)
 	}()
 
-	var chunk string
+	var chunk []byte
 	var err error
 
 loop:
-	chunk, err = relay.receiver.Recv(0)
+	chunk, err = relay.receiver.RecvBytes(0)
 	if err != nil {
 		goto fail
 	}
-	_, err = relay.sender.Send(chunk, 0)
+	_, err = relay.sender.SendBytes(chunk, 0)
 	relay.metrics.MessageIngress()
 	if err != nil {
 		goto fail
@@ -153,13 +153,7 @@ loop:
 	goto loop
 
 fail:
-	if err == nil {
-		goto loop
-	}
-	if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
-		goto eos
-	}
-	if zmq.AsErrno(err) == zmq.ETERM {
+	if err == zmq4.ErrorSocketClosed || err == zmq4.ErrorContextClosed || err == zmq4.ErrorNoSocket {
 		goto eos
 	}
 	goto loop

@@ -33,7 +33,7 @@ type Program struct {
 
 // Register daemon into program
 func (prog *Program) Register(daemon concurrent.Daemon) {
-	if prog == nil {
+	if prog == nil || daemon == nil {
 		return
 	}
 	prog.daemons = append(prog.daemons, daemon)
@@ -41,30 +41,40 @@ func (prog *Program) Register(daemon concurrent.Daemon) {
 
 // NewProgram returns new program
 func NewProgram() Program {
-
-	cfg := config.LoadConfig()
-
-	logging.SetupLogger(cfg.LogLevel)
-
-	metricsWorker := metrics.NewMetrics(cfg.MetricsOutput, cfg.MetricsContinuous)
-	relayWorker := relay.NewRelay(cfg.PullPort, cfg.PubPort, metricsWorker)
-
-	program := Program{
+	return Program{
 		interrupt: make(chan os.Signal, 1),
-		cfg:       cfg,
+		cfg:       config.LoadConfig(),
 		daemons:   make([]concurrent.Daemon, 0),
 	}
+}
 
-	program.Register(concurrent.NewScheduledDaemon(
+// Setup setups program
+func (prog *Program) Setup() {
+	if prog == nil {
+		return
+	}
+
+	logging.SetupLogger(prog.cfg.LogLevel)
+
+	metricsWorker := metrics.NewMetrics(
+		prog.cfg.MetricsOutput,
+		prog.cfg.MetricsContinuous,
+	)
+
+	relayWorker := relay.NewRelay(
+		prog.cfg.PullPort,
+		prog.cfg.PubPort,
+		metricsWorker,
+	)
+
+	prog.Register(concurrent.NewScheduledDaemon(
 		"metrics",
 		metricsWorker,
-		cfg.MetricsRefreshRate,
+		prog.cfg.MetricsRefreshRate,
 	))
 
-	program.Register(concurrent.NewOneShotDaemon(
+	prog.Register(concurrent.NewOneShotDaemon(
 		"relay",
 		relayWorker,
 	))
-
-	return program
 }

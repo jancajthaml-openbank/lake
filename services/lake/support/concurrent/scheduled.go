@@ -60,7 +60,7 @@ func (daemon ScheduledDaemon) Start(parentContext context.Context, cancelFunctio
 		log.Error().Msgf("Setup daemon %s error %+v", daemon.name, err.Error())
 		return
 	}
-	log.Info().Msgf("Start daemon %s", daemon.name)
+	log.Info().Msgf("Start daemon %s run each %v", daemon.name, daemon.interval)
 	for {
 		select {
 		case <-parentContext.Done():

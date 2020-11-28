@@ -70,7 +70,7 @@ func (daemon OneShotDaemon) Start(parentContext context.Context, cancelFunction 
 			}
 		}
 	}()
-	log.Info().Msgf("Start daemon %s", daemon.name)
+	log.Info().Msgf("Start daemon %s run once", daemon.name)
 	daemon.Work()
 	<-daemon.Done()
 	log.Info().Msgf("Stop daemon %s", daemon.name)

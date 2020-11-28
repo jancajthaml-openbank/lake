@@ -21,12 +21,16 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
 	fmt.Println(">>> Start <<<")
+
 	program := boot.NewProgram()
+	program.Setup()
+
 	defer func() {
 		program.Stop()
 		fmt.Println(">>> Stop <<<")
 	}()
+
+	ctx, cancel := context.WithCancel(context.Background())
 	program.Start(ctx, cancel)
 }

@@ -77,7 +77,7 @@ func (metrics *Metrics) Setup() error {
 		return nil
 	}
 	if metrics.continuous {
-		return metrics.Hydrate()
+		metrics.Hydrate()
 	}
 	return nil
 }
@@ -89,7 +89,6 @@ func (metrics *Metrics) Done() <- chan interface{} {
 }
 
 func (metrics *Metrics) Cancel() {
-
 }
 
 // Work represents metrics worker work
