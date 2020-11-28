@@ -73,7 +73,7 @@ func (prog *Program) Setup() {
 		prog.cfg.MetricsRefreshRate,
 	))
 
-	prog.Register(concurrent.NewOneShotDaemon(
+	prog.Register(concurrent.NewOneShotPinnedDaemon(
 		"relay",
 		relayWorker,
 	))

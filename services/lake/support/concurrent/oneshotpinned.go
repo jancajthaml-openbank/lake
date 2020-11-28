@@ -19,37 +19,38 @@ import (
 	"context"
 )
 
-// OneShotDaemon represent work happening only once
-type OneShotDaemon struct {
+// OneShotPinnedDaemon represent work happening only once pinned to os thread
+type OneShotPinnedDaemon struct {
 	Worker
 	name string
 }
 
-// NewOneShotDaemon returns new daemon with given name for single work
-func NewOneShotDaemon(name string, worker Worker) Daemon {
-	return OneShotDaemon{
+// NewOneShotPinnedDaemon returns new daemon with given name for single work
+// pinned to single os thread
+func NewOneShotPinnedDaemon(name string, worker Worker) Daemon {
+	return OneShotPinnedDaemon{
 		Worker: worker,
 		name:   name,
 	}
 }
 
 // Done returns signal when worker has finished work
-func (daemon OneShotDaemon) Done() <- chan interface{} {
+func (daemon OneShotPinnedDaemon) Done() <- chan interface{} {
 	return daemon.Worker.Done()
 }
 
 // Setup prepares worker for work
-func (daemon OneShotDaemon) Setup() error {
+func (daemon OneShotPinnedDaemon) Setup() error {
 	return daemon.Worker.Setup()
 }
 
 // Stop cancels worker's work
-func (daemon OneShotDaemon) Stop() {
+func (daemon OneShotPinnedDaemon) Stop() {
 	daemon.Worker.Cancel()
 }
 
 // Start starts worker's work once
-func (daemon OneShotDaemon) Start(parentContext context.Context, cancelFunction context.CancelFunc) {
+func (daemon OneShotPinnedDaemon) Start(parentContext context.Context, cancelFunction context.CancelFunc) {
 	defer cancelFunction()
 	runtime.LockOSThread()
 	defer func() {
