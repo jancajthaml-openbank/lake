@@ -17,7 +17,7 @@ func TestGetConfig(t *testing.T) {
 
 	t.Log("has defaults for all values")
 	{
-		config := GetConfig()
+		config := LoadConfig()
 
 		if config.PullPort != 5562 {
 			t.Errorf("PullPort default value is not 5562")

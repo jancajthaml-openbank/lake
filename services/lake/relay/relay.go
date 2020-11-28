@@ -142,8 +142,8 @@ loop:
 	if err != nil {
 		goto fail
 	}
-	relay.metrics.MessageIngress()
 	_, err = sender.Send(chunk, 0)
+	relay.metrics.MessageIngress()
 	if err != nil {
 		goto fail
 	}
@@ -151,7 +151,16 @@ loop:
 	goto loop
 
 fail:
-	if relay.isCircuitBreaker(err) {
+	if relay.IsCanceled() {
+		goto eos
+	}
+	if err == nil {
+		goto loop
+	}
+	if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
+		goto eos
+	}
+	if zmq.AsErrno(err) == zmq.ETERM {
 		goto eos
 	}
 	goto loop
@@ -160,18 +169,4 @@ eos:
 	relay.Stop()
 	relay.WaitStop()
 	return
-}
-
-func (relay Relay) isCircuitBreaker(err error) bool {
-	if relay.IsCanceled() {
-		return true
-	}
-	if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
-		return true
-	}
-	errno := zmq.AsErrno(err)
-	if errno == zmq.ETERM {
-		return true
-	}
-	return false
 }

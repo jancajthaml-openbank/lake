@@ -25,7 +25,7 @@ import (
 	"github.com/jancajthaml-openbank/lake/utils"
 )
 
-// Program encapsulate initialized application
+// Program encapsulate program
 type Program struct {
 	interrupt chan os.Signal
 	cfg       config.Configuration
@@ -33,11 +33,11 @@ type Program struct {
 	cancel    context.CancelFunc
 }
 
-// Initialize application
-func Initialize() Program {
+// NewProgram returns new program
+func NewProgram() Program {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	cfg := config.GetConfig()
+	cfg := config.LoadConfig()
 
 	logging.SetupLogger(cfg.LogLevel)
 
@@ -47,6 +47,7 @@ func Initialize() Program {
 		cfg.MetricsOutput,
 		cfg.MetricsRefreshRate,
 	)
+
 	relayDaemon := relay.NewRelay(
 		ctx,
 		cfg.PullPort,
