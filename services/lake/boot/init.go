@@ -19,17 +19,17 @@ import (
 	"os"
 
 	"github.com/jancajthaml-openbank/lake/config"
-	"github.com/jancajthaml-openbank/lake/logging"
+	"github.com/jancajthaml-openbank/lake/support/logging"
 	"github.com/jancajthaml-openbank/lake/metrics"
 	"github.com/jancajthaml-openbank/lake/relay"
-	"github.com/jancajthaml-openbank/lake/utils"
+	"github.com/jancajthaml-openbank/lake/support/concurrent"
 )
 
 // Program encapsulate program
 type Program struct {
 	interrupt chan os.Signal
 	cfg       config.Configuration
-	daemons   []utils.Daemon
+	daemons   []concurrent.Daemon
 	cancel    context.CancelFunc
 }
 
@@ -55,7 +55,7 @@ func NewProgram() Program {
 		metricsDaemon,
 	)
 
-	var daemons = make([]utils.Daemon, 0)
+	var daemons = make([]concurrent.Daemon, 0)
 	daemons = append(daemons, metricsDaemon)
 	daemons = append(daemons, relayDaemon)
 

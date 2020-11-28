@@ -20,13 +20,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/jancajthaml-openbank/lake/utils"
+	"github.com/jancajthaml-openbank/lake/support/concurrent"
 	localfs "github.com/jancajthaml-openbank/local-fs"
 )
 
 // Metrics holds metrics counters
 type Metrics struct {
-	utils.DaemonSupport
+	concurrent.DaemonSupport
 	storage         localfs.Storage
 	continuous      bool
 	refreshRate     time.Duration
@@ -43,7 +43,7 @@ func NewMetrics(ctx context.Context, continuous bool, output string, refreshRate
 		return nil
 	}
 	return &Metrics{
-		DaemonSupport:   utils.NewDaemonSupport(ctx, "metrics"),
+		DaemonSupport:   concurrent.NewDaemonSupport(ctx, "metrics"),
 		storage:         storage,
 		continuous:      continuous,
 		refreshRate:     refreshRate,

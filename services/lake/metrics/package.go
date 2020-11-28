@@ -14,6 +14,6 @@
 
 package metrics
 
-import "github.com/jancajthaml-openbank/lake/logging"
+import "github.com/jancajthaml-openbank/lake/support/logging"
 
 var log = logging.New("metrics")

@@ -21,14 +21,14 @@ import (
 	"time"
 
 	"github.com/jancajthaml-openbank/lake/metrics"
-	"github.com/jancajthaml-openbank/lake/utils"
+	"github.com/jancajthaml-openbank/lake/support/concurrent"
 
 	zmq "github.com/pebbe/zmq4"
 )
 
 // Relay fascade
 type Relay struct {
-	utils.DaemonSupport
+	concurrent.DaemonSupport
 	pullPort string
 	pubPort  string
 	metrics  *metrics.Metrics
@@ -37,7 +37,7 @@ type Relay struct {
 // NewRelay returns new instance of Relay
 func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) *Relay {
 	return &Relay{
-		DaemonSupport: utils.NewDaemonSupport(ctx, "relay"),
+		DaemonSupport: concurrent.NewDaemonSupport(ctx, "relay"),
 		pullPort:      fmt.Sprintf("tcp://127.0.0.1:%d", pull),
 		pubPort:       fmt.Sprintf("tcp://127.0.0.1:%d", pub),
 		metrics:       metrics,
