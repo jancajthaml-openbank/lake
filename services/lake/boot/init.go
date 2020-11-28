@@ -15,14 +15,13 @@
 package boot
 
 import (
-	"context"
 	"os"
 
 	"github.com/jancajthaml-openbank/lake/config"
-	"github.com/jancajthaml-openbank/lake/support/logging"
 	"github.com/jancajthaml-openbank/lake/metrics"
 	"github.com/jancajthaml-openbank/lake/relay"
 	"github.com/jancajthaml-openbank/lake/support/concurrent"
+	"github.com/jancajthaml-openbank/lake/support/logging"
 )
 
 // Program encapsulate program
@@ -30,39 +29,37 @@ type Program struct {
 	interrupt chan os.Signal
 	cfg       config.Configuration
 	daemons   []concurrent.Daemon
-	cancel    context.CancelFunc
 }
 
 // NewProgram returns new program
 func NewProgram() Program {
-	ctx, cancel := context.WithCancel(context.Background())
 
 	cfg := config.LoadConfig()
 
 	logging.SetupLogger(cfg.LogLevel)
 
-	metricsDaemon := metrics.NewMetrics(
-		ctx,
-		cfg.MetricsContinuous,
-		cfg.MetricsOutput,
-		cfg.MetricsRefreshRate,
-	)
+	metricsWorker := metrics.NewMetrics(cfg.MetricsOutput, cfg.MetricsContinuous)
 
-	relayDaemon := relay.NewRelay(
-		ctx,
+	relayWorker := relay.NewRelay(
 		cfg.PullPort,
 		cfg.PubPort,
-		metricsDaemon,
+		metricsWorker,
 	)
 
 	var daemons = make([]concurrent.Daemon, 0)
-	daemons = append(daemons, metricsDaemon)
-	daemons = append(daemons, relayDaemon)
+	daemons = append(daemons, concurrent.NewScheduledDaemon(
+		"metrics",
+		metricsWorker,
+		cfg.MetricsRefreshRate,
+	))
+	daemons = append(daemons, concurrent.NewOneShotDaemon(
+		"relay",
+		relayWorker,
+	))
 
 	return Program{
 		interrupt: make(chan os.Signal, 1),
 		cfg:       cfg,
 		daemons:   daemons,
-		cancel:    cancel,
 	}
 }

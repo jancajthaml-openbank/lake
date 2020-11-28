@@ -16,15 +16,17 @@ package main
 
 import (
 	"fmt"
+	"context"
 	"github.com/jancajthaml-openbank/lake/boot"
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
 	fmt.Println(">>> Start <<<")
 	program := boot.NewProgram()
 	defer func() {
 		program.Stop()
 		fmt.Println(">>> Stop <<<")
 	}()
-	program.Start()
+	program.Start(ctx, cancel)
 }

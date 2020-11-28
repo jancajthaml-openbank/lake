@@ -14,17 +14,7 @@
 
 package concurrent
 
-import "context"
+import "github.com/jancajthaml-openbank/lake/support/logging"
 
-type Worker interface {
-  Setup() error
-  Work()
-  Cancel()
-  Done() <- chan interface{}
-}
+var log = logging.New("concurrent")
 
-type Daemon interface {
-  Start(context.Context, context.CancelFunc)
-  Stop()
-  Done() <- chan interface{}
-}
