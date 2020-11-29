@@ -15,8 +15,8 @@
 package concurrent
 
 import (
-	"runtime"
 	"context"
+	"runtime"
 )
 
 // OneShotPinnedDaemon represent work happening only once pinned to os thread
@@ -35,7 +35,7 @@ func NewOneShotPinnedDaemon(name string, worker Worker) Daemon {
 }
 
 // Done returns signal when worker has finished work
-func (daemon OneShotPinnedDaemon) Done() <- chan interface{} {
+func (daemon OneShotPinnedDaemon) Done() <-chan interface{} {
 	return daemon.Worker.Done()
 }
 
@@ -63,13 +63,8 @@ func (daemon OneShotPinnedDaemon) Start(parentContext context.Context, cancelFun
 		return
 	}
 	go func() {
-		for {
-			select {
-			case <-parentContext.Done():
-				daemon.Cancel()
-				return
-			}
-		}
+		<-parentContext.Done()
+		daemon.Stop()
 	}()
 	log.Info().Msgf("Start daemon %s run once", daemon.name)
 	daemon.Work()

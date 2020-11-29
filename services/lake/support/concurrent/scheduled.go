@@ -22,21 +22,21 @@ import (
 // ScheduledDaemon represent work happening repeatedly in given interval
 type ScheduledDaemon struct {
 	Worker
-	name          string
-	interval      time.Duration
+	name     string
+	interval time.Duration
 }
 
 // NewScheduledDaemon returns new daemon with given name for periodic work
 func NewScheduledDaemon(name string, worker Worker, interval time.Duration) Daemon {
 	return ScheduledDaemon{
-		Worker:        worker,
-		name:          name,
-		interval:      interval,
+		Worker:   worker,
+		name:     name,
+		interval: interval,
 	}
 }
 
 // Done returns signal when worker has finished work
-func (daemon ScheduledDaemon) Done() <- chan interface{} {
+func (daemon ScheduledDaemon) Done() <-chan interface{} {
 	return daemon.Worker.Done()
 }
 
@@ -70,6 +70,6 @@ func (daemon ScheduledDaemon) Start(parentContext context.Context, cancelFunctio
 		}
 	}
 	daemon.Work()
-	daemon.Cancel()
+	daemon.Stop()
 	log.Info().Msgf("Stop daemon %s", daemon.name)
 }

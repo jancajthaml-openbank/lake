@@ -72,6 +72,7 @@ func (metrics *Metrics) MemoryAllocatedSnapshot() {
 	atomic.StoreUint64(&(metrics.memoryAllocated), stats.Sys)
 }
 
+// Setup hydrates metrics from storage
 func (metrics *Metrics) Setup() error {
 	if metrics == nil {
 		return nil
@@ -82,12 +83,14 @@ func (metrics *Metrics) Setup() error {
 	return nil
 }
 
-func (metrics *Metrics) Done() <- chan interface{} {
+// Done returns always finished
+func (metrics *Metrics) Done() <-chan interface{} {
 	done := make(chan interface{})
 	close(done)
 	return done
 }
 
+// Cancel does nothing
 func (metrics *Metrics) Cancel() {
 }
 

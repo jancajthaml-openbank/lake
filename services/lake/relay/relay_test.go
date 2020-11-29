@@ -118,16 +118,16 @@ func TestWorkContract(t *testing.T) {
 	metrics := metrics.NewMetrics("/tmp", false)
 
 	/*
-	t.Log("does not panic on nil")
-	{
-		var relay *Relay
-		//relay := NewRelay(5562, 5561, metrics)
+		t.Log("does not panic on nil")
+		{
+			var relay *Relay
+			//relay := NewRelay(5562, 5561, metrics)
 
-		relay.Setup()
-		go relay.Work()
-		relay.Cancel()
-		<-relay.Done()
-	}*/
+			relay.Setup()
+			go relay.Work()
+			relay.Cancel()
+			<-relay.Done()
+		}*/
 
 	t.Log("Cancel -> Done")
 	{

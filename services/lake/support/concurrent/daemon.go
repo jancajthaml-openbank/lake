@@ -16,15 +16,17 @@ package concurrent
 
 import "context"
 
+// Worker represents some scheduled task
 type Worker interface {
-  Setup() error
-  Work()
-  Cancel()
-  Done() <- chan interface{}
+	Setup() error
+	Work()
+	Cancel()
+	Done() <-chan interface{}
 }
 
+// Daemon represents background routine
 type Daemon interface {
-  Start(context.Context, context.CancelFunc)
-  Stop()
-  Done() <- chan interface{}
+	Start(context.Context, context.CancelFunc)
+	Stop()
+	Done() <-chan interface{}
 }

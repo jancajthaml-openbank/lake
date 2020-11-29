@@ -15,8 +15,8 @@
 package main
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 	"github.com/jancajthaml-openbank/lake/boot"
 )
 

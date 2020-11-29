@@ -16,8 +16,8 @@ package relay
 
 import (
 	"fmt"
-	"time"
 	"github.com/jancajthaml-openbank/lake/metrics"
+	"time"
 
 	"github.com/pebbe/zmq4"
 )
@@ -30,19 +30,20 @@ type Relay struct {
 	receiver *zmq4.Socket
 	sender   *zmq4.Socket
 	ctx      *zmq4.Context
-	done     chan(interface{})
+	done     chan (interface{})
 }
 
 // NewRelay returns new instance of Relay
 func NewRelay(pull int, pub int, metrics *metrics.Metrics) *Relay {
 	return &Relay{
-		pullPort:      fmt.Sprintf("tcp://127.0.0.1:%d", pull),
-		pubPort:       fmt.Sprintf("tcp://127.0.0.1:%d", pub),
-		metrics:       metrics,
-		done:          nil,
+		pullPort: fmt.Sprintf("tcp://127.0.0.1:%d", pull),
+		pubPort:  fmt.Sprintf("tcp://127.0.0.1:%d", pub),
+		metrics:  metrics,
+		done:     nil,
 	}
 }
 
+// Setup initializes zmq context and sockets
 func (relay *Relay) Setup() error {
 	if relay == nil {
 		return fmt.Errorf("nil pointer")
@@ -92,6 +93,7 @@ func (relay *Relay) Setup() error {
 	return nil
 }
 
+// Cancel shut downs sockets and terminates context
 func (relay *Relay) Cancel() {
 	if relay == nil {
 		return
@@ -107,14 +109,16 @@ func (relay *Relay) Cancel() {
 		relay.receiver.Close()
 	}
 	if relay.ctx != nil {
-		for relay.ctx.Term() != nil {}
+		for relay.ctx.Term() != nil {
+		}
 	}
 	relay.sender = nil
 	relay.receiver = nil
 	relay.ctx = nil
 }
 
-func (relay *Relay) Done() <- chan interface{} {
+// Done returns done when relay is finished if nil returns done immediately
+func (relay *Relay) Done() <-chan interface{} {
 	if relay == nil || relay.done == nil {
 		done := make(chan interface{})
 		close(done)
@@ -123,7 +127,7 @@ func (relay *Relay) Done() <- chan interface{} {
 	return relay.done
 }
 
-// Start handles everything needed to start relay
+// Work runs relay main loop
 func (relay *Relay) Work() {
 	if relay == nil {
 		return
