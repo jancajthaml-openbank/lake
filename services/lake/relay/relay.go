@@ -183,11 +183,11 @@ loop:
 	if err != nil {
 		goto fail
 	}
+	relay.metrics.MessageIngress()
 	if !relay.live {
 		goto eos
 	}
 	_, err = relay.publisher.SendBytes(chunk, 0)
-	relay.metrics.MessageIngress()
 	if err != nil {
 		goto fail
 	}
