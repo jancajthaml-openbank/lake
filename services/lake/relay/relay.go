@@ -137,11 +137,9 @@ func (relay *Relay) Cancel() {
 	}
 	<-relay.Done()
 	if relay.publisher != nil {
-		relay.publisher.Unbind(relay.pubPort)
 		relay.publisher.Close()
 	}
 	if relay.puller != nil {
-		relay.puller.Unbind(relay.pullPort)
 		relay.puller.Close()
 	}
 	if relay.pusher != nil {
