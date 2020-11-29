@@ -134,7 +134,6 @@ func (relay *Relay) Cancel() {
 	if relay.pusher != nil && relay.live {
 		relay.live = false
 		relay.pusher.SendBytes([]byte("_"), 0)
-		relay.pusher.Close()
 	}
 	<-relay.Done()
 	if relay.publisher != nil {
@@ -144,6 +143,9 @@ func (relay *Relay) Cancel() {
 	if relay.puller != nil {
 		relay.puller.Unbind(relay.pullPort)
 		relay.puller.Close()
+	}
+	if relay.pusher != nil {
+		relay.pusher.Close()
 	}
 	relay.publisher = nil
 	relay.puller = nil
