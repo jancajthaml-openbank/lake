@@ -117,22 +117,9 @@ func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan strin
 func TestWorkContract(t *testing.T) {
 	metrics := metrics.NewMetrics("/tmp", false)
 
-	/*
-		t.Log("does not panic on nil")
-		{
-			var relay *Relay
-			//relay := NewRelay(5562, 5561, metrics)
-
-			relay.Setup()
-			go relay.Work()
-			relay.Cancel()
-			<-relay.Done()
-		}*/
-
 	t.Log("Cancel -> Done")
 	{
 		relay := NewRelay(5562, 5561, metrics)
-
 		relay.Cancel()
 		<-relay.Done()
 	}
@@ -140,7 +127,6 @@ func TestWorkContract(t *testing.T) {
 	t.Log("Setup -> Cancel -> Done")
 	{
 		relay := NewRelay(5562, 5561, metrics)
-
 		relay.Setup()
 		relay.Cancel()
 		<-relay.Done()
@@ -149,7 +135,6 @@ func TestWorkContract(t *testing.T) {
 	t.Log("Setup -> Work -> Cancel -> Done")
 	{
 		relay := NewRelay(5562, 5561, metrics)
-
 		relay.Setup()
 		go relay.Work()
 		relay.Cancel()

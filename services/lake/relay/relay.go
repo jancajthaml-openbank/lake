@@ -17,7 +17,6 @@ package relay
 import (
 	"fmt"
 	"github.com/jancajthaml-openbank/lake/metrics"
-	"time"
 
 	"github.com/pebbe/zmq4"
 )
@@ -70,13 +69,7 @@ func (relay *Relay) setupPuller() (err error) {
 	relay.puller.SetImmediate(true)
 	relay.puller.SetLinger(0)
 	relay.puller.SetRcvhwm(0)
-	for {
-		if relay.puller.Bind(relay.pullPort) == nil {
-			break
-		}
-		relay.puller.Unbind(relay.pullPort)
-		time.Sleep(10 * time.Millisecond)
-	}
+	for relay.puller.Bind(relay.pullPort) != nil {}
 	return
 }
 
@@ -92,13 +85,7 @@ func (relay *Relay) setupPublisher() (err error) {
 	relay.publisher.SetImmediate(true)
 	relay.publisher.SetLinger(0)
 	relay.publisher.SetSndhwm(0)
-	for {
-		if relay.publisher.Bind(relay.pubPort) == nil {
-			break
-		}
-		relay.publisher.Unbind(relay.pubPort)
-		time.Sleep(10 * time.Millisecond)
-	}
+	for relay.publisher.Bind(relay.pubPort) != nil {}
 	return
 }
 
@@ -110,12 +97,7 @@ func (relay *Relay) setupPusher() (err error) {
 	if err != nil {
 		return
 	}
-	for {
-		if relay.pusher.Connect(relay.pullPort) == nil {
-			break
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
+	for relay.pusher.Connect(relay.pullPort) != nil {}
 	return
 }
 
@@ -146,16 +128,22 @@ func (relay *Relay) Setup() error {
 
 // Cancel shut downs sockets and terminates context
 func (relay *Relay) Cancel() {
-	if relay == nil || !relay.live {
+	if relay == nil {
 		return
 	}
-	relay.live = false
-	if relay.pusher != nil {
+	if relay.pusher != nil && relay.live {
+		relay.live = false
 		relay.pusher.SendBytes([]byte("_"), 0)
+		relay.pusher.Close()
 	}
 	<-relay.Done()
-	if relay.ctx != nil {
-		for relay.ctx.Term() != nil {}
+	if relay.publisher != nil {
+		relay.publisher.Unbind(relay.pubPort)
+		relay.publisher.Close()
+	}
+	if relay.puller != nil {
+		relay.puller.Unbind(relay.pullPort)
+		relay.puller.Close()
 	}
 	relay.publisher = nil
 	relay.puller = nil
