@@ -15,135 +15,141 @@
 package relay
 
 import (
-	"context"
 	"fmt"
-	"runtime"
+	"github.com/jancajthaml-openbank/lake/metrics"
 	"time"
 
-	"github.com/jancajthaml-openbank/lake/metrics"
-	"github.com/jancajthaml-openbank/lake/utils"
-
-	zmq "github.com/pebbe/zmq4"
+	"github.com/pebbe/zmq4"
 )
 
 // Relay fascade
 type Relay struct {
-	utils.DaemonSupport
 	pullPort string
 	pubPort  string
 	metrics  *metrics.Metrics
+	receiver *zmq4.Socket
+	sender   *zmq4.Socket
+	ctx      *zmq4.Context
+	done     chan (interface{})
 }
 
 // NewRelay returns new instance of Relay
-func NewRelay(ctx context.Context, pull int, pub int, metrics *metrics.Metrics) *Relay {
+func NewRelay(pull int, pub int, metrics *metrics.Metrics) *Relay {
 	return &Relay{
-		DaemonSupport: utils.NewDaemonSupport(ctx, "relay"),
-		pullPort:      fmt.Sprintf("tcp://127.0.0.1:%d", pull),
-		pubPort:       fmt.Sprintf("tcp://127.0.0.1:%d", pub),
-		metrics:       metrics,
+		pullPort: fmt.Sprintf("tcp://127.0.0.1:%d", pull),
+		pubPort:  fmt.Sprintf("tcp://127.0.0.1:%d", pub),
+		metrics:  metrics,
+		done:     nil,
 	}
 }
 
-// Start handles everything needed to start relay
-func (relay *Relay) Start() {
+// Setup initializes zmq context and sockets
+func (relay *Relay) Setup() error {
+	if relay == nil {
+		return fmt.Errorf("nil pointer")
+	}
+
+	var err error
+	relay.ctx, err = zmq4.NewContext()
+	if err != nil {
+		return fmt.Errorf("unable to create ZMQ context %+v", err)
+	}
+
+	relay.receiver, err = relay.ctx.NewSocket(zmq4.PULL)
+	if err != nil {
+		return fmt.Errorf("unable create ZMQ PULL %v", err)
+	}
+
+	relay.receiver.SetConflate(false)
+	relay.receiver.SetImmediate(true)
+	relay.receiver.SetLinger(-1)
+	relay.receiver.SetRcvhwm(0)
+
+	relay.sender, err = relay.ctx.NewSocket(zmq4.PUB)
+	if err != nil {
+		return fmt.Errorf("unable create ZMQ PUB %v", err)
+	}
+
+	relay.sender.SetConflate(false)
+	relay.sender.SetImmediate(true)
+	relay.sender.SetLinger(-1)
+	relay.sender.SetSndhwm(0)
+
+	for {
+		if relay.receiver.Bind(relay.pullPort) == nil {
+			break
+		}
+		relay.receiver.Unbind(relay.pullPort)
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	for {
+		if relay.sender.Bind(relay.pubPort) == nil {
+			break
+		}
+		relay.sender.Unbind(relay.pubPort)
+		time.Sleep(10 * time.Millisecond)
+	}
+	return nil
+}
+
+// Cancel shut downs sockets and terminates context
+func (relay *Relay) Cancel() {
 	if relay == nil {
 		return
 	}
-	var (
-		chunk    string
-		receiver *zmq.Socket
-		sender   *zmq.Socket
-		alive    bool = true
-	)
+	if relay.sender != nil {
+		relay.sender.SetLinger(0)
+		relay.sender.Unbind(relay.pubPort)
+		relay.sender.Close()
+	}
+	if relay.receiver != nil {
+		relay.receiver.SetLinger(0)
+		relay.receiver.Unbind(relay.pullPort)
+		relay.receiver.Close()
+	}
+	if relay.ctx != nil {
+		for relay.ctx.Term() != nil {
+		}
+	}
+	relay.sender = nil
+	relay.receiver = nil
+	relay.ctx = nil
+}
 
-	runtime.LockOSThread()
+// Done returns done when relay is finished if nil returns done immediately
+func (relay *Relay) Done() <-chan interface{} {
+	if relay == nil || relay.done == nil {
+		done := make(chan interface{})
+		close(done)
+		return done
+	}
+	return relay.done
+}
+
+// Work runs relay main loop
+func (relay *Relay) Work() {
+	if relay == nil {
+		return
+	}
+
+	relay.done = make(chan interface{})
+
 	defer func() {
 		recover()
-		runtime.UnlockOSThread()
+		close(relay.done)
 	}()
 
-	ctx, err := zmq.NewContext()
-	if err != nil {
-		log.Warn().Msgf("Unable to create ZMQ context %+v", err)
-		return
-	}
-
-	go func() {
-		for {
-			select {
-			case <-relay.Done():
-				if !alive {
-					return
-				}
-				alive = false
-				relay.MarkDone()
-				if ctx.Term() != nil {
-					log.Error().Msg("Stop relay-daemon (failed to terminate context)")
-				} else {
-					log.Info().Msg("Stop relay-daemon")
-				}
-			}
-		}
-	}()
-
-	receiver, err = ctx.NewSocket(zmq.PULL)
-	if err != nil {
-		log.Warn().Msgf("Unable create ZMQ PULL %v", err)
-		return
-	}
-
-	receiver.SetConflate(false)
-	receiver.SetImmediate(true)
-	receiver.SetLinger(-1)
-	receiver.SetRcvhwm(0)
-	defer receiver.Close()
-
-	sender, err = ctx.NewSocket(zmq.PUB)
-	if err != nil {
-		log.Warn().Msgf("Unable create ZMQ PUB %v", err)
-		return
-	}
-
-	sender.SetConflate(false)
-	sender.SetImmediate(true)
-	sender.SetLinger(0)
-	sender.SetSndhwm(0)
-	defer sender.Close()
-
-	for {
-		if receiver.Bind(relay.pullPort) == nil {
-			break
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
-	defer receiver.Unbind(relay.pullPort)
-
-	for {
-		if sender.Bind(relay.pubPort) == nil {
-			break
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
-	defer sender.Unbind(relay.pubPort)
-
-	relay.MarkReady()
-
-	select {
-	case <-relay.CanStart:
-		break
-	case <-relay.Done():
-		goto eos
-	}
-
-	log.Info().Msg("Start relay-daemon")
+	var chunk []byte
+	var err error
 
 loop:
-	chunk, err = receiver.Recv(0)
+	chunk, err = relay.receiver.RecvBytes(0)
 	if err != nil {
 		goto fail
 	}
+	_, err = relay.sender.SendBytes(chunk, 0)
 	relay.metrics.MessageIngress()
-	_, err = sender.Send(chunk, 0)
 	if err != nil {
 		goto fail
 	}
@@ -151,27 +157,11 @@ loop:
 	goto loop
 
 fail:
-	if relay.isCircuitBreaker(err) {
+	if err == zmq4.ErrorSocketClosed || err == zmq4.ErrorContextClosed || err == zmq4.ErrorNoSocket {
 		goto eos
 	}
 	goto loop
 
 eos:
-	relay.Stop()
-	relay.WaitStop()
 	return
-}
-
-func (relay Relay) isCircuitBreaker(err error) bool {
-	if relay.IsCanceled() {
-		return true
-	}
-	if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
-		return true
-	}
-	errno := zmq.AsErrno(err)
-	if errno == zmq.ETERM {
-		return true
-	}
-	return false
 }

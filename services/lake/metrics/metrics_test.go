@@ -1,19 +1,11 @@
 package metrics
 
-import (
-	"context"
-	"testing"
-	"time"
-)
+import "testing"
 
 func TestMetrics(t *testing.T) {
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	t.Log("does not panic on invalid root")
 	{
-		NewMetrics(ctx, false, "/dev/null", time.Hour)
+		NewMetrics("/dev/null", false)
 	}
 
 	t.Log("does not panic on nil reference function calls")
@@ -26,10 +18,7 @@ func TestMetrics(t *testing.T) {
 }
 
 func TestMetricsIngress(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	entity := NewMetrics(ctx, false, "/tmp/ingress", time.Hour)
+	entity := NewMetrics("/tmp/ingress", false)
 
 	if uint64(0) != entity.messageIngress {
 		t.Errorf("extected messageIngress 0 actual %d", entity.messageIngress)
@@ -45,10 +34,7 @@ func TestMetricsIngress(t *testing.T) {
 }
 
 func TestMetricsEgress(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	entity := NewMetrics(ctx, false, "/tmp/egress", time.Hour)
+	entity := NewMetrics("/tmp/egress", false)
 
 	if uint64(0) != entity.messageEgress {
 		t.Errorf("extected messageEgress 0 actual %d", entity.messageEgress)
@@ -64,10 +50,7 @@ func TestMetricsEgress(t *testing.T) {
 }
 
 func TestMetricsMemory(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	entity := NewMetrics(ctx, false, "/tmp/memory", time.Hour)
+	entity := NewMetrics("/tmp/memory", false)
 
 	if uint64(0) != entity.memoryAllocated {
 		t.Errorf("extected memoryAllocated 0 actual %d", entity.memoryAllocated)

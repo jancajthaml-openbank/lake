@@ -15,14 +15,18 @@ import (
 
 func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
 	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-	defer cancel()
+	defer func() {
+		cancel()
+		runtime.UnlockOSThread()
+	}()
 
 	var (
 		chunk   string
 		channel *zmq.Socket
 		err     error
 	)
+
+	// FIXME zmq context with proper close and term
 
 	for {
 		channel, err = zmq.NewSocket(zmq.SUB)
@@ -69,13 +73,17 @@ func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan st
 
 func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan string, port int) {
 	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-	defer cancel()
+	defer func() {
+		cancel()
+		runtime.UnlockOSThread()
+	}()
 
 	var (
 		channel *zmq.Socket
 		err     error
 	)
+
+	// FIXME zmq context with proper close and term
 
 	for {
 		channel, err = zmq.NewSocket(zmq.PUSH)
@@ -106,45 +114,58 @@ func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan strin
 	}
 }
 
-func TestStartStop(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+func TestWorkContract(t *testing.T) {
+	metrics := metrics.NewMetrics("/tmp", false)
 
-	metrics := metrics.NewMetrics(ctx, false, "/tmp", time.Hour)
-	relay := NewRelay(ctx, 5562, 5561, metrics)
+	/*
+		t.Log("does not panic on nil")
+		{
+			var relay *Relay
+			//relay := NewRelay(5562, 5561, metrics)
 
-	t.Log("by daemon support ( Start -> Stop )")
+			relay.Setup()
+			go relay.Work()
+			relay.Cancel()
+			<-relay.Done()
+		}*/
+
+	t.Log("Cancel -> Done")
 	{
-		go relay.Start()
-		<-relay.IsReady
-		relay.GreenLight()
-		relay.Stop()
-		relay.WaitStop()
+		relay := NewRelay(5562, 5561, metrics)
+
+		relay.Cancel()
+		<-relay.Done()
 	}
-}
 
-func TestStopOnContextCancel(t *testing.T) {
-	t.Log("stop with cancelation of context")
+	t.Log("Setup -> Cancel -> Done")
 	{
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		relay := NewRelay(5562, 5561, metrics)
 
-		metrics := metrics.NewMetrics(ctx, false, "/tmp", time.Hour)
-		relay := NewRelay(ctx, 5562, 5561, metrics)
+		relay.Setup()
+		relay.Cancel()
+		<-relay.Done()
+	}
 
-		go relay.Start()
-		<-relay.IsReady
-		relay.GreenLight()
-		cancel()
-		relay.WaitStop()
+	t.Log("Setup -> Work -> Cancel -> Done")
+	{
+		relay := NewRelay(5562, 5561, metrics)
+
+		relay.Setup()
+		go relay.Work()
+		relay.Cancel()
+		<-relay.Done()
 	}
 }
 
 func TestRelayInOrder(t *testing.T) {
-	masterCtx, masterCancel := context.WithCancel(context.Background())
-	defer masterCancel()
+	runtime.LockOSThread()
+	defer func() {
+		recover()
+		runtime.UnlockOSThread()
+	}()
 
-	metrics := metrics.NewMetrics(masterCtx, false, "/tmp", time.Hour)
-	relay := NewRelay(masterCtx, 5562, 5561, metrics)
+	metrics := metrics.NewMetrics("/tmp", false)
+	relay := NewRelay(5562, 5561, metrics)
 
 	t.Log("Relays message")
 	{
@@ -164,9 +185,8 @@ func TestRelayInOrder(t *testing.T) {
 		var wg sync.WaitGroup
 		ctx, cancel := context.WithCancel(context.Background())
 
-		go relay.Start()
-		<-relay.IsReady
-		relay.GreenLight()
+		relay.Setup()
+		go relay.Work()
 
 		go pushRoutine(ctx, cancel, pushChannel, 5562)
 		go subRoutine(ctx, cancel, subChannel, 5561)
@@ -174,13 +194,15 @@ func TestRelayInOrder(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer func() {
-				relay.Stop()
-				relay.WaitStop()
+				cancel()
+				relay.Cancel()
+				<-relay.Done()
 				wg.Done()
 			}()
 
 			for {
-				accumulatedData = append(accumulatedData, <-subChannel)
+				msg := <-subChannel
+				accumulatedData = append(accumulatedData, msg)
 				if ctx.Err() == nil && len(expectedData) != len(accumulatedData) {
 					continue
 				}
@@ -195,7 +217,6 @@ func TestRelayInOrder(t *testing.T) {
 		for _, msg := range expectedData {
 			pushChannel <- msg
 		}
-
 		wg.Wait()
 	}
 }

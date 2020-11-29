@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package metrics
+package concurrent
 
 import "github.com/jancajthaml-openbank/lake/support/logging"
 
-var log = logging.New("metrics")
+var log = logging.New("concurrent")

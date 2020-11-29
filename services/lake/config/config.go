@@ -35,8 +35,8 @@ type Configuration struct {
 	MetricsOutput string
 }
 
-// GetConfig loads application configuration
-func GetConfig() Configuration {
+// LoadConfig loads application configuration
+func LoadConfig() Configuration {
 	return Configuration{
 		PullPort:           envInteger("LAKE_PORT_PULL", 5562),
 		PubPort:            envInteger("LAKE_PORT_PUB", 5561),
