@@ -17,20 +17,21 @@ package relay
 import (
 	"fmt"
 	"github.com/jancajthaml-openbank/lake/metrics"
-	"time"
 
 	"github.com/pebbe/zmq4"
 )
 
-// Relay fascade
+// Relay 1:N (PULL -> PUB)
 type Relay struct {
-	pullPort string
-	pubPort  string
-	metrics  *metrics.Metrics
-	receiver *zmq4.Socket
-	sender   *zmq4.Socket
-	ctx      *zmq4.Context
-	done     chan (interface{})
+	pullPort  string
+	pubPort   string
+	metrics   *metrics.Metrics
+	puller    *zmq4.Socket
+	pusher    *zmq4.Socket
+	publisher *zmq4.Socket
+	ctx       *zmq4.Context
+	done      chan interface{}
+	live      bool
 }
 
 // NewRelay returns new instance of Relay
@@ -40,7 +41,64 @@ func NewRelay(pull int, pub int, metrics *metrics.Metrics) *Relay {
 		pubPort:  fmt.Sprintf("tcp://127.0.0.1:%d", pub),
 		metrics:  metrics,
 		done:     nil,
+		live:     false,
 	}
+}
+
+func (relay *Relay) setupContext() (err error) {
+	if relay == nil || relay.ctx != nil {
+		return
+	}
+	relay.ctx, err = zmq4.NewContext()
+	if err != nil {
+		return
+	}
+	relay.ctx.SetRetryAfterEINTR(false)
+	return
+}
+
+func (relay *Relay) setupPuller() (err error) {
+	if relay == nil || relay.puller != nil {
+		return
+	}
+	relay.puller, err = relay.ctx.NewSocket(zmq4.PULL)
+	if err != nil {
+		return
+	}
+	relay.puller.SetConflate(false)
+	relay.puller.SetImmediate(true)
+	relay.puller.SetLinger(0)
+	relay.puller.SetRcvhwm(0)
+	for relay.puller.Bind(relay.pullPort) != nil {}
+	return
+}
+
+func (relay *Relay) setupPublisher() (err error) {
+	if relay == nil || relay.publisher != nil {
+		return
+	}
+	relay.publisher, err = relay.ctx.NewSocket(zmq4.PUB)
+	if err != nil {
+		return
+	}
+	relay.publisher.SetConflate(false)
+	relay.publisher.SetImmediate(true)
+	relay.publisher.SetLinger(0)
+	relay.publisher.SetSndhwm(0)
+	for relay.publisher.Bind(relay.pubPort) != nil {}
+	return
+}
+
+func (relay *Relay) setupPusher() (err error) {
+	if relay == nil || relay.pusher != nil {
+		return
+	}
+	relay.pusher, err = relay.ctx.NewSocket(zmq4.PUSH)
+	if err != nil {
+		return
+	}
+	for relay.pusher.Connect(relay.pullPort) != nil {}
+	return
 }
 
 // Setup initializes zmq context and sockets
@@ -48,47 +106,22 @@ func (relay *Relay) Setup() error {
 	if relay == nil {
 		return fmt.Errorf("nil pointer")
 	}
-
 	var err error
-	relay.ctx, err = zmq4.NewContext()
+	err = relay.setupContext()
 	if err != nil {
-		return fmt.Errorf("unable to create ZMQ context %+v", err)
+		return fmt.Errorf("unable to create context %+v", err)
 	}
-
-	relay.receiver, err = relay.ctx.NewSocket(zmq4.PULL)
+	err = relay.setupPuller()
 	if err != nil {
-		return fmt.Errorf("unable create ZMQ PULL %v", err)
+		return fmt.Errorf("unable create PULL socket %v", err)
 	}
-
-	relay.receiver.SetConflate(false)
-	relay.receiver.SetImmediate(true)
-	relay.receiver.SetLinger(-1)
-	relay.receiver.SetRcvhwm(0)
-
-	relay.sender, err = relay.ctx.NewSocket(zmq4.PUB)
+	err = relay.setupPublisher()
 	if err != nil {
-		return fmt.Errorf("unable create ZMQ PUB %v", err)
+		return fmt.Errorf("unable create PUB socket %v", err)
 	}
-
-	relay.sender.SetConflate(false)
-	relay.sender.SetImmediate(true)
-	relay.sender.SetLinger(-1)
-	relay.sender.SetSndhwm(0)
-
-	for {
-		if relay.receiver.Bind(relay.pullPort) == nil {
-			break
-		}
-		relay.receiver.Unbind(relay.pullPort)
-		time.Sleep(10 * time.Millisecond)
-	}
-
-	for {
-		if relay.sender.Bind(relay.pubPort) == nil {
-			break
-		}
-		relay.sender.Unbind(relay.pubPort)
-		time.Sleep(10 * time.Millisecond)
+	err = relay.setupPusher()
+	if err != nil {
+		return fmt.Errorf("unable create PUSH socket %v", err)
 	}
 	return nil
 }
@@ -98,22 +131,23 @@ func (relay *Relay) Cancel() {
 	if relay == nil {
 		return
 	}
-	if relay.sender != nil {
-		relay.sender.SetLinger(0)
-		relay.sender.Unbind(relay.pubPort)
-		relay.sender.Close()
+	if relay.pusher != nil && relay.live {
+		relay.live = false
+		relay.pusher.SendBytes([]byte("_"), 0)
 	}
-	if relay.receiver != nil {
-		relay.receiver.SetLinger(0)
-		relay.receiver.Unbind(relay.pullPort)
-		relay.receiver.Close()
+	<-relay.Done()
+	if relay.publisher != nil {
+		relay.publisher.Close()
 	}
-	if relay.ctx != nil {
-		for relay.ctx.Term() != nil {
-		}
+	if relay.puller != nil {
+		relay.puller.Close()
 	}
-	relay.sender = nil
-	relay.receiver = nil
+	if relay.pusher != nil {
+		relay.pusher.Close()
+	}
+	relay.publisher = nil
+	relay.puller = nil
+	relay.pusher = nil
 	relay.ctx = nil
 }
 
@@ -133,6 +167,7 @@ func (relay *Relay) Work() {
 		return
 	}
 
+	relay.live = true
 	relay.done = make(chan interface{})
 
 	defer func() {
@@ -144,11 +179,14 @@ func (relay *Relay) Work() {
 	var err error
 
 loop:
-	chunk, err = relay.receiver.RecvBytes(0)
+	chunk, err = relay.puller.RecvBytes(0)
 	if err != nil {
 		goto fail
 	}
-	_, err = relay.sender.SendBytes(chunk, 0)
+	if !relay.live {
+		goto eos
+	}
+	_, err = relay.publisher.SendBytes(chunk, 0)
 	relay.metrics.MessageIngress()
 	if err != nil {
 		goto fail
@@ -157,10 +195,16 @@ loop:
 	goto loop
 
 fail:
-	if err == zmq4.ErrorSocketClosed || err == zmq4.ErrorContextClosed || err == zmq4.ErrorNoSocket {
+	switch err {
+	case zmq4.ErrorNoSocket:
+		fallthrough
+	case zmq4.ErrorSocketClosed:
+		fallthrough
+	case zmq4.ErrorContextClosed:
 		goto eos
+	default:
+		goto loop
 	}
-	goto loop
 
 eos:
 	return

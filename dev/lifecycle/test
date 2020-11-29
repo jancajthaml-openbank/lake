@@ -52,7 +52,7 @@ lifecycle::go::test() {
     -coverprofile=${coverage_out} \
     -covermode=count \
     -coverpkg=./... \
-    -timeout=20s \
+    -timeout=10s \
   | grc tee ${test_out}
 
   go2xunit \
