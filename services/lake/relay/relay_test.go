@@ -137,6 +137,7 @@ func TestWorkContract(t *testing.T) {
 		relay := NewRelay(5562, 5561, metrics)
 		relay.Setup()
 		go relay.Work()
+		time.Sleep(100 * time.Millisecond)
 		relay.Cancel()
 		<-relay.Done()
 	}
