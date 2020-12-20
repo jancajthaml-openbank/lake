@@ -83,10 +83,13 @@ func (instance *metrics) Work() {
 	if instance == nil {
 		return
 	}
+
 	egress := instance.messageEgress
-	atomic.AddInt64(&(instance.messageEgress), -egress)
 	ingress := instance.messageIngress
+
+	atomic.AddInt64(&(instance.messageEgress), -egress)
 	atomic.AddInt64(&(instance.messageIngress), -ingress)
+
 	var stats = new(runtime.MemStats)
 	runtime.ReadMemStats(stats)
 
