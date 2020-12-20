@@ -16,6 +16,7 @@ package boot
 
 import (
 	"os"
+	"time"
 
 	"github.com/jancajthaml-openbank/lake/config"
 	"github.com/jancajthaml-openbank/lake/metrics"
@@ -49,8 +50,7 @@ func (prog *Program) Setup() {
 	logging.SetupLogger(prog.cfg.LogLevel)
 
 	metricsWorker := metrics.NewMetrics(
-		prog.cfg.MetricsOutput,
-		prog.cfg.MetricsContinuous,
+		prog.cfg.MetricsStastdEndpoint,
 	)
 
 	relayWorker := relay.NewRelay(
@@ -62,7 +62,7 @@ func (prog *Program) Setup() {
 	prog.pool.Register(concurrent.NewScheduledDaemon(
 		"metrics",
 		metricsWorker,
-		prog.cfg.MetricsRefreshRate,
+		time.Second,
 	))
 
 	prog.pool.Register(concurrent.NewOneShotPinnedDaemon(

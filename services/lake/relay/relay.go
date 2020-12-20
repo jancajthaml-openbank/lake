@@ -25,7 +25,7 @@ import (
 type Relay struct {
 	pullPort  string
 	pubPort   string
-	metrics   *metrics.Metrics
+	metrics   metrics.Metrics
 	puller    *zmq4.Socket
 	pusher    *zmq4.Socket
 	publisher *zmq4.Socket
@@ -35,7 +35,7 @@ type Relay struct {
 }
 
 // NewRelay returns new instance of Relay
-func NewRelay(pull int, pub int, metrics *metrics.Metrics) *Relay {
+func NewRelay(pull int, pub int, metrics metrics.Metrics) *Relay {
 	return &Relay{
 		pullPort: fmt.Sprintf("tcp://127.0.0.1:%d", pull),
 		pubPort:  fmt.Sprintf("tcp://127.0.0.1:%d", pub),

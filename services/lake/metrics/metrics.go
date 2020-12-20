@@ -18,84 +18,79 @@ import (
 	"runtime"
 	"sync/atomic"
 
-	localfs "github.com/jancajthaml-openbank/local-fs"
+	"github.com/DataDog/datadog-go/statsd"
 )
 
-// Metrics holds metrics counters
-type Metrics struct {
-	storage         localfs.Storage
-	continuous      bool
-	messageEgress   uint64
-	messageIngress  uint64
-	memoryAllocated uint64
+type Metrics interface {
+	MessageEgress()
+	MessageIngress()
+}
+
+type metrics struct {
+	client *statsd.Client
+	messageEgress   int64
+	messageIngress  int64
 }
 
 // NewMetrics returns blank metrics holder
-func NewMetrics(output string, continuous bool) *Metrics {
-	storage, err := localfs.NewPlaintextStorage(output)
+func NewMetrics(endpoint string) *metrics {
+	client, err := statsd.New(endpoint)
 	if err != nil {
-		log.Error().Msgf("Failed to ensure storage %+v", err)
+		log.Error().Msgf("Failed to ensure statsd client %+v", err)
 		return nil
 	}
-	return &Metrics{
-		storage:         storage,
-		continuous:      continuous,
-		messageEgress:   uint64(0),
-		messageIngress:  uint64(0),
-		memoryAllocated: uint64(0),
+	return &metrics{
+		client: client,
+		messageEgress:   int64(0),
+		messageIngress:  int64(0),
 	}
 }
 
 // MessageEgress increment number of outcomming messages
-func (metrics *Metrics) MessageEgress() {
-	if metrics == nil {
+func (instance *metrics) MessageEgress() {
+	if instance == nil {
 		return
 	}
-	atomic.AddUint64(&(metrics.messageEgress), 1)
+	atomic.AddInt64(&(instance.messageEgress), 1)
 }
 
 // MessageIngress increment number of incomming messages
-func (metrics *Metrics) MessageIngress() {
-	if metrics == nil {
+func (instance *metrics) MessageIngress() {
+	if instance == nil {
 		return
 	}
-	atomic.AddUint64(&(metrics.messageIngress), 1)
+	atomic.AddInt64(&(instance.messageIngress), 1)
 }
 
-// MemoryAllocatedSnapshot updates memory allocated snapshot
-func (metrics *Metrics) MemoryAllocatedSnapshot() {
-	if metrics == nil {
-		return
-	}
-	var stats = new(runtime.MemStats)
-	runtime.ReadMemStats(stats)
-	atomic.StoreUint64(&(metrics.memoryAllocated), stats.Sys)
-}
-
-// Setup hydrates metrics from storage
-func (metrics *Metrics) Setup() error {
-	if metrics == nil {
-		return nil
-	}
-	if metrics.continuous {
-		metrics.Hydrate()
-	}
+// Setup does nothing
+func (_ *metrics) Setup() error {
 	return nil
 }
 
 // Done returns always finished
-func (metrics *Metrics) Done() <-chan interface{} {
+func (_ *metrics) Done() <-chan interface{} {
 	done := make(chan interface{})
 	close(done)
 	return done
 }
 
 // Cancel does nothing
-func (metrics *Metrics) Cancel() {
+func (_ *metrics) Cancel() {
 }
 
 // Work represents metrics worker work
-func (metrics *Metrics) Work() {
-	metrics.MemoryAllocatedSnapshot()
-	metrics.Persist()
+func (instance *metrics) Work() {
+	if instance == nil {
+		return
+	}
+	egress := instance.messageEgress
+	atomic.AddInt64(&(instance.messageEgress), -egress)
+	ingress := instance.messageIngress
+	atomic.AddInt64(&(instance.messageIngress), -ingress)
+	var stats = new(runtime.MemStats)
+	runtime.ReadMemStats(stats)
+
+	instance.client.Count("openbank.lake.message.ingress", ingress, nil, 1)
+	instance.client.Count("openbank.lake.message.egress", egress, nil, 1)
+	instance.client.Gauge("openbank.lake.memory.bytes", float64(stats.Sys), nil, 1)
 }
