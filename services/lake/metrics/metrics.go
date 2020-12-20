@@ -27,9 +27,9 @@ type Metrics interface {
 }
 
 type metrics struct {
-	client *statsd.Client
-	messageEgress   int64
-	messageIngress  int64
+	client         *statsd.Client
+	messageEgress  int64
+	messageIngress int64
 }
 
 // NewMetrics returns blank metrics holder
@@ -40,9 +40,9 @@ func NewMetrics(endpoint string) *metrics {
 		return nil
 	}
 	return &metrics{
-		client: client,
-		messageEgress:   int64(0),
-		messageIngress:  int64(0),
+		client:         client,
+		messageEgress:  int64(0),
+		messageIngress: int64(0),
 	}
 }
 

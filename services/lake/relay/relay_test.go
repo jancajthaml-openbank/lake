@@ -12,11 +12,10 @@ import (
 	zmq "github.com/pebbe/zmq4"
 )
 
+type mockMetrics struct{}
 
-type mockMetrics struct {}
-func (_ mockMetrics) MessageEgress() {}
+func (_ mockMetrics) MessageEgress()  {}
 func (_ mockMetrics) MessageIngress() {}
-
 
 func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
 	runtime.LockOSThread()
