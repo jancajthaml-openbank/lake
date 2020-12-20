@@ -141,9 +141,7 @@ class ApplianceManager(object):
       'LOG_LEVEL': 'INFO',
       'PORT_PULL': '5562',
       'PORT_PUB': '5561',
-      'METRICS_OUTPUT': '/opt/lake/metrics',
-      'METRICS_REFRESHRATE': '1000ms',
-      'METRICS_CONTINUOUS': 'false',
+      'STATSD_ENDPOINT': '127.0.0.1:8125',
     }
 
     os.makedirs("/etc/lake/conf.d", exist_ok=True)

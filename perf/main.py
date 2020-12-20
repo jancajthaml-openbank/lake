@@ -8,9 +8,6 @@ import glob
 from functools import partial
 from collections import OrderedDict
 from utils import warn, info, interrupt_stdout, timeit
-from metrics.decorator import metrics
-from metrics.fascade import Metrics
-from metrics.plot import Graph
 from appliance_manager import ApplianceManager
 from messaging.publisher import Publisher
 from logs.collector import LogsCollector
@@ -31,12 +28,10 @@ def main():
     '{}/../reports/perf-tests'.format(cwd),
     '{}/../reports/perf-tests/logs'.format(cwd),
     '{}/../reports/perf-tests/graphs'.format(cwd),
-    '{}/../reports/perf-tests/metrics'.format(cwd)
   ]:
     os.system('mkdir -p {}'.format(folder))
 
   for folder in [
-    '{}/../reports/perf-tests/metrics/*.json'.format(cwd),
     '{}/../reports/perf-tests/logs/*.log'.format(cwd),
     '{}/../reports/perf-tests/graphs/*.png'.format(cwd),
   ]:
@@ -59,12 +54,7 @@ def main():
   while i <= messages_to_push:
     info('pushing {:,.0f} messages throught ZMQ'.format(i))
     with timeit('{:,.0f} messages'.format(i)):
-      with metrics(manager, 'count_{}'.format(i)):
-        Publisher(i)
-
-    info('generating graph for {:,.0f} messages'.format(i))
-    with timeit('{:,.0f} graph'.format(i)):
-      Graph(Metrics('{}/../reports/perf-tests/metrics/metrics.count_{}.json'.format(cwd, i)))
+      Publisher(i)
 
     i *= 10
 
