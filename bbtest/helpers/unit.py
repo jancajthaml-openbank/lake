@@ -19,7 +19,7 @@ class UnitHelper(object):
       "LOG_LEVEL": "DEBUG",
       "PORT_PULL": "5562",
       "PORT_PUB": "5561",
-      "LAKE_STATSD_ENDPOINT": "127.0.0.1:8125",
+      "STATSD_ENDPOINT": "127.0.0.1:8125",
     }
 
   def get_arch(self):
