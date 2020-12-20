@@ -34,7 +34,7 @@ type metrics struct {
 
 // NewMetrics returns blank metrics holder
 func NewMetrics(endpoint string) *metrics {
-	client, err := statsd.New(endpoint)
+	client, err := statsd.New(endpoint, statsd.WithClientSideAggregation(), statsd.WithoutTelemetry())
 	if err != nil {
 		log.Error().Msgf("Failed to ensure statsd client %+v", err)
 		return nil
@@ -83,6 +83,8 @@ func (instance *metrics) Work() {
 	if instance == nil {
 		return
 	}
+
+	log.Debug().Msg("Sending metrics to statsd client")
 
 	egress := instance.messageEgress
 	ingress := instance.messageIngress
