@@ -19,9 +19,7 @@ class UnitHelper(object):
       "LOG_LEVEL": "DEBUG",
       "PORT_PULL": "5562",
       "PORT_PUB": "5561",
-      "METRICS_REFRESHRATE": "1h",
-      "METRICS_OUTPUT": os.path.realpath('{}/../../reports/blackbox-tests/metrics'.format(os.path.dirname(__file__))),
-      "METRICS_CONTINUOUS": "true",
+      "STATSD_ENDPOINT": "127.0.0.1:8125",
     }
 
   def get_arch(self):

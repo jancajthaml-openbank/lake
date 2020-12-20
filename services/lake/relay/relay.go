@@ -25,7 +25,7 @@ import (
 type Relay struct {
 	pullPort  string
 	pubPort   string
-	metrics   *metrics.Metrics
+	metrics   metrics.Metrics
 	puller    *zmq4.Socket
 	pusher    *zmq4.Socket
 	publisher *zmq4.Socket
@@ -35,7 +35,7 @@ type Relay struct {
 }
 
 // NewRelay returns new instance of Relay
-func NewRelay(pull int, pub int, metrics *metrics.Metrics) *Relay {
+func NewRelay(pull int, pub int, metrics metrics.Metrics) *Relay {
 	return &Relay{
 		pullPort: fmt.Sprintf("tcp://127.0.0.1:%d", pull),
 		pubPort:  fmt.Sprintf("tcp://127.0.0.1:%d", pub),
@@ -69,7 +69,8 @@ func (relay *Relay) setupPuller() (err error) {
 	relay.puller.SetImmediate(true)
 	relay.puller.SetLinger(0)
 	relay.puller.SetRcvhwm(0)
-	for relay.puller.Bind(relay.pullPort) != nil {}
+	for relay.puller.Bind(relay.pullPort) != nil {
+	}
 	return
 }
 
@@ -85,7 +86,8 @@ func (relay *Relay) setupPublisher() (err error) {
 	relay.publisher.SetImmediate(true)
 	relay.publisher.SetLinger(0)
 	relay.publisher.SetSndhwm(0)
-	for relay.publisher.Bind(relay.pubPort) != nil {}
+	for relay.publisher.Bind(relay.pubPort) != nil {
+	}
 	return
 }
 
@@ -97,7 +99,8 @@ func (relay *Relay) setupPusher() (err error) {
 	if err != nil {
 		return
 	}
-	for relay.pusher.Connect(relay.pullPort) != nil {}
+	for relay.pusher.Connect(relay.pullPort) != nil {
+	}
 	return
 }
 

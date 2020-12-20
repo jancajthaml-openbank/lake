@@ -3,7 +3,6 @@ package relay
 import (
 	"context"
 	"fmt"
-	"github.com/jancajthaml-openbank/lake/metrics"
 	"runtime"
 	"strings"
 	"sync"
@@ -12,6 +11,11 @@ import (
 
 	zmq "github.com/pebbe/zmq4"
 )
+
+type mockMetrics struct{}
+
+func (_ mockMetrics) MessageEgress()  {}
+func (_ mockMetrics) MessageIngress() {}
 
 func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
 	runtime.LockOSThread()
@@ -115,7 +119,7 @@ func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan strin
 }
 
 func TestWorkContract(t *testing.T) {
-	metrics := metrics.NewMetrics("/tmp", false)
+	metrics := mockMetrics{}
 
 	t.Log("Cancel -> Done")
 	{
@@ -150,7 +154,7 @@ func TestRelayInOrder(t *testing.T) {
 		runtime.UnlockOSThread()
 	}()
 
-	metrics := metrics.NewMetrics("/tmp", false)
+	metrics := mockMetrics{}
 	relay := NewRelay(5562, 5561, metrics)
 
 	t.Log("Relays message")

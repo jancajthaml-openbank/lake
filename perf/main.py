@@ -55,7 +55,7 @@ def main():
 
   messages_to_push = int(os.environ.get('MESSAGES_PUSHED', '100000'))
 
-  i = 100
+  i = 1000
   while i <= messages_to_push:
     info('pushing {:,.0f} messages throught ZMQ'.format(i))
     with timeit('{:,.0f} messages'.format(i)):

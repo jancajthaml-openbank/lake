@@ -24,26 +24,18 @@ class metrics():
       self.__fn = args[0]
       self.__ready = True
       return self
-
     with self:
       return self.__fn(*args, **kwargs)
 
   def __enter__(self):
-    file = '/opt/lake/metrics/metrics.json'
-
-    if os.path.exists(file):
-      os.remove(file)
-
-    self.__metrics = MetricsAggregator(file)
-    self.__manager.start()
+    self.__metrics = MetricsAggregator()
     self.__metrics.start()
+    self.__manager.start()
 
   def __exit__(self, *args):
     self.__manager.stop()
     self.__metrics.stop()
-
     self.__persist()
-
     del self.__manager
     del self.__metrics
 

@@ -14,10 +14,7 @@
 
 package config
 
-import (
-	"strings"
-	"time"
-)
+import "strings"
 
 // Configuration of application
 type Configuration struct {
@@ -27,22 +24,16 @@ type Configuration struct {
 	PubPort int
 	// LogLevel ignorecase log level
 	LogLevel string
-	// MetricsContinuous determines if metrics should start from last state
-	MetricsContinuous bool
-	// MetricsRefreshRate how frequently should metrics be updated
-	MetricsRefreshRate time.Duration
-	// MetricsOutput determines into which filename should metrics write
-	MetricsOutput string
+	// MetricsStastdEndpoint represents statsd daemon hostname
+	MetricsStastdEndpoint string
 }
 
 // LoadConfig loads application configuration
 func LoadConfig() Configuration {
 	return Configuration{
-		PullPort:           envInteger("LAKE_PORT_PULL", 5562),
-		PubPort:            envInteger("LAKE_PORT_PUB", 5561),
-		LogLevel:           strings.ToUpper(envString("LAKE_LOG_LEVEL", "INFO")),
-		MetricsContinuous:  envBoolean("LAKE_METRICS_CONTINUOUS", true),
-		MetricsRefreshRate: envDuration("LAKE_METRICS_REFRESHRATE", time.Second),
-		MetricsOutput:      envFilename("LAKE_METRICS_OUTPUT", "/tmp/lake-metrics"),
+		PullPort:              envInteger("LAKE_PORT_PULL", 5562),
+		PubPort:               envInteger("LAKE_PORT_PUB", 5561),
+		LogLevel:              strings.ToUpper(envString("LAKE_LOG_LEVEL", "INFO")),
+		MetricsStastdEndpoint: envString("LAKE_STATSD_ENDPOINT", "127.0.0.1:8125"),
 	}
 }

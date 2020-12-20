@@ -4,7 +4,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestGetConfig(t *testing.T) {
@@ -28,14 +27,8 @@ func TestGetConfig(t *testing.T) {
 		if config.LogLevel != "INFO" {
 			t.Errorf("LogLevel default value is not INFO")
 		}
-		if config.MetricsContinuous != true {
-			t.Errorf("MetricsContinuous default value is not true")
-		}
-		if config.MetricsRefreshRate != time.Second {
-			t.Errorf("MetricsRefreshRate default value is not 1s")
-		}
-		if config.MetricsOutput != "/tmp/lake-metrics" {
-			t.Errorf("MetricsOutput default value is not /tmp/lake-metrics")
+		if config.MetricsStastdEndpoint != "127.0.0.1:8125" {
+			t.Errorf("MetricsStastdEndpoint default value is not 127.0.0.1:8125")
 		}
 	}
 }
