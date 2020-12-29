@@ -26,28 +26,30 @@ type Metrics interface {
 	MessageIngress()
 }
 
-type metrics struct {
+type StatsdMetrics struct {
 	client         *statsd.Client
 	messageEgress  int64
 	messageIngress int64
+	canceled chan interface{}
 }
 
 // NewMetrics returns blank metrics holder
-func NewMetrics(endpoint string) *metrics {
+func NewMetrics(endpoint string) *StatsdMetrics {
 	client, err := statsd.New(endpoint, statsd.WithClientSideAggregation(), statsd.WithoutTelemetry())
 	if err != nil {
 		log.Error().Msgf("Failed to ensure statsd client %+v", err)
 		return nil
 	}
-	return &metrics{
+	return &StatsdMetrics{
 		client:         client,
 		messageEgress:  int64(0),
 		messageIngress: int64(0),
+		canceled: make(chan interface{}),
 	}
 }
 
 // MessageEgress increment number of outcomming messages
-func (instance *metrics) MessageEgress() {
+func (instance *StatsdMetrics) MessageEgress() {
 	if instance == nil {
 		return
 	}
@@ -55,7 +57,7 @@ func (instance *metrics) MessageEgress() {
 }
 
 // MessageIngress increment number of incomming messages
-func (instance *metrics) MessageIngress() {
+func (instance *StatsdMetrics) MessageIngress() {
 	if instance == nil {
 		return
 	}
@@ -63,23 +65,30 @@ func (instance *metrics) MessageIngress() {
 }
 
 // Setup does nothing
-func (_ *metrics) Setup() error {
+func (_ *StatsdMetrics) Setup() error {
 	return nil
 }
 
-// Done returns always finished
-func (_ *metrics) Done() <-chan interface{} {
-	done := make(chan interface{})
-	close(done)
-	return done
+// Done returns done when Cancel was called
+func (instance *StatsdMetrics) Done() <-chan interface{} {
+	if instance == nil {
+		done := make(chan interface{})
+		close(done)
+		return done
+	}
+	return instance.canceled
 }
 
-// Cancel does nothing
-func (_ *metrics) Cancel() {
+// Cancel closes canceled mark
+func (*StatsdMetrics) Cancel() {
+	if instance == nil {
+		return
+	}
+	close(instance.canceled)
 }
 
 // Work represents metrics worker work
-func (instance *metrics) Work() {
+func (instance *StatsdMetrics) Work() {
 	if instance == nil {
 		return
 	}
