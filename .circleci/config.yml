@@ -226,17 +226,17 @@ jobs:
                 VERSION=${tags}
               fi
               META=$(echo -e ${CIRCLE_BRANCH} | sed 's:.*/::')
-              echo -e "${VERSION#v}" > /home/circleci/project/VERSION
-              echo -e "${META}" > /home/circleci/project/META
+              echo -e "${VERSION#v}" > /mnt/ramdisk/VERSION
+              echo -e "${META}" > /mnt/ramdisk/META
             else
-              echo -e "${CIRCLE_TAG#v}" > /home/circleci/project/VERSION
-              echo -e "-main" > /home/circleci/project/META
+              echo -e "${CIRCLE_TAG#v}" > /mnt/ramdisk/VERSION
+              echo -e "-main" > /mnt/ramdisk/META
             fi
       - save_cache:
           key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
-            - /mnt/ramdisk/VERSION
-            - /mnt/ramdisk/META
+            - /mnt/ramdisk/SHORT_VERSION
+            - /mnt/ramdisk/FULL_VERSION
 
   # -------------------------------------------------------------------------- #
 
