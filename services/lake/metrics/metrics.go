@@ -76,10 +76,8 @@ func (*StatsdMetrics) Done() <-chan interface{} {
 
 // Cancel triggers work once
 func (instance *StatsdMetrics) Cancel() {
-	if instance == nil {
-		return
-	}
 	instance.Work()
+	instance.client.Flush()
 }
 
 // Work represents metrics worker work

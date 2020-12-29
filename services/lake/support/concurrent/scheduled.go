@@ -90,11 +90,11 @@ func (daemon *ScheduledDaemon) Start(parentContext context.Context, cancelFuncti
 		select {
 		case <-parentContext.Done():
 			daemon.Stop()
-			return
+			break
 		case <-daemon.ticker.C:
 			daemon.Work()
 		case <-daemon.Done():
-			return
+			break
 		}
 	}
 }
