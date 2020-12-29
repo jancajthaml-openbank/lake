@@ -80,7 +80,7 @@ func (instance *StatsdMetrics) Done() <-chan interface{} {
 }
 
 // Cancel closes canceled mark
-func (*StatsdMetrics) Cancel() {
+func (instance *StatsdMetrics) Cancel() {
 	if instance == nil {
 		return
 	}
