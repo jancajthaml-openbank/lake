@@ -17,41 +17,64 @@ package concurrent
 import (
 	"context"
 	"runtime"
+	"sync"
 )
 
 // OneShotPinnedDaemon represent work happening only once pinned to os thread
 type OneShotPinnedDaemon struct {
 	Worker
 	name string
+	cancelOnce sync.Once
+	done 			 chan interface{}
 }
 
 // NewOneShotPinnedDaemon returns new daemon with given name for single work
 // pinned to single os thread
 func NewOneShotPinnedDaemon(name string, worker Worker) Daemon {
-	return OneShotPinnedDaemon{
+	return &OneShotPinnedDaemon{
 		Worker: worker,
 		name:   name,
+		cancelOnce: sync.Once{},
+		done: 		  make(chan interface{}),
 	}
 }
 
 // Done returns signal when worker has finished work
-func (daemon OneShotPinnedDaemon) Done() <-chan interface{} {
-	return daemon.Worker.Done()
+func (daemon *OneShotPinnedDaemon) Done() <-chan interface{} {
+	if daemon == nil {
+		done := make(chan interface{})
+		close(done)
+		return done
+	}
+	<-daemon.Worker.Done()
+	return daemon.done
 }
 
 // Setup prepares worker for work
-func (daemon OneShotPinnedDaemon) Setup() error {
+func (daemon *OneShotPinnedDaemon) Setup() error {
+	if daemon == nil {
+		return nil
+	}
 	return daemon.Worker.Setup()
 }
 
 // Stop cancels worker's work
-func (daemon OneShotPinnedDaemon) Stop() {
-	daemon.Worker.Cancel()
+func (daemon *OneShotPinnedDaemon) Stop() {
+	if daemon == nil {
+		return
+	}
+	daemon.cancelOnce.Do(func() {
+		daemon.Worker.Cancel()
+		close(daemon.done)
+	})
 }
 
 // Start starts worker's work once
-func (daemon OneShotPinnedDaemon) Start(parentContext context.Context, cancelFunction context.CancelFunc) {
+func (daemon *OneShotPinnedDaemon) Start(parentContext context.Context, cancelFunction context.CancelFunc) {
 	defer cancelFunction()
+	if daemon == nil {
+		return
+	}
 	runtime.LockOSThread()
 	defer func() {
 		recover()
@@ -66,8 +89,10 @@ func (daemon OneShotPinnedDaemon) Start(parentContext context.Context, cancelFun
 		<-parentContext.Done()
 		daemon.Stop()
 	}()
+
 	log.Info().Msgf("Start daemon %s run once", daemon.name)
+	defer log.Info().Msgf("Stop daemon %s", daemon.name)
+
 	daemon.Work()
 	<-daemon.Done()
-	log.Info().Msgf("Stop daemon %s", daemon.name)
 }
