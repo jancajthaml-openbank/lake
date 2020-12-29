@@ -30,7 +30,6 @@ type StatsdMetrics struct {
 	client         *statsd.Client
 	messageEgress  int64
 	messageIngress int64
-	canceled chan interface{}
 }
 
 // NewMetrics returns blank metrics holder
@@ -44,7 +43,6 @@ func NewMetrics(endpoint string) *StatsdMetrics {
 		client:         client,
 		messageEgress:  int64(0),
 		messageIngress: int64(0),
-		canceled: make(chan interface{}),
 	}
 }
 
@@ -65,26 +63,23 @@ func (instance *StatsdMetrics) MessageIngress() {
 }
 
 // Setup does nothing
-func (_ *StatsdMetrics) Setup() error {
+func (*StatsdMetrics) Setup() error {
 	return nil
 }
 
-// Done returns done when Cancel was called
-func (instance *StatsdMetrics) Done() <-chan interface{} {
-	if instance == nil {
-		done := make(chan interface{})
-		close(done)
-		return done
-	}
-	return instance.canceled
+// Done returns always finished
+func (*StatsdMetrics) Done() <-chan interface{} {
+	done := make(chan interface{})
+	close(done)
+	return done
 }
 
-// Cancel closes canceled mark
+// Cancel triggers work once
 func (instance *StatsdMetrics) Cancel() {
 	if instance == nil {
 		return
 	}
-	close(instance.canceled)
+	instance.Work()
 }
 
 // Work represents metrics worker work
