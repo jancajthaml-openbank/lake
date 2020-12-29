@@ -464,9 +464,10 @@ jobs:
           command: |
             echo ${DOCKER_PASSWORD} \
               | docker login -u ${DOCKER_USER} --password-stdin
-            VERSION=$(cat /mnt/ramdisk/FULL_VERSION)
+            VERSION=$(cat /mnt/ramdisk/VERSION)
+            META=$(cat /mnt/ramdisk/META)
             docker push \
-              docker.io/openbank/lake:${VERSION}
+              docker.io/openbank/lake:${VERSION}-${META}
             rm -f /root/.docker/config.json
       - run:
           name: Publish to docker.pkg.github.com
