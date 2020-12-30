@@ -45,11 +45,10 @@ def main():
   info("setup")
 
   logs_collector = LogsCollector()
+  logs_collector.start()
 
   manager = ApplianceManager()
   manager.bootstrap()
-
-  logs_collector.start()
 
   info("start")
 

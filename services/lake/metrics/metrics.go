@@ -26,20 +26,20 @@ type Metrics interface {
 	MessageIngress()
 }
 
-type metrics struct {
+type StatsdMetrics struct {
 	client         *statsd.Client
 	messageEgress  int64
 	messageIngress int64
 }
 
 // NewMetrics returns blank metrics holder
-func NewMetrics(endpoint string) *metrics {
+func NewMetrics(endpoint string) *StatsdMetrics {
 	client, err := statsd.New(endpoint, statsd.WithClientSideAggregation(), statsd.WithoutTelemetry())
 	if err != nil {
 		log.Error().Msgf("Failed to ensure statsd client %+v", err)
 		return nil
 	}
-	return &metrics{
+	return &StatsdMetrics{
 		client:         client,
 		messageEgress:  int64(0),
 		messageIngress: int64(0),
@@ -47,7 +47,7 @@ func NewMetrics(endpoint string) *metrics {
 }
 
 // MessageEgress increment number of outcomming messages
-func (instance *metrics) MessageEgress() {
+func (instance *StatsdMetrics) MessageEgress() {
 	if instance == nil {
 		return
 	}
@@ -55,7 +55,7 @@ func (instance *metrics) MessageEgress() {
 }
 
 // MessageIngress increment number of incomming messages
-func (instance *metrics) MessageIngress() {
+func (instance *StatsdMetrics) MessageIngress() {
 	if instance == nil {
 		return
 	}
@@ -63,23 +63,25 @@ func (instance *metrics) MessageIngress() {
 }
 
 // Setup does nothing
-func (_ *metrics) Setup() error {
+func (*StatsdMetrics) Setup() error {
 	return nil
 }
 
 // Done returns always finished
-func (_ *metrics) Done() <-chan interface{} {
+func (*StatsdMetrics) Done() <-chan interface{} {
 	done := make(chan interface{})
 	close(done)
 	return done
 }
 
-// Cancel does nothing
-func (_ *metrics) Cancel() {
+// Cancel triggers work once
+func (instance *StatsdMetrics) Cancel() {
+	instance.Work()
+	instance.client.Flush()
 }
 
 // Work represents metrics worker work
-func (instance *metrics) Work() {
+func (instance *StatsdMetrics) Work() {
 	if instance == nil {
 		return
 	}
