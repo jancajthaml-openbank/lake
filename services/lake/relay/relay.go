@@ -151,6 +151,9 @@ func (relay *Relay) Cancel() {
 	relay.publisher = nil
 	relay.puller = nil
 	relay.pusher = nil
+	if relay.ctx != nil {
+		relay.ctx.Term()
+	}
 	relay.ctx = nil
 }
 
@@ -186,10 +189,10 @@ loop:
 	if err != nil {
 		goto fail
 	}
-	relay.metrics.MessageIngress()
 	if !relay.live {
 		goto eos
 	}
+	relay.metrics.MessageIngress()
 	_, err = relay.publisher.SendBytes(chunk, 0)
 	if err != nil {
 		goto fail
