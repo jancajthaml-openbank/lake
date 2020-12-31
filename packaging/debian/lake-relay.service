@@ -16,7 +16,9 @@ LimitCORE=infinity
 Restart=always
 RestartSec=0
 TimeoutStartSec=0
-KillMode=control-group
+SuccessExitStatus=2
+KillMode=process
+KillSignal=SIGTERM
 
 [Install]
 WantedBy=multi-user.target
