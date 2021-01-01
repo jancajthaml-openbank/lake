@@ -16,9 +16,11 @@ def step_impl(context, package, operation):
   elif operation == 'uninstalled':
     (code, result, error) = execute(["apt-get", "-y", "remove", package])
     assert code == 0, "unable to uninstall with code {} and {} {}".format(code, result, error)
+    (code, result, error) = execute(["apt-get", "-y", "purge", package])
+    assert code == 0, "unable to purge with code {} and {} {}".format(code, result, error)
     assert os.path.isfile('/etc/lake/conf.d/init.conf') is False
   else:
-    assert False
+    assert False, 'unknown operation {}'.format(operation)
 
 
 @given('systemctl contains following active units')
