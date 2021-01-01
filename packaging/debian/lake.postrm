@@ -2,6 +2,6 @@
 set -e
 
 #DEBHELPER#
-if [ "$1" = remove -o "$1" = purge ] && [ -f /etc/lake/conf.d/init.conf ] ; then
+if [ "$1" = purge ] && [ -f /etc/lake/conf.d/init.conf ] ; then
   rm /etc/lake/conf.d/init.conf
 fi
