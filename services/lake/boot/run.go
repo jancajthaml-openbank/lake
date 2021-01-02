@@ -24,7 +24,6 @@ import (
 // Stop stops all daemons
 func (prog Program) Stop() {
 	prog.pool.Stop()
-	close(prog.interrupt)
 }
 
 // Start starts all daemons and blocks until INT or TERM signal is received
@@ -34,7 +33,12 @@ func (prog Program) Start(parentContext context.Context, cancelFunction context.
 	host.NotifyServiceReady()
 	log.Info().Msg("Program Started")
 	signal.Notify(prog.interrupt, syscall.SIGINT, syscall.SIGTERM)
-	<-prog.interrupt
+	select {
+		case <-prog.interrupt:
+			break
+		case <-prog.pool.Done():
+			break
+	}
 	log.Info().Msg("Program Stopping")
 	if err := host.NotifyServiceStopping(); err != nil {
 		log.Error().Msg(err.Error())
