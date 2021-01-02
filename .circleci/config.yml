@@ -457,8 +457,14 @@ jobs:
             VERSION=$(cat /mnt/ramdisk/VERSION)
             META=$(cat /mnt/ramdisk/META)
 
-            docker build -t docker.io/openbank/lake:${VERSION}-${META} .
-            docker build -t docker.pkg.github.com/jancajthaml-openbank/lake/lake:${VERSION} .
+            docker build \
+              -t docker.io/openbank/lake:${VERSION}-${META} \
+              -f packaging/docker/Dockerfile \
+              .
+            docker build \
+              -t docker.pkg.github.com/jancajthaml-openbank/lake/lake:${VERSION} \
+              -f packaging/docker/Dockerfile \
+              .
       - run:
           name: Publish to docker.io
           command: |
