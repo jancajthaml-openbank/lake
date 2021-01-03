@@ -35,4 +35,6 @@ COPY --from=0 /opt/artifacts /opt/artifacts
 COPY --from=0 /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
 COPY --from=0 /lib/x86_64-linux-gnu /lib/x86_64-linux-gnu
 
-ENTRYPOINT [ "/opt/artifacts/lake-linux-amd64" ]
+RUN ln -s /opt/artifacts/lake-linux-amd64 /usr/bin/lake
+
+ENTRYPOINT [ "lake" ]
