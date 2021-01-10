@@ -458,7 +458,7 @@ jobs:
             META=$(cat /mnt/ramdisk/META)
 
             docker build \
-              -t docker.io/openbank/lake:${VERSION}-${META} \
+              -t docker.io/openbank/lake:v${VERSION}-${META} \
               -f packaging/docker/Dockerfile \
               .
             docker build \
@@ -473,7 +473,7 @@ jobs:
             VERSION=$(cat /mnt/ramdisk/VERSION)
             META=$(cat /mnt/ramdisk/META)
             docker push \
-              docker.io/openbank/lake:${VERSION}-${META}
+              docker.io/openbank/lake:v${VERSION}-${META}
             rm -f /root/.docker/config.json
       - run:
           name: Publish to docker.pkg.github.com
@@ -513,7 +513,7 @@ jobs:
       - run:
           name: Run blackbox tests
           command: |
-            export VERSION=$(cat /home/circleci/project/VERSION)
+            export VERSION=v$(cat /home/circleci/project/VERSION)
             export META=$(cat /home/circleci/project/META)
 
             docker-compose up -d bbtest
