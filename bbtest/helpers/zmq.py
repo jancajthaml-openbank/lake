@@ -31,10 +31,13 @@ class ZMQHelper(threading.Thread):
     threading.Thread.start(self)
 
   def run(self):
+    last_data = None
     while not self.__cancel.is_set():
       try:
         data = self.__sub.recv(zmq.NOBLOCK)
-        self.backlog.append(data)
+        if data != last_data:
+          self.backlog.append(data)
+        last_data = data
       except Exception as ex:
         if ex.errno != 11:
           return
