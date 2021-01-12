@@ -199,6 +199,7 @@ loop:
 		log.Warn().Msgf("Unable to send message with %+v", err)
 		goto fail
 	}
+	relay.metrics.MessageEgress()
 	_, err = relay.publisher.SendBytes(chunk, 0)
 	if err != nil {
 		log.Warn().Msgf("Unable to send message with %+v", err)
