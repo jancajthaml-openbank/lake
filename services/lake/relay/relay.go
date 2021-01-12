@@ -187,6 +187,7 @@ func (relay *Relay) Work() {
 loop:
 	chunk, err = relay.puller.RecvBytes(0)
 	if err != nil {
+		log.Warn().Msgf("Unable to receive message with %+v", err)
 		goto fail
 	}
 	if !relay.live {
@@ -195,6 +196,7 @@ loop:
 	relay.metrics.MessageIngress()
 	_, err = relay.publisher.SendBytes(chunk, 0)
 	if err != nil {
+		log.Warn().Msgf("Unable to send message with %+v", err)
 		goto fail
 	}
 	relay.metrics.MessageEgress()
