@@ -87,6 +87,7 @@ func (relay *Relay) setupPublisher() (err error) {
 	relay.publisher.SetImmediate(true)
 	relay.publisher.SetLinger(0)
 	relay.publisher.SetSndhwm(0)
+	relay.publisher.SetXpubNodrop(true)
 	for relay.publisher.Bind(relay.pubPort) != nil {
 	}
 	return
