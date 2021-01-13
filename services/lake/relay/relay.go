@@ -83,7 +83,7 @@ func (relay *Relay) setupPublisher() (err error) {
 	relay.publisher.SetConflate(false)
 	relay.publisher.SetImmediate(true)
 	relay.publisher.SetSndhwm(10000)
-	//relay.publisher.SetXpubNodrop(true)
+	relay.publisher.SetXpubNodrop(true)
 	for relay.publisher.Bind(relay.pubPort) != nil {}
 	return
 }
@@ -195,15 +195,6 @@ pull:
 	}
 pub:
 	relay.metrics.MessageIngress()
-	_, err = relay.publisher.SendBytes(chunk, 0)
-	if err != nil {
-		log.Warn().Msgf("Unable to send message with %+v", err)
-		if err.Error() != "resource temporarily unavailable" {
-			goto pub
-		}
-		goto fail
-	}
-	relay.metrics.MessageEgress()
 	_, err = relay.publisher.SendBytes(chunk, 0)
 	if err != nil {
 		log.Warn().Msgf("Unable to send message with %+v", err)
