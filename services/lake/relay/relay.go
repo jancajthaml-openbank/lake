@@ -16,6 +16,7 @@ package relay
 
 import (
 	"fmt"
+	"time"
 	"github.com/jancajthaml-openbank/lake/metrics"
 
 	"github.com/pebbe/zmq4"
@@ -184,7 +185,7 @@ func (relay *Relay) Work() {
 	var chunk []byte
 	var err error
 
-loop:
+pull:
 	chunk, err = relay.puller.RecvBytes(0)
 	if err != nil {
 		log.Warn().Msgf("Unable to receive message with %+v", err)
@@ -193,21 +194,29 @@ loop:
 	if !relay.live {
 		goto eos
 	}
+pub:
 	relay.metrics.MessageIngress()
 	_, err = relay.publisher.SendBytes(chunk, 0)
 	if err != nil {
 		log.Warn().Msgf("Unable to send message with %+v", err)
+		if err.Error() != "resource temporarily unavailable" {
+			time.Sleep(10*time.Millisecond)
+			goto pub
+		}
 		goto fail
 	}
 	relay.metrics.MessageEgress()
 	_, err = relay.publisher.SendBytes(chunk, 0)
 	if err != nil {
 		log.Warn().Msgf("Unable to send message with %+v", err)
+		if err.Error() != "resource temporarily unavailable" {
+			goto pub
+		}
 		goto fail
 	}
 	relay.metrics.MessageEgress()
 	log.Debug().Msgf("Relayed %s", string(chunk))
-	goto loop
+	goto pull
 
 fail:
 	switch err {
@@ -218,7 +227,7 @@ fail:
 	case zmq4.ErrorContextClosed:
 		goto eos
 	default:
-		goto loop
+		goto pull
 	}
 
 eos:
