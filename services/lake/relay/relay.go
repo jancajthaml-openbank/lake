@@ -16,7 +16,6 @@ package relay
 
 import (
 	"fmt"
-	"time"
 	"github.com/jancajthaml-openbank/lake/metrics"
 
 	"github.com/pebbe/zmq4"
@@ -38,8 +37,8 @@ type Relay struct {
 // NewRelay returns new instance of Relay
 func NewRelay(pull int, pub int, metrics metrics.Metrics) *Relay {
 	return &Relay{
-		pullPort: fmt.Sprintf("tcp://127.0.0.1:%d", pull),
-		pubPort:  fmt.Sprintf("tcp://127.0.0.1:%d", pub),
+		pullPort: fmt.Sprintf("tcp://0.0.0.0:%d", pull),
+		pubPort:  fmt.Sprintf("tcp://0.0.0.0:%d", pub),
 		metrics:  metrics,
 		done:     nil,
 		live:     false,
@@ -68,10 +67,8 @@ func (relay *Relay) setupPuller() (err error) {
 	}
 	relay.puller.SetConflate(false)
 	relay.puller.SetImmediate(true)
-	relay.puller.SetLinger(0)
 	relay.puller.SetRcvhwm(0)
-	for relay.puller.Bind(relay.pullPort) != nil {
-	}
+	for relay.puller.Bind(relay.pullPort) != nil {}
 	return
 }
 
@@ -85,11 +82,9 @@ func (relay *Relay) setupPublisher() (err error) {
 	}
 	relay.publisher.SetConflate(false)
 	relay.publisher.SetImmediate(true)
-	relay.publisher.SetLinger(0)
 	relay.publisher.SetSndhwm(0)
 	relay.publisher.SetXpubNodrop(true)
-	for relay.publisher.Bind(relay.pubPort) != nil {
-	}
+	for relay.publisher.Bind(relay.pubPort) != nil {}
 	return
 }
 
@@ -101,8 +96,7 @@ func (relay *Relay) setupPusher() (err error) {
 	if err != nil {
 		return
 	}
-	for relay.pusher.Connect(relay.pullPort) != nil {
-	}
+	for relay.pusher.Connect(relay.pullPort) != nil {}
 	return
 }
 
@@ -142,9 +136,11 @@ func (relay *Relay) Cancel() {
 	}
 	<-relay.Done()
 	if relay.publisher != nil {
+		relay.publisher.SetLinger(0)
 		relay.publisher.Close()
 	}
 	if relay.puller != nil {
+		relay.puller.SetLinger(0)
 		relay.puller.Close()
 	}
 	if relay.pusher != nil {
@@ -186,6 +182,8 @@ func (relay *Relay) Work() {
 	var chunk []byte
 	var err error
 
+	log.Info().Msg("Relay entering main loop")
+
 pull:
 	chunk, err = relay.puller.RecvBytes(0)
 	if err != nil {
@@ -201,7 +199,6 @@ pub:
 	if err != nil {
 		log.Warn().Msgf("Unable to send message with %+v", err)
 		if err.Error() != "resource temporarily unavailable" {
-			time.Sleep(10*time.Millisecond)
 			goto pub
 		}
 		goto fail
@@ -220,6 +217,7 @@ pub:
 	goto pull
 
 fail:
+	log.Warn().Msgf("Relay error %+v", err)
 	switch err {
 	case zmq4.ErrorNoSocket:
 		fallthrough
@@ -232,5 +230,6 @@ fail:
 	}
 
 eos:
+	log.Info().Msg("Relay exiting main loop")
 	return
 }
