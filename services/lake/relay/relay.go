@@ -37,8 +37,8 @@ type Relay struct {
 // NewRelay returns new instance of Relay
 func NewRelay(pull int, pub int, metrics metrics.Metrics) *Relay {
 	return &Relay{
-		pullPort: fmt.Sprintf("tcp://0.0.0.0:%d", pull),
-		pubPort:  fmt.Sprintf("tcp://0.0.0.0:%d", pub),
+		pullPort: fmt.Sprintf("tcp://127.0.0.1:%d", pull),
+		pubPort:  fmt.Sprintf("tcp://127.0.0.1:%d", pub),
 		metrics:  metrics,
 		done:     nil,
 		live:     false,
