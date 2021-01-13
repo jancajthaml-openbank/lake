@@ -160,30 +160,16 @@ func TestRelayInOrder(t *testing.T) {
 	t.Log("Relays message")
 	{
 		accumulatedData := make([]string, 0)
-		fixtureData := []string{
-			"A",
-			"B",
-			"C",
-			"D",
-			"E",
-			"F",
-		}
 		expectedData := []string{
 			"A",
-			"A",
-			"B",
 			"B",
 			"C",
-			"C",
-			"D",
 			"D",
 			"E",
-			"E",
-			"F",
 			"F",
 		}
 
-		pushChannel := make(chan string, len(fixtureData))
+		pushChannel := make(chan string, len(expectedData))
 		subChannel := make(chan string, len(expectedData))
 
 		var wg sync.WaitGroup
@@ -218,7 +204,7 @@ func TestRelayInOrder(t *testing.T) {
 		}()
 
 		time.Sleep(time.Second)
-		for _, msg := range fixtureData {
+		for _, msg := range expectedData {
 			pushChannel <- msg
 		}
 		wg.Wait()

@@ -7,5 +7,5 @@ Feature: Metrics test
     And metrics reports:
       | key                            | type  | value |
       | openbank.lake.message.ingress  | count |     1 |
-      | openbank.lake.message.egress   | count |     2 |
+      | openbank.lake.message.egress   | count |     1 |
       | openbank.lake.memory.bytes     | gauce |       |
