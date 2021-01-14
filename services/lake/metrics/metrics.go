@@ -86,8 +86,6 @@ func (instance *StatsdMetrics) Work() {
 		return
 	}
 
-	log.Debug().Msg("Sending metrics to statsd client")
-
 	egress := instance.messageEgress
 	ingress := instance.messageIngress
 

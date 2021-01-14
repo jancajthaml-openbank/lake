@@ -67,10 +67,8 @@ func (relay *Relay) setupPuller() (err error) {
 	}
 	relay.puller.SetConflate(false)
 	relay.puller.SetImmediate(true)
-	relay.puller.SetLinger(0)
 	relay.puller.SetRcvhwm(0)
-	for relay.puller.Bind(relay.pullPort) != nil {
-	}
+	for relay.puller.Bind(relay.pullPort) != nil {}
 	return
 }
 
@@ -84,10 +82,9 @@ func (relay *Relay) setupPublisher() (err error) {
 	}
 	relay.publisher.SetConflate(false)
 	relay.publisher.SetImmediate(true)
-	relay.publisher.SetLinger(0)
 	relay.publisher.SetSndhwm(0)
-	for relay.publisher.Bind(relay.pubPort) != nil {
-	}
+	relay.publisher.SetXpubNodrop(true)
+	for relay.publisher.Bind(relay.pubPort) != nil {}
 	return
 }
 
@@ -99,8 +96,7 @@ func (relay *Relay) setupPusher() (err error) {
 	if err != nil {
 		return
 	}
-	for relay.pusher.Connect(relay.pullPort) != nil {
-	}
+	for relay.pusher.Connect(relay.pullPort) != nil {}
 	return
 }
 
@@ -140,9 +136,11 @@ func (relay *Relay) Cancel() {
 	}
 	<-relay.Done()
 	if relay.publisher != nil {
+		relay.publisher.SetLinger(0)
 		relay.publisher.Close()
 	}
 	if relay.puller != nil {
+		relay.puller.SetLinger(0)
 		relay.puller.Close()
 	}
 	if relay.pusher != nil {
@@ -184,23 +182,32 @@ func (relay *Relay) Work() {
 	var chunk []byte
 	var err error
 
-loop:
+	log.Info().Msg("Relay entering main loop")
+
+pull:
 	chunk, err = relay.puller.RecvBytes(0)
 	if err != nil {
+		log.Warn().Msgf("Unable to receive message with %+v", err)
 		goto fail
 	}
 	if !relay.live {
 		goto eos
 	}
+pub:
 	relay.metrics.MessageIngress()
 	_, err = relay.publisher.SendBytes(chunk, 0)
 	if err != nil {
+		if err.Error() != "resource temporarily unavailable" {
+			goto pub
+		}
+		log.Warn().Msgf("Unable to send message with %+v", err)
 		goto fail
 	}
 	relay.metrics.MessageEgress()
-	goto loop
+	goto pull
 
 fail:
+	log.Warn().Msgf("Relay error %+v", err)
 	switch err {
 	case zmq4.ErrorNoSocket:
 		fallthrough
@@ -209,9 +216,10 @@ fail:
 	case zmq4.ErrorContextClosed:
 		goto eos
 	default:
-		goto loop
+		goto pull
 	}
 
 eos:
+	log.Info().Msg("Relay exiting main loop")
 	return
 }
