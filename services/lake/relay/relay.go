@@ -204,7 +204,6 @@ pub:
 		goto fail
 	}
 	relay.metrics.MessageEgress()
-	log.Debug().Msgf("Relayed %s", string(chunk))
 	goto pull
 
 fail:
