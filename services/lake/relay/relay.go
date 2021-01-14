@@ -197,10 +197,10 @@ pub:
 	relay.metrics.MessageIngress()
 	_, err = relay.publisher.SendBytes(chunk, 0)
 	if err != nil {
-		log.Warn().Msgf("Unable to send message with %+v", err)
 		if err.Error() != "resource temporarily unavailable" {
 			goto pub
 		}
+		log.Warn().Msgf("Unable to send message with %+v", err)
 		goto fail
 	}
 	relay.metrics.MessageEgress()
