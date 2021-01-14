@@ -67,7 +67,7 @@ func (relay *Relay) setupPuller() (err error) {
 	}
 	relay.puller.SetConflate(false)
 	relay.puller.SetImmediate(true)
-	relay.puller.SetRcvhwm(10000)
+	relay.puller.SetRcvhwm(0)
 	for relay.puller.Bind(relay.pullPort) != nil {}
 	return
 }
@@ -82,7 +82,7 @@ func (relay *Relay) setupPublisher() (err error) {
 	}
 	relay.publisher.SetConflate(false)
 	relay.publisher.SetImmediate(true)
-	relay.publisher.SetSndhwm(10000)
+	relay.publisher.SetSndhwm(0)
 	relay.publisher.SetXpubNodrop(true)
 	for relay.publisher.Bind(relay.pubPort) != nil {}
 	return
