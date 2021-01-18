@@ -84,20 +84,18 @@ class Graph(object):
     ax2 = ax1.twinx()
 
     ax2.fill_between(x1, memory, 0, alpha=0.1, linewidth=0, interpolate=False, color='red')
-    ax2.plot(x1, [max_memory]*len(x1), linewidth=1, linestyle='--', antialiased=False, color='red')
-
     ax2.set_xlim(xmin=0, xmax=max(x1))
-    ax2.set_ylim(ymin=0, ymax=max_memory * 1.5)
-    ax2.set_yticks([0, max_memory])
-    ax2.set_yticklabels([human_readable_count(x)+'B' for x in ax2.get_yticks()])
+    ax2.set_ylim(ymin=0, ymax=max_memory * 2)
+    ax2.set_yticks([])
+    ax2.set_yticklabels([])
 
     ax3 = ax1.twinx()
 
     ax3.plot(x1, [fps_median if len(fps) else 0]*len(x1), linewidth=1, linestyle='--', antialiased=False, color='black')
-    ax3.plot(x1, fps, linewidth=2, color='green', antialiased=True)
+    ax3.plot(x1, fps, linewidth=2, color='black', antialiased=True)
 
     ax3.set_xlim(xmin=0, xmax=max(x1))
-    ax3.set_ylim(ymin=0, ymax=max(fps) * 2)
+    ax3.set_ylim(ymin=0, ymax=max(y1))
 
     ax3.set_yticks([0, fps_median])
     ax3.set_yticklabels([human_readable_count(x) for x in ax3.get_yticks()])

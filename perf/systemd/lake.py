@@ -46,11 +46,11 @@ class Lake(object):
 
   def stop(self) -> bool:
     (code, result, error) = execute(['systemctl', 'stop', 'lake-relay'])
-    assert code == 0, str(result) + ' ' + str(error)
+    assert code == 0, str(code) + ' ' + str(result) + ' ' + str(error)
 
   def start(self) -> bool:
     (code, result, error) = execute(['systemctl', 'start', 'lake-relay'])
-    assert code == 0, str(result) + ' ' + str(error)
+    assert code == 0, str(code) + ' ' + str(result) + ' ' + str(error)
 
     @eventually(30)
     def wait_for_running():
