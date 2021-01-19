@@ -6,6 +6,7 @@ import threading
 import signal
 import time
 import os
+import re
 
 
 class Deadline(threading.Thread):
@@ -28,6 +29,7 @@ class Deadline(threading.Thread):
 
 
 def execute(command, timeout=60) -> None:
+  ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]', flags=re.IGNORECASE)
   try:
     p = subprocess.Popen(
       command,
@@ -53,7 +55,9 @@ def execute(command, timeout=60) -> None:
     deadline.cancel()
 
     result = result.decode('utf-8').strip() if result else ''
+    result = ansi_escape.sub('', result)
     error = error.decode('utf-8').strip() if error else ''
+    error = ansi_escape.sub('', error)
     code = p.returncode
 
     del p
