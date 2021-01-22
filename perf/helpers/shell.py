@@ -6,6 +6,7 @@ import threading
 import signal
 import time
 import os
+import re
 from utils import print_daemon
 
 
@@ -29,6 +30,7 @@ class Deadline(threading.Thread):
 
 
 def execute(command, timeout=30, silent=False) -> None:
+  ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]', flags=re.IGNORECASE)
   if not silent:
     print_daemon(' '.join(command))
 
@@ -57,7 +59,9 @@ def execute(command, timeout=30, silent=False) -> None:
     deadline.cancel()
 
     result = result.decode('utf-8').strip() if result else ''
+    result = ansi_escape.sub('', result)
     error = error.decode('utf-8').strip() if error else ''
+    error = ansi_escape.sub('', result)
     code = p.returncode
 
     del p
