@@ -21,11 +21,13 @@ import (
 	"github.com/DataDog/datadog-go/statsd"
 )
 
+// Metrics provides helper function for metrics
 type Metrics interface {
 	MessageEgress()
 	MessageIngress()
 }
 
+// StatsdMetrics provides metrics helper with statsd client
 type StatsdMetrics struct {
 	client         *statsd.Client
 	messageEgress  int64

@@ -31,7 +31,6 @@ type Relay struct {
 	publisher *zmq4.Socket
 	ctx       *zmq4.Context
 	done      chan interface{}
-	live      bool
 }
 
 // NewRelay returns new instance of Relay
@@ -41,7 +40,6 @@ func NewRelay(pull int, pub int, metrics metrics.Metrics) *Relay {
 		pubPort:  fmt.Sprintf("tcp://127.0.0.1:%d", pub),
 		metrics:  metrics,
 		done:     nil,
-		live:     false,
 	}
 }
 
@@ -65,10 +63,12 @@ func (relay *Relay) setupPuller() (err error) {
 	if err != nil {
 		return
 	}
+	relay.puller.SetLinger(0)
 	relay.puller.SetConflate(false)
 	relay.puller.SetImmediate(true)
 	relay.puller.SetRcvhwm(0)
-	for relay.puller.Bind(relay.pullPort) != nil {}
+	for relay.puller.Bind(relay.pullPort) != nil {
+	}
 	return
 }
 
@@ -80,11 +80,13 @@ func (relay *Relay) setupPublisher() (err error) {
 	if err != nil {
 		return
 	}
+	relay.publisher.SetLinger(0)
 	relay.publisher.SetConflate(false)
 	relay.publisher.SetImmediate(true)
 	relay.publisher.SetSndhwm(0)
 	relay.publisher.SetXpubNodrop(true)
-	for relay.publisher.Bind(relay.pubPort) != nil {}
+	for relay.publisher.Bind(relay.pubPort) != nil {
+	}
 	return
 }
 
@@ -96,7 +98,11 @@ func (relay *Relay) setupPusher() (err error) {
 	if err != nil {
 		return
 	}
-	for relay.pusher.Connect(relay.pullPort) != nil {}
+	relay.pusher.SetLinger(0)
+	relay.pusher.SetConflate(true)
+	relay.pusher.SetImmediate(true)
+	for relay.pusher.Connect(relay.pullPort) != nil {
+	}
 	return
 }
 
@@ -130,28 +136,25 @@ func (relay *Relay) Cancel() {
 	if relay == nil {
 		return
 	}
-	if relay.pusher != nil && relay.live {
-		relay.live = false
+	if relay.publisher != nil {
+		relay.publisher.Close()
+	}
+	if relay.pusher != nil {
 		relay.pusher.SendBytes([]byte("_"), 0)
 	}
 	<-relay.Done()
-	if relay.publisher != nil {
-		relay.publisher.SetLinger(0)
-		relay.publisher.Close()
-	}
 	if relay.puller != nil {
-		relay.puller.SetLinger(0)
 		relay.puller.Close()
 	}
 	if relay.pusher != nil {
 		relay.pusher.Close()
 	}
-	relay.publisher = nil
-	relay.puller = nil
-	relay.pusher = nil
 	if relay.ctx != nil {
 		relay.ctx.Term()
 	}
+	relay.publisher = nil
+	relay.pusher = nil
+	relay.puller = nil
 	relay.ctx = nil
 }
 
@@ -171,13 +174,8 @@ func (relay *Relay) Work() {
 		return
 	}
 
-	relay.live = true
 	relay.done = make(chan interface{})
-
-	defer func() {
-		recover()
-		close(relay.done)
-	}()
+	defer close(relay.done)
 
 	var chunk []byte
 	var err error
@@ -187,20 +185,15 @@ func (relay *Relay) Work() {
 pull:
 	chunk, err = relay.puller.RecvBytes(0)
 	if err != nil {
-		log.Warn().Msgf("Unable to receive message with %+v", err)
 		goto fail
 	}
-	if !relay.live {
-		goto eos
-	}
-pub:
 	relay.metrics.MessageIngress()
+pub:
 	_, err = relay.publisher.SendBytes(chunk, 0)
 	if err != nil {
-		if err.Error() != "resource temporarily unavailable" {
+		if err.Error() == "resource temporarily unavailable" {
 			goto pub
 		}
-		log.Warn().Msgf("Unable to send message with %+v", err)
 		goto fail
 	}
 	relay.metrics.MessageEgress()

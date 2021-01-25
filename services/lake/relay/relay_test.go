@@ -14,10 +14,10 @@ import (
 
 type mockMetrics struct{}
 
-func (_ mockMetrics) MessageEgress()  {}
-func (_ mockMetrics) MessageIngress() {}
+func (mockMetrics) MessageEgress()  {}
+func (mockMetrics) MessageIngress() {}
 
-func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan string, port int) {
+func subRoutine(ctx context.Context, cancel context.CancelFunc, sub chan string, port int) {
 	runtime.LockOSThread()
 	defer func() {
 		cancel()
@@ -30,30 +30,15 @@ func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan st
 		err     error
 	)
 
-	// FIXME zmq context with proper close and term
-
-	for {
-		channel, err = zmq.NewSocket(zmq.SUB)
-		if err == nil {
-			break
-		}
-		if err.Error() == "resource temporarily unavailable" {
-			fmt.Println("Test : Resources unavailable in connect")
-			time.Sleep(time.Millisecond)
-		} else {
-			fmt.Printf("Test : Unable to connect SUB socket %+v\n", err)
-			return
-		}
+	channel, err = zmq.NewSocket(zmq.SUB)
+	if err != nil {
+		panic(err.Error())
 	}
 	defer channel.Close()
 
-	for {
-		err = channel.Connect(fmt.Sprintf("tcp://127.0.0.1:%d", port))
-		if err == nil {
-			break
-		}
-		fmt.Printf("Test : Unable to connect SUB address %+v\n", err)
-		time.Sleep(time.Millisecond)
+	err = channel.Connect(fmt.Sprintf("tcp://127.0.0.1:%d", port))
+	if err != nil {
+		panic(err.Error())
 	}
 
 	if err = channel.SetSubscribe(""); err != nil {
@@ -64,14 +49,9 @@ func subRoutine(ctx context.Context, cancel context.CancelFunc, callback chan st
 	for ctx.Err() == nil {
 		chunk, err = channel.Recv(0)
 		if err != nil {
-			if err == zmq.ErrorSocketClosed || err == zmq.ErrorContextClosed {
-				fmt.Printf("Test : ZMQ connection closed %+v\n", err)
-				return
-			}
-			fmt.Printf("Test : Error while receiving ZMQ message %+v\n", err)
-			continue
+			return
 		}
-		callback <- chunk
+		sub <- chunk
 	}
 }
 
@@ -87,34 +67,24 @@ func pushRoutine(ctx context.Context, cancel context.CancelFunc, data chan strin
 		err     error
 	)
 
-	// FIXME zmq context with proper close and term
-
-	for {
-		channel, err = zmq.NewSocket(zmq.PUSH)
-		if err == nil {
-			break
-		}
-		if err.Error() == "resource temporarily unavailable" {
-			fmt.Println("Test : Resources unavailable in connect")
-			time.Sleep(time.Millisecond)
-		} else {
-			fmt.Printf("Test : Unable to connect PUSH socket %+v\n", err)
-			return
-		}
+	channel, err = zmq.NewSocket(zmq.PUSH)
+	if err != nil {
+		panic(err.Error())
 	}
 	defer channel.Close()
 
-	for {
-		err = channel.Connect(fmt.Sprintf("tcp://127.0.0.1:%d", port))
-		if err == nil {
-			break
-		}
-		fmt.Printf("Test : Unable to connect PUSH address %+v\n", err)
-		time.Sleep(time.Millisecond)
+	err = channel.Connect(fmt.Sprintf("tcp://127.0.0.1:%d", port))
+	if err != nil {
+		panic(err.Error())
 	}
 
 	for ctx.Err() == nil {
-		channel.Send(<-data, 0)
+		select {
+		case <-ctx.Done():
+			return
+		case chunk := <-data:
+			channel.Send(chunk, 0)
+		}
 	}
 }
 
@@ -190,17 +160,19 @@ func TestRelayInOrder(t *testing.T) {
 				wg.Done()
 			}()
 
-			for {
-				msg := <-subChannel
-				accumulatedData = append(accumulatedData, msg)
-				if ctx.Err() == nil && len(expectedData) != len(accumulatedData) {
-					continue
+			for len(expectedData) != len(accumulatedData) {
+				select {
+				case <-ctx.Done():
+					return
+				case msg := <-subChannel:
+					accumulatedData = append(accumulatedData, msg)
 				}
-				if strings.Join(expectedData, ",") != strings.Join(accumulatedData, ",") {
-					t.Errorf("extected %+v actual %+v", expectedData, accumulatedData)
-				}
-				return
 			}
+
+			if strings.Join(expectedData, ",") != strings.Join(accumulatedData, ",") {
+				t.Errorf("extected %+v actual %+v", expectedData, accumulatedData)
+			}
+
 		}()
 
 		time.Sleep(time.Second)
