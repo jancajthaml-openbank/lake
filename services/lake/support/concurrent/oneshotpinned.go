@@ -23,19 +23,19 @@ import (
 // OneShotPinnedDaemon represent work happening only once pinned to os thread
 type OneShotPinnedDaemon struct {
 	Worker
-	name string
+	name       string
 	cancelOnce sync.Once
-	done 			 chan interface{}
+	done       chan interface{}
 }
 
 // NewOneShotPinnedDaemon returns new daemon with given name for single work
 // pinned to single os thread
 func NewOneShotPinnedDaemon(name string, worker Worker) Daemon {
 	return &OneShotPinnedDaemon{
-		Worker: worker,
-		name:   name,
+		Worker:     worker,
+		name:       name,
 		cancelOnce: sync.Once{},
-		done: 		  make(chan interface{}),
+		done:       make(chan interface{}),
 	}
 }
 
@@ -86,8 +86,13 @@ func (daemon *OneShotPinnedDaemon) Start(parentContext context.Context, cancelFu
 		return
 	}
 	go func() {
-		<-parentContext.Done()
-		daemon.Stop()
+		select {
+		case <-parentContext.Done():
+			daemon.Stop()
+			return
+		case <-daemon.Done():
+			return
+		}
 	}()
 
 	log.Info().Msgf("Start daemon %s run once", daemon.name)
