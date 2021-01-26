@@ -58,8 +58,7 @@ class Graph(object):
 
     x1 = list(range(0, duration, 1))
     y1 = [item['i'] for item in metrics.dataset.values()]
-    memory = [item['m'] for item in metrics.dataset.values()]
-    fps = [item['i'] for item in metrics.dataset.values()]
+    fps = [item['e'] for item in metrics.dataset.values()]
 
     if duration == 1:
         duration += 1
@@ -68,7 +67,6 @@ class Graph(object):
         fps = [fps[0]] + fps
 
     fps_median = numpy.median(fps)
-    max_memory = max(memory)
 
     x_interval = list(reversed(range(duration-1, -1, min(-1, -int(duration/4)))))
     x_interval[0] = 0
@@ -77,28 +75,20 @@ class Graph(object):
     ax1.set_xticks(list(itemgetter(*x_interval)(x1)))
     ax1.set_xticklabels([human_readable_duration(x*1000) for x in ax1.get_xticks()])
 
-    ax1.set_ylim(ymin=0, ymax=max(y1))
-    ax1.set_yticks([0, max(y1)])
+    ax1.set_ylim(ymin=0, ymax=sum(y1))
+    ax1.set_yticks([0, sum(y1)])
     ax1.set_yticklabels([human_readable_count(x) for x in ax1.get_yticks()])
 
     ax2 = ax1.twinx()
 
-    ax2.fill_between(x1, memory, 0, alpha=0.1, linewidth=0, interpolate=False, color='red')
+    ax2.plot(x1, [fps_median if len(fps) else 0]*len(x1), linewidth=1, linestyle='--', antialiased=False, color='black')
+    ax2.plot(x1, fps, linewidth=2, color='crimson', antialiased=True)
+
     ax2.set_xlim(xmin=0, xmax=max(x1))
-    ax2.set_ylim(ymin=0, ymax=max_memory * 2)
-    ax2.set_yticks([])
-    ax2.set_yticklabels([])
+    ax2.set_ylim(ymin=0, ymax=max(y1) * 2)
 
-    ax3 = ax1.twinx()
-
-    ax3.plot(x1, [fps_median if len(fps) else 0]*len(x1), linewidth=1, linestyle='--', antialiased=False, color='black')
-    ax3.plot(x1, fps, linewidth=2, color='black', antialiased=True)
-
-    ax3.set_xlim(xmin=0, xmax=max(x1))
-    ax3.set_ylim(ymin=0, ymax=max(y1))
-
-    ax3.set_yticks([0, fps_median])
-    ax3.set_yticklabels([human_readable_count(x) for x in ax3.get_yticks()])
+    ax2.set_yticks([0, fps_median])
+    ax2.set_yticklabels(['{} / s'.format(human_readable_count(x)) for x in ax2.get_yticks()])
 
     plt.tight_layout()
 

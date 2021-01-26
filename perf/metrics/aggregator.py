@@ -5,6 +5,7 @@ import socket
 import threading
 import time
 import re
+from collections import OrderedDict
 
 
 class MetricsAggregator(threading.Thread):
@@ -12,7 +13,7 @@ class MetricsAggregator(threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
     self.__cancel = threading.Event()
-    self.__store = dict()
+    self.__store = OrderedDict()
 
   def start(self):
     self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -27,8 +28,27 @@ class MetricsAggregator(threading.Thread):
         self.__process_change(data.decode('utf-8'))
       except:
         return
+  
+  def strip_trailing_zero_values(self) -> None:
+    #print(self.__store)
+    to_delete = list()
+    last_not_nil = None
+    in_deletion_stage = False
+    for key, value in self.__store.items():
+      if value['i'] != 0 and value['e'] != 0:
+        last_not_nil = key
+    for key in self.__store.keys():
+      if key == last_not_nil:
+        in_deletion_stage = True
+      elif in_deletion_stage:
+        to_delete.append(key)
+    #print(to_delete)
+    for key in to_delete:
+      del self.__store[key]
+    
+    return self.__store
 
-  def get_metrics(self) -> dict:
+  def get_metrics(self) -> OrderedDict:
     return self.__store
 
   def __process_change(self, data) -> None:
@@ -53,10 +73,7 @@ class MetricsAggregator(threading.Thread):
       elif key == 'openbank.lake.message.egress':
         self.__store[ts]['e'] += int(value)
       elif key == 'openbank.lake.memory.bytes':
-        self.__store[ts]['m'] = int(value)
-
-      #print(self.__store)
-
+        self.__store[ts]['m'] = max(self.__store[ts]['m'], int(value))
 
   def stop(self):
     if self.__cancel.is_set():
