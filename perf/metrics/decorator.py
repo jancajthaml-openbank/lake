@@ -43,6 +43,7 @@ class metrics():
     filename = os.path.realpath('{}/../../reports/perf-tests/metrics/metrics.{}.json'.format(os.path.dirname(os.path.abspath(__file__)), self.__label))
 
     with open(filename, mode='w', encoding='ascii') as fd:
+      self.__metrics.strip_trailing_zero_values()
       store = self.__metrics.get_metrics()
       json.dump(store, fd, indent=4, sort_keys=True)
       del store
