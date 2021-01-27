@@ -82,7 +82,7 @@ class Graph(object):
     ax2 = ax1.twinx()
 
     ax2.plot(x1, [fps_median if len(fps) else 0]*len(x1), linewidth=1, linestyle='--', antialiased=False, color='black')
-    ax2.plot(x1, fps, linewidth=2, color='crimson', antialiased=True)
+    ax2.plot(x1, fps, linewidth=1, color='crimson', antialiased=True)
 
     ax2.set_xlim(xmin=0, xmax=max(x1))
     ax2.set_ylim(ymin=0, ymax=max(y1) * 2)
