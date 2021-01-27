@@ -76,10 +76,7 @@ func (daemon *OneShotPinnedDaemon) Start(parentContext context.Context, cancelFu
 		return
 	}
 	runtime.LockOSThread()
-	defer func() {
-		recover()
-		runtime.UnlockOSThread()
-	}()
+	defer runtime.UnlockOSThread()
 	err := daemon.Setup()
 	if err != nil {
 		log.Error().Msgf("Setup daemon %s error %+v", daemon.name, err.Error())
