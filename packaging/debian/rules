@@ -22,7 +22,7 @@ override_dh_systemd_start:
 override_dh_installinit:
 	dh_installinit -plake --noscripts
 	@mv \
-		debian/target/${DEB_HOST_ARCH_OS}-${DEB_HOST_ARCH_CPU}/usr/bin/lake-${DEB_HOST_ARCH_OS}-${DEB_HOST_ARCH_CPU} \
+		debian/target/${DEB_HOST_ARCH_OS}-${DEB_HOST_ARCH_CPU}/usr/bin/lake-* \
 		debian/target/${DEB_HOST_ARCH_OS}-${DEB_HOST_ARCH_CPU}/usr/bin/lake
 
 override_dh_strip:
