@@ -2,7 +2,7 @@
 Description=openbank lake message relay
 PartOf=lake.service
 After=lake.service
-ConditionPathExists=/etc/lake/conf.d/init.conf
+Requires=lake.service
 
 [Service]
 Type=notify
@@ -13,7 +13,7 @@ StandardInput=null
 LimitNOFILE=1048576
 LimitNPROC=infinity
 LimitCORE=infinity
-Restart=always
+Restart=on-failure
 RestartSec=0
 TimeoutStartSec=0
 SuccessExitStatus=2
@@ -21,4 +21,4 @@ KillMode=process
 KillSignal=SIGTERM
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=lake.service

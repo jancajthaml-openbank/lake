@@ -1,0 +1,12 @@
+[Unit]
+Description=openbank lake configuration watcher
+StartLimitBurst=5
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo reloading lake.service'
+ExecStart=/bin/sh -c 'systemctl restart lake.service'
+ExecStart=/bin/sh -c 'echo reloaded lake.service'
+
+[Install]
+WantedBy=multi-user.target

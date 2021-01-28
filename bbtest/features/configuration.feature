@@ -5,7 +5,6 @@ Feature: Service can be configured
       | property  | value |
       | LOG_LEVEL | ERROR |
 
-    When restart unit "lake-relay.service"
     Then journalctl of "lake-relay.service" contains following
     """
       Log level set to ERROR
@@ -16,7 +15,6 @@ Feature: Service can be configured
       | property  | value |
       | LOG_LEVEL | INFO  |
 
-    When restart unit "lake-relay.service"
     Then journalctl of "lake-relay.service" contains following
     """
       Log level set to INFO
@@ -27,7 +25,6 @@ Feature: Service can be configured
       | property  | value   |
       | LOG_LEVEL | INVALID |
 
-    When restart unit "lake-relay.service"
     Then journalctl of "lake-relay.service" contains following
     """
       Log level set to INFO
@@ -38,7 +35,6 @@ Feature: Service can be configured
       | property  | value |
       | LOG_LEVEL | DEBUG |
 
-    When restart unit "lake-relay.service"
     Then journalctl of "lake-relay.service" contains following
     """
       Log level set to DEBUG
