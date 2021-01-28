@@ -22,8 +22,9 @@ def step_impl(context, unit):
     actual_lines = []
     idx = len(actual_lines_merged) - 1
 
+
     while True:
-      if idx < 0 or (">>> Start <<<" in actual_lines_merged[idx]):
+      if idx < 0 or actual_lines_merged[idx].startswith("Starting openbank lake message relay"):
         break
       actual_lines.append(actual_lines_merged[idx])
       idx -= 1

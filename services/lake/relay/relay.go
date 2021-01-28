@@ -114,19 +114,19 @@ func (relay *Relay) Setup() error {
 	var err error
 	err = relay.setupContext()
 	if err != nil {
-		return fmt.Errorf("unable to create context %+v", err)
+		return fmt.Errorf("unable to create context %w", err)
 	}
 	err = relay.setupPuller()
 	if err != nil {
-		return fmt.Errorf("unable create PULL socket %v", err)
+		return fmt.Errorf("unable create PULL socket %w", err)
 	}
 	err = relay.setupPublisher()
 	if err != nil {
-		return fmt.Errorf("unable create PUB socket %v", err)
+		return fmt.Errorf("unable create PUB socket %w", err)
 	}
 	err = relay.setupPusher()
 	if err != nil {
-		return fmt.Errorf("unable create PUSH socket %v", err)
+		return fmt.Errorf("unable create PUSH socket %w", err)
 	}
 	return nil
 }
@@ -180,7 +180,7 @@ func (relay *Relay) Work() {
 	var chunk []byte
 	var err error
 
-	log.Info().Msg("Relay entering main loop")
+	log.Debug().Msg("Relay entering main loop")
 
 pull:
 	chunk, err = relay.puller.RecvBytes(0)
@@ -200,7 +200,7 @@ pub:
 	goto pull
 
 fail:
-	log.Warn().Msgf("Relay error %+v", err)
+	log.Warn().Err(err).Msg("Relay")
 	switch err {
 	case zmq4.ErrorNoSocket:
 		fallthrough
@@ -213,6 +213,6 @@ fail:
 	}
 
 eos:
-	log.Info().Msg("Relay exiting main loop")
+	log.Debug().Msg("Relay exiting main loop")
 	return
 }
