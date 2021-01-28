@@ -3,8 +3,21 @@
 
 import os
 from helpers.unit import UnitHelper
+from helpers.logger import logger
 from helpers.zmq import ZMQHelper
 from helpers.statsd import StatsdHelper
+
+
+def before_feature(context, feature):
+  context.statsd.clear()
+  context.log.info('')
+  context.log.info('  (FEATURE) {}'.format(feature.name))
+
+
+def before_scenario(context, scenario):
+  context.log.info('')
+  context.log.info('  (SCENARIO) {}'.format(scenario.name))
+  context.log.info('')
 
 
 def after_feature(context, feature):
@@ -12,6 +25,7 @@ def after_feature(context, feature):
 
 
 def before_all(context):
+  context.log = logger()
   context.unit = UnitHelper(context)
   context.zmq = ZMQHelper()
   context.statsd = StatsdHelper()

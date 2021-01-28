@@ -1,0 +1,10 @@
+[Unit]
+Description=openbank lake configuration watcher
+
+[Path]
+PathChanged=/etc/lake/conf.d/init.conf
+Unit=lake-watcher.service
+
+[Install]
+WantedBy=multi-user.target
+

@@ -2,7 +2,9 @@ Feature: Metrics test
 
   Scenario: metrics measures expected stats
 
-    When lake recieves "A B"
+  	When restart unit "lake.service"
+    And lake recieves "A B"
+
     Then lake responds with "A B"
     And metrics reports:
       | key                            | type  | value |

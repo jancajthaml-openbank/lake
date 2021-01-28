@@ -10,13 +10,15 @@ SUBSTVARS = -Vshlibs:Depends="libc6"
 	+dh $@ -P debian/target/${DEB_HOST_ARCH_OS}-${DEB_HOST_ARCH_CPU} --with=systemd
 
 override_dh_systemd_enable:
-	dh_systemd_enable -plake --name=lake lake.path
 	dh_systemd_enable -plake --name=lake lake.service
+	dh_systemd_enable -plake --name=lake-watcher lake-watcher.path
+	dh_systemd_enable -plake --name=lake-watcher lake-watcher.service
 	dh_systemd_enable -plake --name=lake-relay lake-relay.service
 
 override_dh_systemd_start:
-	dh_systemd_start -plake --name=lake lake.path
 	dh_systemd_start -plake --name=lake lake.service
+	dh_systemd_start -plake --name=lake-watcher lake-watcher.path
+	dh_systemd_start -plake --name=lake-watcher lake-watcher.service
 	dh_systemd_start -plake --name=lake-relay lake-relay.service
 
 override_dh_installinit:

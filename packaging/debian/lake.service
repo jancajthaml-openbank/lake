@@ -1,5 +1,5 @@
 [Unit]
-Description=openbank lake message relay
+Description=openbank lake control group
 After=inetd.service
 ConditionPathExists=/etc/lake/conf.d/init.conf
 
@@ -8,6 +8,8 @@ Type=oneshot
 ExecStart=/bin/true
 RemainAfterExit=yes
 KillMode=control-group
+StartLimitBurst=0
+StartLimitInterval=0
 
 [Install]
 WantedBy=multi-user.target
