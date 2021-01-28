@@ -1,5 +1,5 @@
 [Unit]
-Description=openbank lake message relay control group
+Description=openbank lake control group
 After=inetd.service
 ConditionPathExists=/etc/lake/conf.d/init.conf
 
