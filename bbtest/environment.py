@@ -20,7 +20,7 @@ def before_scenario(context, scenario):
   context.log.info('')
 
 
-def after_feature(context, feature):
+def after_scenario(context, scenario):
   context.unit.collect_logs()
 
 
