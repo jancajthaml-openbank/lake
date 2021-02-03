@@ -39,10 +39,9 @@ lifecycle::go::lint() {
     (/go/bin/golint -min_confidence 0.5 ${file} || :)
     (/go/bin/misspell -q -locale US -source=text -w ${file} || :)
     (/go/bin/prealloc ${file} || :)
-    (/go/bin/prealloc ${file} || :)
     (/go/bin/goconst ${file} || :)
-    (/go/bin/ineffassign ${file} || :)
   done
+  cd $dir && (/go/bin/ineffassign ./... || :)
 }
 
 ################################################################################
