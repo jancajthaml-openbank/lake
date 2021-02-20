@@ -16,7 +16,7 @@ package config
 
 import (
 	"strings"
-	"github.com/jancajthaml-openbank/lake/env"
+	"github.com/jancajthaml-openbank/lake/support/env"
 )
 
 // Configuration of application
