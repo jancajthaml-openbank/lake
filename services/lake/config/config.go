@@ -14,7 +14,10 @@
 
 package config
 
-import "strings"
+import (
+	"strings"
+	"github.com/jancajthaml-openbank/lake/env"
+)
 
 // Configuration of application
 type Configuration struct {
@@ -31,9 +34,9 @@ type Configuration struct {
 // LoadConfig loads application configuration
 func LoadConfig() Configuration {
 	return Configuration{
-		PullPort:              envInteger("LAKE_PORT_PULL", 5562),
-		PubPort:               envInteger("LAKE_PORT_PUB", 5561),
-		LogLevel:              strings.ToUpper(envString("LAKE_LOG_LEVEL", "INFO")),
-		MetricsStastdEndpoint: envString("LAKE_STATSD_ENDPOINT", "127.0.0.1:8125"),
+		PullPort:              env.Int("LAKE_PORT_PULL", 5562),
+		PubPort:               env.Int("LAKE_PORT_PUB", 5561),
+		LogLevel:              strings.ToUpper(env.String("LAKE_LOG_LEVEL", "INFO")),
+		MetricsStastdEndpoint: env.String("LAKE_STATSD_ENDPOINT", "127.0.0.1:8125"),
 	}
 }
