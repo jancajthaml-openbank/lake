@@ -35,24 +35,18 @@ OUTPUT_FILE=${OUTPUT}/$(basename ${SOURCE})-${PLATFORM}-${ARCH}
 
 ################################################################################
 
-lifecycle::go::clean() {
-  local source="$1"
-  if [ -z ${source} -o ! -d ${source} ] ; then
+lifecycle::rust::clean() {
+  local output_file="$1"
+  if [ -z ${output_file} -o ! -f ${output_file} ] ; then
     return
   fi
-  local output="$2"
-  if [ -z ${output} -o ! -d ${output} ] ; then
-    return
-  fi
+  
+  rm ${output_file}
 
-  find "${output}" -name "$(basename ${source})*${ARCH}*" -exec rm -f {} \;
-  echo "[info] ${output} cleaned"
-
-  cd ${source} && go clean
-  echo "[info] ${source} cleaned"
+  echo "[info] ${output_file} cleaned"
 }
 
-lifecycle::go::build() {
+lifecycle::rust::build() {
   local source="$1"
   if [ -z ${source} -o ! -d ${source} ] ; then
     return
@@ -63,38 +57,22 @@ lifecycle::go::build() {
     return
   fi
 
-
-
   case ${ARCH} in
 
-    arm64)
-      cd ${source} && \
-      \
-      GOOS=${PLATFORM} \
-      GOARCH=arm64 \
-      CGO_ENABLED=1 \
-      GOFLAGS=-buildmode=pie \
-      CC=aarch64-linux-gnu-gcc \
-      \
-      go build -a -o ${output} || {
-        (>&2 echo "[error] ${output} unable to build")
-        exit 1
-      }
-    ;;
-
     amd64)
-      cd ${source} && \
-      \
-      GOOS=${PLATFORM} \
-      GOARCH=amd64 \
-      CGO_ENABLED=1 \
-      GOFLAGS=-buildmode=pie \
       CC=gcc \
+      CARGO_HOME=${source}/target \
       \
-      go build -a -o ${output} || {
+      cargo build \
+        --release \
+        --manifest-path=${source}/Cargo.toml \
+        --target-dir=${source}/target || {
         (>&2 echo "[error] ${output} unable to build")
         exit 1
       }
+
+      mkdir -p $(dirname "${output}")
+      cp "${source}/target/release/main" "${output}"
     ;;
 
     *)
@@ -109,7 +87,7 @@ lifecycle::go::build() {
   echo "[info] ${output} compiled"
 }
 
-lifecycle::go::strip() {
+lifecycle::rust::strip() {
   local output="$1"
   if [ -z ${output} -o ! -f ${output} ] ; then
     return
@@ -135,15 +113,14 @@ lifecycle::go::strip() {
 
 ################################################################################
 
-lifecycle::go::clean \
-  ${SOURCE} \
-  ${OUTPUT}
+lifecycle::rust::clean \
+  ${OUTPUT_FILE}
 
-lifecycle::go::build \
+lifecycle::rust::build \
   ${SOURCE} \
   ${OUTPUT_FILE}
 
-lifecycle::go::strip \
+lifecycle::rust::strip \
   ${OUTPUT_FILE}
 
 du -hs ${OUTPUT_FILE}
