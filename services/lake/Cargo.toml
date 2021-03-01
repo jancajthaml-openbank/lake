@@ -1,0 +1,9 @@
+[workspace]
+
+members = [
+  "config",
+  "boot",
+  "metrics",
+  "relay",
+  "main"
+]
