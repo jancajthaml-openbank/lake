@@ -2,34 +2,27 @@ extern crate zmq;
 
 use config::Configuration;
 use metrics::Metrics;
-use std::thread;
+use std::sync::Arc;
 
-pub struct Relay<'a> {
+pub struct Relay {
     pull_port: i32,
     pub_port: i32,
-    metrics: &'a Metrics,
+    metrics: Arc<Metrics>,
     ctx: zmq::Context,
 }
 
-impl<'a> Relay<'a> {
+impl Relay {
 
-    pub fn new(config: &Configuration, metrics: &'a Metrics) -> Relay<'a> {
-        let ctx = zmq::Context::new();
+    pub fn new(config: &Configuration, metrics: Arc<Metrics>) -> Relay {
         Relay {
             pull_port: *&config.pull_port,
             pub_port: *&config.pub_port,
             metrics: metrics,
-            ctx: ctx,
+            ctx: zmq::Context::new(),
         }
     }
 
-    pub fn run(&'static self) -> thread::JoinHandle<()> {
-        thread::spawn(move || {
-            self.work();
-        })
-    }
-
-    fn work(&self) {
+    pub fn run(&self) {
         let puller = self.ctx.socket(zmq::PULL).unwrap();
         let publisher = self.ctx.socket(zmq::PUB).unwrap();
 
@@ -42,6 +35,5 @@ impl<'a> Relay<'a> {
             publisher.send(msg, 0).unwrap();
             self.metrics.message_egress();
         }
-
     }
 }

@@ -4,24 +4,34 @@ use crate::health::{notify_service_ready, notify_service_stopping};
 use config::Configuration;
 use metrics::Metrics;
 use relay::Relay;
-
-use std::time::Duration;
 use std::thread;
+
+use bastion::prelude::*;
+use std::time::Duration;
 use log::LevelFilter;
 use simple_logger::SimpleLogger;
 use signal_hook::iterator::Signals;
 use signal_hook::low_level;
-use signal_hook::consts::{TERM_SIGNALS, SIGTERM, SIGQUIT};
+use signal_hook::consts::{TERM_SIGNALS, SIGQUIT};
+use std::sync::Arc;
 
 pub struct Program {
 	config: Configuration,
+	metrics: Arc<Metrics>,
+	relay: Arc<Relay>,
 }
 
 impl Program {
 
     pub fn new() -> Program {
-        Program {
-        	config: Configuration::load(),
+    	let config = Configuration::load();
+    	let metrics = Arc::new(Metrics::new(&config));
+    	let relay = Arc::new(Relay::new(&config, Arc::clone(&metrics)));
+
+    	Program {
+        	config: config,
+        	metrics: metrics,
+        	relay: relay,
         }
     }
 
@@ -45,47 +55,86 @@ impl Program {
     	log::set_max_level(level);
     }
 
-    pub fn setup(&self) {
+    pub fn setup(&'static self) {
     	self.setup_logging();
         log::info!("Program Setup");
     }
 
-    pub fn start(&self) {
+    pub fn start(&'static self) {
         log::info!("Program Starting");
         notify_service_ready();
 
-        let mut pool = Vec::with_capacity(2);
+        Bastion::init();
+        Bastion::start();
 
-        let metrics = Metrics::new(&self.config);
-		let relay = Relay::new(&self.config, &metrics);
+        Bastion::supervisor(|sp| {
 
-		pool.push(metrics.run());
-		pool.push(relay.run());
-        
-		// https://github.com/bastion-rs/bastion
+        	let callbacks = Callbacks::new()
+    			.with_before_start(|| log::debug!("Supervisor started."))
+    			.with_after_stop(|| log::debug!("Supervisor stopped."));
 
-        //pool
-        //let pool = thread::spawn(|| {
+	        sp
+	        	.with_callbacks(callbacks)
+	            .with_strategy(SupervisionStrategy::OneForOne)
+	            .children(|children| {
 
-        	//for _ in 0..5 {
-        	//	log::info!("program working...");
-        		//thread::sleep(Duration::from_millis(1000));
-        	//}
-        //low_level::raise(SIGTERM).unwrap();
-        //});
+	            	let metrics = &self.metrics;
 
-    	let mut sigs = Signals::new(TERM_SIGNALS).unwrap();
-        for _ in sigs.forever() {
-        	//_pool
-        	pool.
-            //break
-        };
+	            	let callbacks = Callbacks::new()
+				        .with_after_stop(move || {
+				        	metrics.send();
+				        	log::debug!("Metrics after stop.")
+				        });
 
-        pool.join();
+	                children
+	                	.with_callbacks(callbacks)
+					    .with_exec(move |_ctx| async move {
+				        	loop {
+								thread::sleep(Duration::from_secs(1));
+					        	metrics.send();
+				        	};
+				        })
+	            })
+	            .children(|children| {
+
+	            	let metrics = &self.metrics;
+	            	let relay = &self.relay;
+
+	            	let callbacks = Callbacks::new()
+				        .with_after_stop(move || {
+				        	metrics.send();
+				        	log::debug!("Relay after stop.")
+				        });
+
+	                children
+	                	.with_callbacks(callbacks)
+					    .with_exec(move |_ctx| async move {
+					        relay.run();
+					        Ok(())
+				        })
+	            })
+	            .children(|children| {
+	                children
+					    .with_exec(|ctx| async move {
+				        	let mut sigs = Signals::new(TERM_SIGNALS).unwrap();
+					        for sig in sigs.forever() {
+					        	log::info!("signal {:?} received, stopping", sig);
+					        	ctx.parent().stop().expect("Couldn't stop the children group.");
+					        	Bastion::stop();
+					        	break;
+					        };
+					        log::info!("signal exit exec");
+				        	Ok(())
+				        })
+	            })
+	    })
+	    .expect("Couldn't create the supervisor.");
+
+        Bastion::block_until_stopped();
         notify_service_stopping();
     }
 
-    pub fn stop(&self) {
+    pub fn stop(&'static self) {
         log::info!("Program Stopping");
         low_level::raise(SIGQUIT).unwrap();
     }

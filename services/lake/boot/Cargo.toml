@@ -10,5 +10,6 @@ relay = { path = "../relay" }
 config = { path = "../config" }
 simple_logger = { version = "1.11.0" }
 signal-hook = { version = "0.3.4" }
+bastion = { version = "0.4.4" }
 
 [build-dependencies]
