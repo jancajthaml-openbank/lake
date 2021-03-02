@@ -1,5 +1,3 @@
-extern crate zmq;
-
 use config::Configuration;
 use metrics::Metrics;
 use std::sync::Arc;
@@ -12,17 +10,16 @@ pub struct Relay {
 }
 
 impl Relay {
-
     pub fn new(config: &Configuration, metrics: Arc<Metrics>) -> Relay {
         Relay {
-            pull_port: *&config.pull_port,
-            pub_port: *&config.pub_port,
-            metrics: metrics,
+            pull_port: config.pull_port,
+            pub_port: config.pub_port,
+            metrics,
             ctx: zmq::Context::new(),
         }
     }
 
-    pub fn run(&self) -> Result<(),()> {
+    pub fn run(&self) -> Result<(), ()> {
         let puller = self.ctx.socket(zmq::PULL).unwrap();
 
         puller.set_immediate(true).unwrap();
@@ -37,8 +34,12 @@ impl Relay {
         publisher.set_linger(0).unwrap();
         publisher.set_sndhwm(0).unwrap();
 
-        puller.bind(&format!("tcp://127.0.0.1:{}", self.pull_port)).unwrap();
-        publisher.bind(&format!("tcp://127.0.0.1:{}", self.pub_port)).unwrap();
+        puller
+            .bind(&format!("tcp://127.0.0.1:{}", self.pull_port))
+            .unwrap();
+        publisher
+            .bind(&format!("tcp://127.0.0.1:{}", self.pub_port))
+            .unwrap();
 
         loop {
             let data = puller.recv_bytes(0).unwrap();

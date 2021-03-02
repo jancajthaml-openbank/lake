@@ -1,6 +1,5 @@
-
-use std::io::{self, ErrorKind};
 use std::env;
+use std::io;
 use std::os::unix::net::UnixDatagram;
 
 pub fn notify(state: &str) -> io::Result<()> {
@@ -10,10 +9,10 @@ pub fn notify(state: &str) -> io::Result<()> {
     };
     let sock = UnixDatagram::unbound()?;
     let len = sock.send_to(state.as_bytes(), socket_path)?;
-    if len != state.len() {
-        Err(io::Error::new(ErrorKind::WriteZero, "incomplete write"))
-    } else {
+    if len == state.len() {
         Ok(())
+    } else {
+        Err(io::Error::new(io::ErrorKind::WriteZero, "incomplete write"))
     }
 }
 
@@ -22,8 +21,7 @@ pub fn notify_service_ready() {
         Ok(_) => (),
         Err(e) => {
             log::warn!("unable to notify host os about READY with {}", e);
-            ()
-        },
+        }
     }
 }
 
@@ -32,7 +30,6 @@ pub fn notify_service_stopping() {
         Ok(_) => (),
         Err(e) => {
             log::warn!("unable to notify host os about STOPPING with {}", e);
-            ()
-        },
+        }
     }
 }

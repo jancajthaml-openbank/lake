@@ -1,8 +1,34 @@
+bin = []
+bench = []
+test = []
+example = []
+
 [package]
 name = "config"
-version = "0.1.0"
 edition = "2018"
+version = "0.1.0"
+authors = []
+keywords = []
+categories = []
+autobins = true
+autoexamples = true
+autotests = true
+autobenches = true
+publish = true
 
 [dependencies]
 
 [build-dependencies]
+
+[lib]
+path = "src/lib.rs"
+name = "config"
+test = true
+doctest = true
+bench = true
+doc = true
+plugin = false
+proc_macro = false
+harness = true
+edition = "2018"
+crate_type = ["rlib"]
