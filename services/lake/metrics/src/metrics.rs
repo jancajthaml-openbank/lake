@@ -4,7 +4,6 @@ use statsd::Client;
 use config::Configuration;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
-//use std::thread;
 use sysinfo::{System, SystemExt};
 
 

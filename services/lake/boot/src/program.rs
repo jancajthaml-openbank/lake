@@ -77,14 +77,10 @@ impl Program {
 	        	.with_callbacks(callbacks)
 	            .with_strategy(SupervisionStrategy::OneForOne)
 	            .children(|children| {
-
 	            	let metrics = &self.metrics;
 
 	            	let callbacks = Callbacks::new()
-				        .with_after_stop(move || {
-				        	metrics.send();
-				        	log::debug!("Metrics after stop.")
-				        });
+				        .with_after_stop(move || metrics.send());
 
 	                children
 	                	.with_callbacks(callbacks)
@@ -96,21 +92,10 @@ impl Program {
 				        })
 	            })
 	            .children(|children| {
-
-	            	let metrics = &self.metrics;
 	            	let relay = &self.relay;
-
-	            	let callbacks = Callbacks::new()
-				        .with_after_stop(move || {
-				        	metrics.send();
-				        	log::debug!("Relay after stop.")
-				        });
-
 	                children
-	                	.with_callbacks(callbacks)
 					    .with_exec(move |_ctx| async move {
-					        relay.run();
-					        Ok(())
+					        relay.run()
 				        })
 	            })
 	            .children(|children| {
