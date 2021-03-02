@@ -59,6 +59,7 @@ lifecycle::rust::build() {
 
   case ${ARCH} in
 
+    #RUSTFLAGS="-Clink-arg=-fuse-ld=lld" \
     amd64)
       CC=gcc \
       CARGO_HOME=${source}/target \

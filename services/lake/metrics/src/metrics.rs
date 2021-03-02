@@ -1,22 +1,21 @@
-extern crate statsd;
-
-use statsd::Client;
 use config::Configuration;
+use statsd::Client;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
-use sysinfo::{System, SystemExt};
-
+use systemstat::{saturating_sub_bytes, Platform, System};
 
 pub struct Metrics {
     client: Client,
     ingress: AtomicU32,
     egress: AtomicU32,
+    system: System,
 }
 
 impl Metrics {
-
+    #[must_use]
     pub fn new(config: &Configuration) -> Metrics {
         Metrics {
+            system: System::new(),
             client: Client::new(&config.statsd_endpoint, "openbank.lake").unwrap(),
             ingress: AtomicU32::new(0),
             egress: AtomicU32::new(0),
@@ -32,17 +31,21 @@ impl Metrics {
     }
 
     pub fn send(&self) {
-        let mut system = System::new();
         let mut pipe = self.client.pipeline();
 
         let ingress = self.ingress.load(Ordering::SeqCst);
         let egress = self.egress.load(Ordering::SeqCst);
-        system.refresh_memory();
-        let memory = system.get_used_memory() as f64;
 
-        pipe.count("message.ingress", ingress as f64);
-        pipe.count("message.egress", egress as f64);
-        pipe.gauge("memory.bytes", memory * 1000.0f64);
+        match self.system.memory() {
+            Ok(mem) => pipe.gauge(
+                "memory.bytes",
+                saturating_sub_bytes(mem.total, mem.free).as_u64() as f64,
+            ),
+            Err(_) => (),
+        }
+
+        pipe.count("message.ingress", f64::from(ingress));
+        pipe.count("message.egress", f64::from(egress));
 
         pipe.send(&self.client);
 
