@@ -23,33 +23,28 @@ impl Relay {
     }
 
     pub fn run(&self) -> Result<(),()> {
-        let puller = self.ctx.socket(zmq::PULL)?;
+        let puller = self.ctx.socket(zmq::PULL).unwrap();
 
-        puller.set_immediate(true)?;
-        puller.set_conflate(false)?;
-        puller.set_linger(0)?;
-        puller.set_sndhwm(0)?;
+        puller.set_immediate(true).unwrap();
+        puller.set_conflate(false).unwrap();
+        puller.set_linger(0).unwrap();
+        puller.set_sndhwm(0).unwrap();
 
-        let publisher = self.ctx.socket(zmq::PUB)?;
+        let publisher = self.ctx.socket(zmq::PUB).unwrap();
 
-        publisher.set_immediate(true)?;
-        publisher.set_conflate(false)?;
-        publisher.set_linger(0)?;
-        publisher.set_sndhwm(0)?;
+        publisher.set_immediate(true).unwrap();
+        publisher.set_conflate(false).unwrap();
+        publisher.set_linger(0).unwrap();
+        publisher.set_sndhwm(0).unwrap();
 
-        puller.bind(&format!("tcp://127.0.0.1:{}", self.pull_port))?;
-        publisher.bind(&format!("tcp://127.0.0.1:{}", self.pub_port))?;
+        puller.bind(&format!("tcp://127.0.0.1:{}", self.pull_port)).unwrap();
+        publisher.bind(&format!("tcp://127.0.0.1:{}", self.pub_port)).unwrap();
 
         loop {
-            let data = puller.recv_bytes(0)?;
+            let data = puller.recv_bytes(0).unwrap();
             self.metrics.message_ingress();
-            publisher.send(data, 0)?;
+            publisher.send(data, 0).unwrap();
             self.metrics.message_egress();
         }
-
-        puller.unbind(&format!("tcp://127.0.0.1:{}", self.pull_port))?;
-        publisher.unbind(&format!("tcp://127.0.0.1:{}", self.pub_port))?;
-
-        Ok(())
     }
 }
