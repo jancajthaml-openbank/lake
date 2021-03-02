@@ -7,5 +7,6 @@ edition = "2018"
 boot = { path = "../boot" }
 metrics = { path = "../metrics" }
 relay = { path = "../relay" }
+lazy_static = { version = "1.4.0" }
 
 [build-dependencies]

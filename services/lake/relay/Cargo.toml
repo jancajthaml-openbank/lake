@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+log = { version = "0.4" }
 config = { path = "../config" }
 metrics = { path = "../metrics" }
 zmq = { version = "0.9" }

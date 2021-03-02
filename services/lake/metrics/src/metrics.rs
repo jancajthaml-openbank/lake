@@ -4,7 +4,9 @@ use statsd::Client;
 use config::Configuration;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
-use std::thread;
+//use std::thread;
+use sysinfo::{System, SystemExt};
+
 
 pub struct Metrics {
     client: Client,
@@ -15,10 +17,8 @@ pub struct Metrics {
 impl Metrics {
 
     pub fn new(config: &Configuration) -> Metrics {
-        let client = Client::new(&config.statsd_endpoint, "openbank.lake").unwrap();
-
         Metrics {
-            client: client,
+            client: Client::new(&config.statsd_endpoint, "openbank.lake").unwrap(),
             ingress: AtomicU32::new(0),
             egress: AtomicU32::new(0),
         }
@@ -32,21 +32,18 @@ impl Metrics {
         self.ingress.fetch_add(1, Ordering::SeqCst);
     }
 
-    pub fn run(&'static self) -> thread::JoinHandle<()> {
-        // FIXME ticker each 1 second
-        thread::spawn(move || {
-            self.work();
-        })
-    }
+    pub fn send(&self) {
+        let mut system = System::new();
+        let mut pipe = self.client.pipeline();
 
-    fn work(&self) {
         let ingress = self.ingress.load(Ordering::SeqCst);
         let egress = self.egress.load(Ordering::SeqCst);
-
-        let mut pipe = self.client.pipeline();
+        system.refresh_memory();
+        let memory = system.get_used_memory() as f64;
 
         pipe.count("message.ingress", ingress as f64);
         pipe.count("message.egress", egress as f64);
+        pipe.gauge("memory.bytes", memory * 1000.0f64);
 
         pipe.send(&self.client);
 

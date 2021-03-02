@@ -6,5 +6,6 @@ edition = "2018"
 [dependencies]
 config = { path = "../config" }
 statsd = { version = "0.13.1" }
+sysinfo = { version = "0.16.4" }
 
 [build-dependencies]
