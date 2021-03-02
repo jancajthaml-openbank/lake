@@ -85,8 +85,6 @@ pipeline {
                     env.PROJECT_NAME = "openbank lake"
                     env.PROJECT_DESCRIPTION = "OpenBanking lake service"
                     env.PROJECT_AUTHOR = "${env.CHANGE_AUTHOR_DISPLAY_NAME} <${env.CHANGE_AUTHOR_EMAIL}>"
-                    env.GOPATH = "${env.WORKSPACE}/go"
-                    env.XDG_CACHE_HOME = "${env.GOPATH}/.cache"
 
                     currentBuild.displayName = "#${currentBuild.number} - ${env.GIT_BRANCH} (${env.VERSION})"
                 }
@@ -96,7 +94,7 @@ pipeline {
         stage('Fetch Dependencies') {
             agent {
                 docker {
-                    image 'jancajthaml/go:latest'
+                    image 'jancajthaml/rust:latest'
                     args "--entrypoint=''"
                     reuseNode true
                 }
@@ -114,7 +112,7 @@ pipeline {
         stage('Static Analysis') {
             agent {
                 docker {
-                    image 'jancajthaml/go:latest'
+                    image 'jancajthaml/rust:latest'
                     args "--entrypoint=''"
                     reuseNode true
                 }
@@ -136,7 +134,7 @@ pipeline {
         stage('Unit Test') {
             agent {
                 docker {
-                    image 'jancajthaml/go:latest'
+                    image 'jancajthaml/rust:latest'
                     args "--entrypoint=''"
                     reuseNode true
                 }
@@ -155,7 +153,7 @@ pipeline {
         stage('Compile') {
             agent {
                 docker {
-                    image 'jancajthaml/go:latest'
+                    image 'jancajthaml/rust:latest'
                     args "--entrypoint=''"
                     reuseNode true
                 }
