@@ -59,13 +59,15 @@ lifecycle::rust::build() {
 
   case ${ARCH} in
 
-    #RUSTFLAGS="-Clink-arg=-fuse-ld=lld" \
-    amd64)
-      CC=gcc \
+    armhf)
+      rustup default ${RUST_VERSION}-armv7-unknown-linux-gnueabihf
+
+      CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=arm-linux-gnueabihf-gcc \
       CARGO_HOME=${source}/target \
       \
       cargo build \
         --release \
+        --target=armv7-unknown-linux-gnueabihf \
         --manifest-path=${source}/Cargo.toml \
         --target-dir=${source}/target || {
         (>&2 echo "[error] ${output} unable to build")
@@ -73,7 +75,46 @@ lifecycle::rust::build() {
       }
 
       mkdir -p $(dirname "${output}")
-      cp "${source}/target/release/main" "${output}"
+      cp "${source}/target/armv7-unknown-linux-gnueabihf/release/main" "${output}"
+    ;;
+
+    arm64)
+      rustup default ${RUST_VERSION}-aarch64-unknown-linux-gnu
+
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc \
+      CARGO_HOME=${source}/target \
+      \
+      cargo build \
+        --release \
+        --target=aarch64-unknown-linux-gnu \
+        --manifest-path=${source}/Cargo.toml \
+        --target-dir=${source}/target || {
+        (>&2 echo "[error] ${output} unable to build")
+        exit 1
+      }
+
+      mkdir -p $(dirname "${output}")
+      cp "${source}/target/aarch64-unknown-linux-gnu/release/main" "${output}"
+    ;;
+
+    #RUSTFLAGS="-Clink-arg=-fuse-ld=lld" \
+    amd64)
+      rustup default ${RUST_VERSION}-x86_64-unknown-linux-gnu
+
+      CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=gcc \
+      CARGO_HOME=${source}/target \
+      \
+      cargo build \
+        --release \
+        --target=x86_64-unknown-linux-gnu \
+        --manifest-path=${source}/Cargo.toml \
+        --target-dir=${source}/target || {
+        (>&2 echo "[error] ${output} unable to build")
+        exit 1
+      }
+
+      mkdir -p $(dirname "${output}")
+      cp "${source}/target/x86_64-unknown-linux-gnu/release/main" "${output}"
     ;;
 
     *)

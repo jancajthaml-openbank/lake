@@ -10,8 +10,8 @@ pub struct Relay {
 }
 
 impl Relay {
-    
-    #[must_use] pub fn new(config: &Configuration, metrics: Arc<Metrics>) -> Relay {
+    #[must_use]
+    pub fn new(config: &Configuration, metrics: Arc<Metrics>) -> Relay {
         Relay {
             pull_port: config.pull_port,
             pub_port: config.pub_port,
