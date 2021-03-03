@@ -262,6 +262,7 @@ pipeline {
     post {
         always {
             script {
+                /*
                 publishHTML(target: [
                     alwaysLinkToLastBuild: false,
                     keepAll: true,
@@ -269,6 +270,7 @@ pipeline {
                     reportFiles: '*',
                     reportName: 'Unit Test Coverage (Lake)'
                 ])
+                */
                 cucumber(
                     fileIncludePattern: '*',
                     jsonReportDirectory: "${env.WORKSPACE}/reports/blackbox-tests/cucumber"
