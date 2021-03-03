@@ -21,7 +21,8 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn new() -> Program {
+    
+    #[must_use] pub fn new() -> Program {
         let config = Configuration::load();
         let metrics = Arc::new(Metrics::new(&config));
         let relay = Arc::new(Relay::new(&config, Arc::clone(&metrics)));
@@ -108,7 +109,7 @@ impl Program {
                                 .expect("Couldn't stop signal group");
                             Bastion::stop();
                             break;
-                        }
+                        };
                         log::info!("signal exit exec");
                         Ok(())
                     })
@@ -120,7 +121,7 @@ impl Program {
         notify_service_stopping();
     }
 
-    pub fn stop(&'static self) {
+    pub fn stop() {
         log::info!("Program Stopping");
         low_level::raise(SIGQUIT).unwrap();
     }
