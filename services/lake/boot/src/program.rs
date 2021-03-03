@@ -103,17 +103,12 @@ impl Program {
                     children.with_exec(|ctx| async move {
                         let mut sigs = Signals::new(TERM_SIGNALS).unwrap();
 
-                        //next
-
                         let sig = sigs.wait();
-                        //for sig in  {
                         log::info!("signal {:?} received, stopping", sig);
                         ctx.parent()
                             .stop()
                             .expect("Couldn't stop signal group");
                         Bastion::stop();
-                        //    break;
-                        //};
                         log::info!("signal exit exec");
                         Ok(())
                     })
@@ -125,6 +120,7 @@ impl Program {
         notify_service_stopping();
     }
 
+    #[allow(clippy::unused_self)]
     pub fn stop(&self) {
         log::info!("Program Stopping");
         low_level::raise(SIGQUIT).unwrap();
