@@ -6,17 +6,17 @@ use systemstat::{saturating_sub_bytes, Platform, System};
 
 pub struct Metrics {
     client: Client,
+    system: System,
     ingress: AtomicU32,
     egress: AtomicU32,
-    system: System,
 }
 
 impl Metrics {
     #[must_use]
     pub fn new(config: &Configuration) -> Metrics {
         Metrics {
-            system: System::new(),
             client: Client::new(&config.statsd_endpoint, "openbank.lake").unwrap(),
+            system: System::new(),
             ingress: AtomicU32::new(0),
             egress: AtomicU32::new(0),
         }

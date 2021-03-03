@@ -17,19 +17,13 @@ pub fn notify(state: &str) -> io::Result<()> {
 }
 
 pub fn notify_service_ready() {
-    match notify("READY=1") {
-        Ok(_) => (),
-        Err(e) => {
-            log::warn!("unable to notify host os about READY with {}", e);
-        }
+    if let Err(e) = notify("READY=1") {
+        log::warn!("unable to notify host os about READY with {}", e);
     }
 }
 
 pub fn notify_service_stopping() {
-    match notify("STOPPING=1") {
-        Ok(_) => (),
-        Err(e) => {
-            log::warn!("unable to notify host os about STOPPING with {}", e);
-        }
+    if let Err(e) = notify("STOPPING=1") {
+        log::warn!("unable to notify host os about STOPPING with {}", e)
     }
 }

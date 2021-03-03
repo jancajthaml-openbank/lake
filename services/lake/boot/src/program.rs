@@ -21,8 +21,8 @@ pub struct Program {
 }
 
 impl Program {
-    
-    #[must_use] pub fn new() -> Program {
+    #[must_use]
+    pub fn new() -> Program {
         let config = Configuration::load();
         let metrics = Arc::new(Metrics::new(&config));
         let relay = Arc::new(Relay::new(&config, Arc::clone(&metrics)));
@@ -92,12 +92,11 @@ impl Program {
                 })
                 .children(|children| {
                     let relay = &self.relay;
-                    children
-                        .with_exec(move |_ctx| async move {
-                            relay.run().map_err(|e| {
-                                log::warn!("relay crashed {:?}", e);
-                            })
+                    children.with_exec(move |_ctx| async move {
+                        relay.run().map_err(|e| {
+                            log::warn!("relay crashed {:?}", e);
                         })
+                    })
                 })
                 .children(|children| {
                     children.with_exec(|ctx| async move {
@@ -105,9 +104,7 @@ impl Program {
 
                         let sig = sigs.wait();
                         log::info!("signal {:?} received, stopping", sig);
-                        ctx.parent()
-                            .stop()
-                            .expect("Couldn't stop signal group");
+                        ctx.parent().stop().expect("Couldn't stop signal group");
                         Bastion::stop();
                         log::info!("signal exit exec");
                         Ok(())
