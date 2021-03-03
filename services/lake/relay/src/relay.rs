@@ -27,23 +27,24 @@ impl Relay {
         term_sig: Arc<AtomicBool>,
         barrier: Arc<Barrier>,
     ) -> std::thread::JoinHandle<()> {
-        log::info!("start relay");
+        log::debug!("requested start");
         thread::spawn({
             let term = term_sig.clone();
             move || {
                 while !term.load(Ordering::Relaxed) {
                     if let Err(e) = self.work() {
-                        log::warn!("relay recovering from crash {:?}", e);
+                        log::warn!("recovering from crash {:?}", e);
                     }
                 }
                 barrier.wait();
-                log::debug!("relay exiting loop");
+                log::debug!("exiting loop");
             }
         })
+        // FIXME recover panic and set term_sig to upstream
     }
 
     pub fn stop(&self) {
-        log::debug!("requested stop relay");
+        log::debug!("requested stop");
 
         let kill_message = zmq::Message::new();
         let killer = self.ctx.socket(zmq::PUSH).unwrap();
@@ -57,7 +58,7 @@ impl Relay {
 
     /// # Errors
     ///
-    /// Propagates `zmq:Error`
+    /// Propagates `zmq:Error` on empty message circuit breaks with ETERM
     fn work(&self) -> Result<(), zmq::Error> {
         let puller = self.ctx.socket(zmq::PULL)?;
 

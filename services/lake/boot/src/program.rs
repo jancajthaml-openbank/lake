@@ -63,19 +63,19 @@ impl Program {
 
     pub fn start(&'static self) {
         log::info!("Program Starting");
-        notify_service_ready();
 
         let term_now = Arc::new(AtomicBool::new(false));
 
         self.metrics.start(term_now.clone(), self.barrier.clone());
         self.relay.start(term_now.clone(), self.barrier.clone());
 
+        notify_service_ready();
+        log::info!("Program Started");
+
         let mut sigs = Signals::new(TERM_SIGNALS).unwrap();
         let _ = sigs.wait();
-        log::info!("signal received, stopping");
+        log::info!("signal received, going down");
         term_now.store(true, Ordering::Relaxed);
-
-        log::info!("coordinated shutdown");
 
         self.metrics.stop();
         self.relay.stop();

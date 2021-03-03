@@ -37,7 +37,7 @@ impl Metrics {
         term_sig: Arc<AtomicBool>,
         barrier: Arc<Barrier>,
     ) -> std::thread::JoinHandle<()> {
-        log::info!("start metrics");
+        log::info!("requested start");
         thread::spawn({
             let term = term_sig.clone();
             move || {
@@ -47,13 +47,13 @@ impl Metrics {
                     self.send();
                 }
                 barrier.wait();
-                log::debug!("metrics exiting loop");
+                log::debug!("exiting loop");
             }
         })
     }
 
     pub fn stop(&self) {
-        log::debug!("requested stop metrics");
+        log::debug!("requested stop");
         // FIXME terminate timer
         // and then
         //self.send();
