@@ -1,11 +1,13 @@
 use config::Configuration;
 use statsd::Client;
-use std::sync::atomic::AtomicU32;
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::{Arc, Barrier};
+use std::thread;
+use std::time::Duration;
 use systemstat::{saturating_sub_bytes, Platform, System};
 
 pub struct Metrics {
-    client: Client,
+    client: Client, // FIXME option
     system: System,
     ingress: AtomicU32,
     egress: AtomicU32,
@@ -15,7 +17,7 @@ impl Metrics {
     #[must_use]
     pub fn new(config: &Configuration) -> Metrics {
         Metrics {
-            client: Client::new(&config.statsd_endpoint, "openbank.lake").unwrap(),
+            client: Client::new(&config.statsd_endpoint, "openbank.lake").unwrap(), // FIXME None right now
             system: System::new(),
             ingress: AtomicU32::new(0),
             egress: AtomicU32::new(0),
@@ -30,8 +32,35 @@ impl Metrics {
         self.ingress.fetch_add(1, Ordering::SeqCst);
     }
 
+    pub fn start(
+        &'static self,
+        term_sig: Arc<AtomicBool>,
+        barrier: Arc<Barrier>,
+    ) -> std::thread::JoinHandle<()> {
+        log::info!("start metrics");
+        thread::spawn({
+            let term = term_sig.clone();
+            move || {
+                while !term.load(Ordering::Relaxed) {
+                    // FIXME kill this thread / timer with stop
+                    thread::sleep(Duration::from_secs(1));
+                    self.send();
+                }
+                barrier.wait();
+                log::debug!("metrics exiting loop");
+            }
+        })
+    }
+
+    pub fn stop(&self) {
+        log::debug!("requested stop metrics");
+        // FIXME terminate timer
+        // and then
+        //self.send();
+    }
+
     #[allow(clippy::cast_precision_loss)]
-    pub fn send(&self) {
+    fn send(&self) {
         let mut pipe = self.client.pipeline();
 
         let ingress = self.ingress.load(Ordering::SeqCst);
