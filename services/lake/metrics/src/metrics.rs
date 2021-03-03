@@ -30,18 +30,18 @@ impl Metrics {
         self.ingress.fetch_add(1, Ordering::SeqCst);
     }
 
+    #[allow(clippy::cast_precision_loss)]
     pub fn send(&self) {
         let mut pipe = self.client.pipeline();
 
         let ingress = self.ingress.load(Ordering::SeqCst);
         let egress = self.egress.load(Ordering::SeqCst);
 
-        match self.system.memory() {
-            Ok(mem) => pipe.gauge(
+        if let Ok(mem) = self.system.memory() {
+            pipe.gauge(
                 "memory.bytes",
                 saturating_sub_bytes(mem.total, mem.free).as_u64() as f64,
-            ),
-            Err(_) => (),
+            )
         }
 
         pipe.count("message.ingress", f64::from(ingress));
