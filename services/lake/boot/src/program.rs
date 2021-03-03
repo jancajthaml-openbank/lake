@@ -95,7 +95,6 @@ impl Program {
                         .with_exec(move |_ctx| async move {
                             relay.run().map_err(|e| {
                                 log::warn!("relay crashed {:?}", e);
-                                ()
                             })
                         })
                 })
