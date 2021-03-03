@@ -91,7 +91,13 @@ impl Program {
                 })
                 .children(|children| {
                     let relay = &self.relay;
-                    children.with_exec(move |_ctx| async move { relay.run() })
+                    children
+                        .with_exec(move |_ctx| async move {
+                            relay.run().map_err(|e| {
+                                log::warn!("relay crashed {:?}", e);
+                                ()
+                            })
+                        })
                 })
                 .children(|children| {
                     children.with_exec(|ctx| async move {
@@ -100,7 +106,7 @@ impl Program {
                             log::info!("signal {:?} received, stopping", sig);
                             ctx.parent()
                                 .stop()
-                                .expect("Couldn't stop the children group.");
+                                .expect("Couldn't stop signal group");
                             Bastion::stop();
                             break;
                         }
