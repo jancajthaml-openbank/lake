@@ -20,6 +20,9 @@ impl Relay {
         }
     }
 
+    /// # Errors
+    ///
+    /// Propagates `zmq:Error`
     pub fn run(&self) -> Result<(), zmq::Error> {
         let puller = self.ctx.socket(zmq::PULL)?;
 
