@@ -1,23 +1,21 @@
 use crate::health::{notify_service_ready, notify_service_stopping};
 
 use config::Configuration;
+use log::LevelFilter;
 use metrics::Metrics;
 use relay::Relay;
-use std::thread;
-
-use bastion::prelude::*;
-use log::LevelFilter;
 use signal_hook::consts::{SIGQUIT, TERM_SIGNALS};
 use signal_hook::iterator::Signals;
 use signal_hook::low_level;
 use simple_logger::SimpleLogger;
-use std::sync::Arc;
-use std::time::Duration;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Barrier};
 
 pub struct Program {
     config: Configuration,
     metrics: Arc<Metrics>,
     relay: Arc<Relay>,
+    barrier: Arc<Barrier>,
 }
 
 impl Program {
@@ -31,6 +29,7 @@ impl Program {
             config,
             metrics,
             relay,
+            barrier: Arc::new(Barrier::new(3)),
         }
     }
 
@@ -66,61 +65,29 @@ impl Program {
         log::info!("Program Starting");
         notify_service_ready();
 
-        Bastion::init();
-        Bastion::start();
+        let term_now = Arc::new(AtomicBool::new(false));
 
-        Bastion::supervisor(|sp| {
-            let callbacks = Callbacks::new()
-                .with_before_start(|| log::debug!("Supervisor started."))
-                .with_after_stop(|| log::debug!("Supervisor stopped."));
+        self.metrics.start(term_now.clone(), self.barrier.clone());
+        self.relay.start(term_now.clone(), self.barrier.clone());
 
-            sp.with_callbacks(callbacks)
-                .with_strategy(SupervisionStrategy::OneForOne)
-                .children(|children| {
-                    let metrics = &self.metrics;
+        let mut sigs = Signals::new(TERM_SIGNALS).unwrap();
+        let _ = sigs.wait();
+        log::info!("signal received, stopping");
+        term_now.store(true, Ordering::Relaxed);
 
-                    let callbacks = Callbacks::new().with_after_stop(move || metrics.send());
+        log::info!("coordinated shutdown");
 
-                    children
-                        .with_callbacks(callbacks)
-                        .with_exec(move |_ctx| async move {
-                            loop {
-                                thread::sleep(Duration::from_secs(1));
-                                metrics.send();
-                            }
-                        })
-                })
-                .children(|children| {
-                    let relay = &self.relay;
-                    children.with_exec(move |_ctx| async move {
-                        relay.run().map_err(|e| {
-                            log::warn!("relay crashed {:?}", e);
-                        })
-                    })
-                })
-                .children(|children| {
-                    children.with_exec(|ctx| async move {
-                        let mut sigs = Signals::new(TERM_SIGNALS).unwrap();
-
-                        let sig = sigs.wait();
-                        log::info!("signal {:?} received, stopping", sig);
-                        ctx.parent().stop().expect("Couldn't stop signal group");
-                        Bastion::stop();
-                        log::info!("signal exit exec");
-                        Ok(())
-                    })
-                })
-        })
-        .expect("Couldn't create the supervisor.");
-
-        Bastion::block_until_stopped();
-        notify_service_stopping();
+        self.metrics.stop();
+        self.relay.stop();
     }
 
     #[allow(clippy::unused_self)]
-    pub fn stop(&self) {
+    pub fn stop(&'static self) {
         log::info!("Program Stopping");
         low_level::raise(SIGQUIT).unwrap();
+        self.barrier.wait();
+        log::info!("Program Stopped");
+        notify_service_stopping();
     }
 }
 
