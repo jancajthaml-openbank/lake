@@ -6,10 +6,11 @@ fn main() {
     lazy_static! {
         static ref PROGRAM: Program = Program::new();
     }
-    // FIXME have return Result<>
-    PROGRAM.setup();
-    // FIXME have return Result<>
-    PROGRAM.start();
-    // FIXME have return Result<>
+    if let Err(e) = PROGRAM.setup() {
+        panic!(e);
+    };
+    if let Err(e) = PROGRAM.start() {
+        panic!(e);
+    };
     PROGRAM.stop();
 }
