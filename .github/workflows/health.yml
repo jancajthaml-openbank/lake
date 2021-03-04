@@ -18,8 +18,8 @@ jobs:
     steps:
 
     - name: Prepare
-      uses: raftario/setup-rust-action@v1
-      id: go
+      uses: icepuma/rust-action@master
+      id: rust
 
     - name: Checkout
       uses: actions/checkout@v2
