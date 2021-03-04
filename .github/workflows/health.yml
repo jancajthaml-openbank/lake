@@ -34,12 +34,13 @@ jobs:
         cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DENABLE_CURVE=ON .. && make && sudo make install
 
     - name: Install static dependencies
-    - uses: actions-rs/cargo@v1
+      uses: actions-rs/cargo@v1
       run: |
         cd services/lake
         cargo fetch
 
     - name: Unit Test
+      uses: actions-rs/cargo@v1
       run:  |
         cd services/lake
         cargo test
