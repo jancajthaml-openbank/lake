@@ -40,9 +40,8 @@ impl Metrics {
     ) -> std::thread::JoinHandle<()> {
         log::info!("requested start");
         thread::spawn({
-            let term = term_sig.clone();
             move || {
-                while !term.load(Ordering::Relaxed) {
+                while !term_sig.load(Ordering::Relaxed) {
                     // FIXME kill this thread / timer with stop
                     thread::sleep(Duration::from_secs(1));
                     self.send();
@@ -53,7 +52,7 @@ impl Metrics {
         })
     }
 
-    // FIXME propagate Result
+    #[allow(clippy::unused_self)]
     pub fn stop(&self) -> Result<(), StopError> {
         log::debug!("requested stop");
         // FIXME terminate timer
