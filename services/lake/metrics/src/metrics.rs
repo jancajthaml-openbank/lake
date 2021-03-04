@@ -1,5 +1,6 @@
 use config::Configuration;
 use statsd::Client;
+use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Barrier};
 use std::thread;
@@ -52,11 +53,13 @@ impl Metrics {
         })
     }
 
-    pub fn stop(&self) {
+    // FIXME propagate Result
+    pub fn stop(&self) -> Result<(), StopError> {
         log::debug!("requested stop");
         // FIXME terminate timer
         // and then
         //self.send();
+        Ok(())
     }
 
     #[allow(clippy::cast_precision_loss)]
@@ -80,5 +83,13 @@ impl Metrics {
 
         self.ingress.fetch_sub(ingress, Ordering::SeqCst);
         self.egress.fetch_sub(egress, Ordering::SeqCst);
+    }
+}
+
+pub struct StopError;
+
+impl fmt::Display for StopError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "unable to stop metrics")
     }
 }

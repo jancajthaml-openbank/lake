@@ -8,6 +8,8 @@ use signal_hook::consts::{SIGQUIT, TERM_SIGNALS};
 use signal_hook::iterator::Signals;
 use signal_hook::low_level;
 use simple_logger::SimpleLogger;
+use std::error::Error;
+use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Barrier};
 
@@ -33,8 +35,8 @@ impl Program {
         }
     }
 
-    fn setup_logging(&self) {
-        SimpleLogger::new().init().unwrap();
+    fn setup_logging(&self) -> Result<(), LifecycleError> {
+        SimpleLogger::new().init()?;
 
         log::set_max_level(LevelFilter::Info);
 
@@ -54,14 +56,17 @@ impl Program {
 
         log::info!("Log level set to {}", level.as_str());
         log::set_max_level(level);
+
+        Ok(())
     }
 
-    pub fn setup(&'static self) {
-        self.setup_logging();
+    pub fn setup(&'static self) -> Result<(), LifecycleError> {
+        self.setup_logging()?;
         log::info!("Program Setup");
+        Ok(())
     }
 
-    pub fn start(&'static self) {
+    pub fn start(&'static self) -> Result<(), LifecycleError> {
         log::info!("Program Starting");
 
         let term_now = Arc::new(AtomicBool::new(false));
@@ -77,8 +82,10 @@ impl Program {
         log::info!("signal received, going down");
         term_now.store(true, Ordering::Relaxed);
 
-        self.metrics.stop();
-        self.relay.stop();
+        self.metrics.stop()?;
+        self.relay.stop()?;
+
+        Ok(())
     }
 
     #[allow(clippy::unused_self)]
@@ -94,5 +101,48 @@ impl Program {
 impl Default for Program {
     fn default() -> Self {
         Program::new()
+    }
+}
+
+#[derive(Debug)]
+pub struct LifecycleError {
+    details: String,
+}
+
+impl Error for LifecycleError {
+    fn description(&self) -> &str {
+        &self.details
+    }
+}
+
+impl LifecycleError {
+    fn new(msg: &str) -> LifecycleError {
+        LifecycleError {
+            details: msg.to_string(),
+        }
+    }
+}
+
+impl fmt::Display for LifecycleError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.details)
+    }
+}
+
+impl From<metrics::StopError> for LifecycleError {
+    fn from(err: metrics::StopError) -> Self {
+        LifecycleError::new(&err.to_string())
+    }
+}
+
+impl From<relay::StopError> for LifecycleError {
+    fn from(err: relay::StopError) -> Self {
+        LifecycleError::new(&err.to_string())
+    }
+}
+
+impl From<log::SetLoggerError> for LifecycleError {
+    fn from(err: log::SetLoggerError) -> Self {
+        LifecycleError::new(&err.to_string())
     }
 }
