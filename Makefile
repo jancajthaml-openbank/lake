@@ -70,6 +70,15 @@ sec:
 		--source /rust/src/github.com/jancajthaml-openbank/lake \
 	|| :
 
+.PHONY: doc
+doc:
+	@docker-compose \
+		run \
+		--rm doc \
+		--source /rust/src/github.com/jancajthaml-openbank/lake \
+		--output /project/reports/docs \
+	|| :
+
 .PHONY: sync
 sync:
 	@ARCH=$(ARCH) docker-compose \
