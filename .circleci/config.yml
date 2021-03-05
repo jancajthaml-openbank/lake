@@ -152,6 +152,7 @@ executors:
   rust:
     docker:
       - image: docker.io/jancajthaml/rust:latest
+    resource_class: arm.medium
 
   debian:
     docker:
