@@ -183,17 +183,10 @@ executors:
     docker:
       - image: docker.io/jancajthaml/debian-packager:latest
 
-  arm:
+  machine:
     machine:
       image: ubuntu-2004:202101-01
       docker_layer_caching: false
-    resource_class: arm.medium
-
-  amd:
-    machine:
-      image: ubuntu-2004:202101-01
-      docker_layer_caching: false
-    resource_class: medium
 
 # ---------------------------------------------------------------------------- #
 
@@ -214,6 +207,8 @@ jobs:
             - /home/circleci/project/services
             - /home/circleci/project/packaging
             - /home/circleci/project/Dockerfile
+            - /home/circleci/project/Makefile
+            - /home/circleci/project/docker-compose.yml
 
   # -------------------------------------------------------------------------- #
 
@@ -286,7 +281,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   compile-amd64:
-    executor: amd
+    executor: machine
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
@@ -296,6 +291,7 @@ jobs:
       - run:
           name: Compile lake binary
           command: |
+            ls -la
             make package-amd64
           no_output_timeout: 5m
       - save_cache:
@@ -306,7 +302,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   compile-armhf:
-    executor: arm
+    executor: machine
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
@@ -316,6 +312,7 @@ jobs:
       - run:
           name: Compile lake binary
           command: |
+            ls -la
             make package-armhf
           no_output_timeout: 5m
       - save_cache:
@@ -326,7 +323,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   compile-arm64:
-    executor: arm
+    executor: machine
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
@@ -336,6 +333,7 @@ jobs:
       - run:
           name: Compile lake binary
           command: |
+            ls -la
             make package-arm64
           no_output_timeout: 5m
       - save_cache:
@@ -486,7 +484,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   blackbox-test-amd64:
-    executor: amd
+    executor: machine
     working_directory: /home/circleci/project
     steps:
       - checkout
