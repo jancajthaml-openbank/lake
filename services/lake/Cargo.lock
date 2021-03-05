@@ -159,7 +159,6 @@ name = "main"
 version = "0.1.0"
 dependencies = [
  "boot",
- "lazy_static",
  "metrics",
  "relay",
 ]

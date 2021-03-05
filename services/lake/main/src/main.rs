@@ -1,22 +1,19 @@
 use boot::Program;
-use lazy_static::lazy_static;
 use std::env;
 use std::io;
 use std::os::unix::net::UnixDatagram;
 
 fn main() {
-    lazy_static! {
-        static ref PROGRAM: Program = Program::new();
-    }
-    if let Err(e) = PROGRAM.setup() {
+    let program = Program::new();
+    if let Err(e) = program.setup() {
         panic!(e);
     };
     ready();
-    if let Err(e) = PROGRAM.start() {
+    if let Err(e) = program.start() {
         stopping();
         panic!(e);
     };
-    PROGRAM.stop();
+    program.stop();
     stopping();
 }
 

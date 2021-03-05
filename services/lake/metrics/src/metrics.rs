@@ -32,10 +32,13 @@ impl Metrics {
     }
 
     #[must_use]
-    pub fn start(&'static self, term_sig: Arc<AtomicBool>) -> std::thread::JoinHandle<()> {
+    pub fn start(&self, term_sig: Arc<AtomicBool>) -> std::thread::JoinHandle<()> {
+        let statsd_endpoint = self.statsd_endpoint.clone();
+        let ingress = self.ingress.clone();
+        let egress = self.egress.clone();
         thread::spawn({
             move || {
-                match Client::new(&self.statsd_endpoint, "openbank.lake") {
+                match Client::new(&statsd_endpoint, "openbank.lake") {
                     Ok(client) => {
                         let system = System::new();
                         let one_sec = Duration::from_secs(1);
@@ -48,7 +51,7 @@ impl Metrics {
                             if let Ok(dur) = now.duration_since(last_time) {
                                 if dur >= one_sec {
                                     last_time = now;
-                                    send_metrics(&client, &system, &self.ingress, &self.egress);
+                                    send_metrics(&client, &system, &ingress, &egress);
                                     alive &= !term_sig.load(Ordering::Relaxed);
                                 }
                             }
