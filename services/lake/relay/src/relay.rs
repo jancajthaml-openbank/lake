@@ -3,7 +3,7 @@ use metrics::Metrics;
 use std::error::Error;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Barrier};
+use std::sync::Arc; //{Arc, Barrier};
 use std::thread;
 
 pub struct Relay {
@@ -24,20 +24,16 @@ impl Relay {
         }
     }
 
-    pub fn start(
-        &'static self,
-        term_sig: Arc<AtomicBool>,
-        barrier: Arc<Barrier>,
-    ) -> std::thread::JoinHandle<()> {
-        log::debug!("requested start");
+    #[must_use]
+    pub fn start(&'static self, term_sig: Arc<AtomicBool>) -> std::thread::JoinHandle<()> {
         thread::spawn({
             move || {
+                log::debug!("entering loop");
                 while !term_sig.load(Ordering::Relaxed) {
                     if let Err(e) = self.work() {
-                        log::warn!("recovering from crash {:?}", e);
+                        log::warn!("crash {:?}", e);
                     }
                 }
-                barrier.wait();
                 log::debug!("exiting loop");
             }
         })
@@ -56,10 +52,6 @@ impl Relay {
             .unwrap();
 
         kill_sock.send(kill_message, 0)?;
-        //if let Err(e) = kill_sock.send(kill_message, 0) {
-        //  log::warn!("unable to gracefully kill relay exiting hard");
-        //process::exit(1);
-        //}
         Ok(())
     }
 
