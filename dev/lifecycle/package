@@ -60,7 +60,7 @@ lifecycle::rust::build() {
   case ${ARCH} in
 
     armhf)
-      rustup default ${RUST_VERSION}-armv7-unknown-linux-gnueabihf
+      #rustup default ${RUST_VERSION}-armv7-unknown-linux-gnueabihf
 
       CC=arm-linux-gnueabihf-gcc \
       LIBZMQ_INCLUDE_DIR=/usr/include \
@@ -83,7 +83,7 @@ lifecycle::rust::build() {
     ;;
 
     arm64)
-      rustup default ${RUST_VERSION}-aarch64-unknown-linux-gnu
+      #rustup default ${RUST_VERSION}-aarch64-unknown-linux-gnu
 
       CC=aarch64-linux-gnu-gcc \
       LIBZMQ_INCLUDE_DIR=/usr/include \
@@ -106,7 +106,7 @@ lifecycle::rust::build() {
     ;;
 
     amd64)
-      rustup default ${RUST_VERSION}-x86_64-unknown-linux-gnu
+      #rustup default ${RUST_VERSION}-x86_64-unknown-linux-gnu
 
       #RUSTFLAGS="-Clink-arg=-fuse-ld=lld" \
       CC=gcc \
