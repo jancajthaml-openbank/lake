@@ -33,7 +33,6 @@ impl Metrics {
 
     #[must_use]
     pub fn start(&'static self, term_sig: Arc<AtomicBool>) -> std::thread::JoinHandle<()> {
-        log::info!("requested start");
         thread::spawn({
             move || {
                 match Client::new(&self.statsd_endpoint, "openbank.lake") {
@@ -49,12 +48,7 @@ impl Metrics {
                             if let Ok(dur) = now.duration_since(last_time) {
                                 if dur >= one_sec {
                                     last_time = now;
-                                    self.send(
-                                        &client,
-                                        &system,
-                                        self.ingress.clone(),
-                                        self.egress.clone(),
-                                    );
+                                    send_metrics(&client, &system, &self.ingress, &self.egress);
                                     alive &= !term_sig.load(Ordering::Relaxed);
                                 }
                             }
@@ -79,43 +73,34 @@ impl Metrics {
         log::debug!("requested stop");
         Ok(())
     }
-
-    #[allow(clippy::cast_precision_loss)]
-    fn send(
-        &self,
-        client: &Client,
-        system: &System,
-        ingress: Arc<AtomicU32>,
-        egress: Arc<AtomicU32>,
-    ) {
-        let mut pipe = client.pipeline();
-
-        let v_ingress = ingress.load(Ordering::SeqCst);
-        let v_egress = egress.load(Ordering::SeqCst);
-
-        if let Ok(mem) = system.memory() {
-            pipe.gauge(
-                "memory.bytes",
-                saturating_sub_bytes(mem.total, mem.free).as_u64() as f64,
-            )
-        }
-
-        pipe.count("message.ingress", f64::from(v_ingress));
-        pipe.count("message.egress", f64::from(v_egress));
-
-        pipe.send(client);
-
-        ingress.fetch_sub(v_ingress, Ordering::SeqCst);
-        egress.fetch_sub(v_egress, Ordering::SeqCst);
-    }
 }
 
-impl Drop for Metrics {
-    fn drop(&mut self) {
-        //for handle in self.handle.iter() {
-        //  handle.join().expect("failed to join thread");
-        //}
+#[allow(clippy::cast_precision_loss)]
+fn send_metrics(
+    client: &Client,
+    system: &System,
+    ingress: &Arc<AtomicU32>,
+    egress: &Arc<AtomicU32>,
+) {
+    let mut pipe = client.pipeline();
+
+    let v_ingress = ingress.load(Ordering::SeqCst);
+    let v_egress = egress.load(Ordering::SeqCst);
+
+    if let Ok(mem) = system.memory() {
+        pipe.gauge(
+            "memory.bytes",
+            saturating_sub_bytes(mem.total, mem.free).as_u64() as f64,
+        )
     }
+
+    pipe.count("message.ingress", f64::from(v_ingress));
+    pipe.count("message.egress", f64::from(v_egress));
+
+    pipe.send(client);
+
+    ingress.fetch_sub(v_ingress, Ordering::SeqCst);
+    egress.fetch_sub(v_egress, Ordering::SeqCst);
 }
 
 pub struct StopError;
