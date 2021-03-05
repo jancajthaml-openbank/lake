@@ -1,5 +1,3 @@
-use crate::health::{notify_service_ready, notify_service_stopping};
-
 use config::Configuration;
 use log::LevelFilter;
 use metrics::Metrics;
@@ -11,13 +9,12 @@ use simple_logger::SimpleLogger;
 use std::error::Error;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Barrier};
+use std::sync::Arc;
 
 pub struct Program {
     config: Configuration,
     metrics: Arc<Metrics>,
     relay: Arc<Relay>,
-    barrier: Arc<Barrier>,
 }
 
 impl Program {
@@ -31,7 +28,6 @@ impl Program {
             config,
             metrics,
             relay,
-            barrier: Arc::new(Barrier::new(3)),
         }
     }
 
@@ -77,10 +73,9 @@ impl Program {
 
         let term_now = Arc::new(AtomicBool::new(false));
 
-        self.metrics.start(term_now.clone(), self.barrier.clone());
-        self.relay.start(term_now.clone(), self.barrier.clone());
+        let metrics_handle = self.metrics.start(term_now.clone());
+        let relay_handle = self.relay.start(term_now.clone());
 
-        notify_service_ready();
         log::info!("Program Started");
 
         let mut sigs = Signals::new(TERM_SIGNALS).unwrap();
@@ -91,16 +86,17 @@ impl Program {
         self.metrics.stop()?;
         self.relay.stop()?;
 
+        metrics_handle.join()?;
+        relay_handle.join()?;
+
+        log::info!("Program Stopping");
+
         Ok(())
     }
 
     #[allow(clippy::unused_self)]
-    pub fn stop(&'static self) {
-        log::info!("Program Stopping");
+    pub fn stop(&self) {
         low_level::raise(SIGQUIT).unwrap();
-        self.barrier.wait();
-        log::info!("Program Stopped");
-        notify_service_stopping();
     }
 }
 
@@ -150,5 +146,14 @@ impl From<relay::StopError> for LifecycleError {
 impl From<log::SetLoggerError> for LifecycleError {
     fn from(err: log::SetLoggerError) -> Self {
         LifecycleError::new(&err.to_string())
+    }
+}
+
+impl From<std::boxed::Box<dyn std::any::Any + std::marker::Send>> for LifecycleError {
+    fn from(err: std::boxed::Box<dyn std::any::Any + std::marker::Send>) -> Self {
+        err.downcast_ref::<String>().map_or_else(
+            || LifecycleError::new("runtime panic"),
+            |s| LifecycleError::new(s),
+        )
     }
 }
