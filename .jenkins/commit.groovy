@@ -243,7 +243,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        ${env.WORKSPACE}/doc/lifecycle/documentation \
+                        ${env.WORKSPACE}/dev/lifecycle/documentation \
                         --source ${env.WORKSPACE}/services/lake \
                         --output ${env.WORKSPACE}/reports/docs
                     """
