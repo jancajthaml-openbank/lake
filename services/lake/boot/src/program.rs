@@ -59,7 +59,7 @@ impl Program {
     /// # Errors
     ///
     /// Yields `LifecycleError` when failed to setup
-    pub fn setup(&'static self) -> Result<(), LifecycleError> {
+    pub fn setup(&self) -> Result<(), LifecycleError> {
         self.setup_logging()?;
         log::info!("Program Setup");
         Ok(())
@@ -68,7 +68,7 @@ impl Program {
     /// # Errors
     ///
     /// Yields `StopError` when failed to start
-    pub fn start(&'static self) -> Result<(), LifecycleError> {
+    pub fn start(&self) -> Result<(), LifecycleError> {
         log::info!("Program Starting");
 
         let term_now = Arc::new(AtomicBool::new(false));
