@@ -1,13 +1,18 @@
 use std::env;
 
 pub struct Configuration {
+    /// port to bind ZMQ PULL
     pub pull_port: i32,
+    /// port to bind ZMQ PUB
     pub pub_port: i32,
+    /// ignorecase log level
     pub log_level: String,
+    /// statsd daemon endpoint
     pub statsd_endpoint: String,
 }
 
 impl Configuration {
+    /// populates configuration from env
     #[must_use]
     pub fn load() -> Configuration {
         Configuration {
@@ -19,6 +24,7 @@ impl Configuration {
     }
 }
 
+/// fetches optional value from env
 fn env_get(key: &str) -> Option<String> {
     match env::var_os(key) {
         Some(val) => val.to_str().map(std::string::ToString::to_string),
@@ -26,6 +32,7 @@ fn env_get(key: &str) -> Option<String> {
     }
 }
 
+/// fetches str env value if present or yields fallback if missing
 fn env_string(key: &str, fallback: &str) -> String {
     match env_get(key) {
         Some(val) => val,
@@ -33,6 +40,7 @@ fn env_string(key: &str, fallback: &str) -> String {
     }
 }
 
+/// fetches i32 env value if present or yields fallback if missing or invalid
 fn env_i32(key: &str, fallback: i32) -> i32 {
     match env_get(key) {
         Some(untyped) => match untyped.parse::<i32>() {
