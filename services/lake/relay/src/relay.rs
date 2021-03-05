@@ -31,9 +31,8 @@ impl Relay {
     ) -> std::thread::JoinHandle<()> {
         log::debug!("requested start");
         thread::spawn({
-            let term = term_sig.clone();
             move || {
-                while !term.load(Ordering::Relaxed) {
+                while !term_sig.load(Ordering::Relaxed) {
                     if let Err(e) = self.work() {
                         log::warn!("recovering from crash {:?}", e);
                     }
@@ -45,7 +44,9 @@ impl Relay {
         // FIXME recover panic and set term_sig to upstream
     }
 
-    // FIXME propagate Result
+    /// # Errors
+    ///
+    /// Yields `StopError` when failed to stop gracefully
     pub fn stop(&self) -> Result<(), StopError> {
         log::debug!("requested stop");
         let kill_message = zmq::Message::new();
@@ -85,7 +86,7 @@ impl Relay {
 
         loop {
             let data = puller.recv_bytes(0)?;
-            if data.len() == 0 {
+            if data.is_empty() {
                 return Err(zmq::Error::ETERM);
             }
             self.metrics.message_ingress();

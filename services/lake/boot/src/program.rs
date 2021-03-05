@@ -60,12 +60,18 @@ impl Program {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Yields `LifecycleError` when failed to setup
     pub fn setup(&'static self) -> Result<(), LifecycleError> {
         self.setup_logging()?;
         log::info!("Program Setup");
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Yields `StopError` when failed to start
     pub fn start(&'static self) -> Result<(), LifecycleError> {
         log::info!("Program Starting");
 
