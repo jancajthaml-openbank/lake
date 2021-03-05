@@ -1,0 +1,57 @@
+#!/bin/bash
+
+set -eu
+trap exit INT TERM
+
+################################################################################
+
+SOURCE=""
+OUTPUT=""
+while [ $# -gt 0 ] ; do
+key="$1"
+case $key in
+  --source) SOURCE="$2";  shift; shift; ;;
+  --output) OUTPUT="$2";  shift; shift; ;;
+  *)                      shift;        ;;
+esac
+done
+
+################################################################################
+
+if [ -z "${SOURCE}" ] ; then
+  (>&2 echo "[error] source package not provided")
+  exit 1
+fi
+
+if [ -z "${OUTPUT}" ] ; then
+  (>&2 echo "[error] output not provided")
+  exit 1
+fi
+
+################################################################################
+
+lifecycle::rus::doc() {
+  local dir="$1"
+  if [ -z ${dir} -o ! -d ${dir} ] ; then
+    return
+  fi
+  local output="$2"
+
+  (rm -rf ${dir}/target/doc 2> /dev/null || :)
+  mkdir -p ${output}
+  (rm -rf ${output}/* 2> /dev/null || :)
+
+  cd ${dir} && \
+  CARGO_HOME=${dir}/target \
+  cargo doc \
+    --all-features \
+    --no-deps \
+    --workspace
+  (cd ${dir}/target/doc && tar c .) | (cd ${output} && tar xf -)
+}
+
+################################################################################
+
+lifecycle::rus::doc \
+  ${SOURCE} \
+  ${OUTPUT}

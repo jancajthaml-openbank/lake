@@ -233,6 +233,25 @@ pipeline {
             }
         }
 
+        stage('Documentation') {
+            agent {
+                docker {
+                    image 'jancajthaml/rust:latest'
+                    args "--entrypoint=''"
+                    reuseNode true
+                }
+            }
+            steps {
+                script {
+                    sh """
+                        ${env.WORKSPACE}/doc/lifecycle/documentation \
+                        --source ${env.WORKSPACE}/services/lake \
+                        --output ${env.WORKSPACE}/reports/docs
+                    """
+                }
+            }
+        }
+
         stage('Publish') {
             steps {
                 script {
@@ -272,6 +291,14 @@ pipeline {
                     reportName: 'Unit Test Coverage (Lake)'
                 ])
                 */
+
+                publishHTML(target: [
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: "${env.WORKSPACE}/reports/docs",
+                    reportFiles: '*',
+                    reportName: 'Documentation (Lake)'
+                ])
                 cucumber(
                     fileIncludePattern: '*',
                     jsonReportDirectory: "${env.WORKSPACE}/reports/blackbox-tests/cucumber"
