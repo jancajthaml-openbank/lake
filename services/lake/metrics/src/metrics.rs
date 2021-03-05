@@ -12,6 +12,7 @@ pub struct Metrics {
     system: System,
     ingress: AtomicU32,
     egress: AtomicU32,
+    handle: Option<std::thread::JoinHandle<()>>,
 }
 
 impl Metrics {
@@ -22,6 +23,7 @@ impl Metrics {
             system: System::new(),
             ingress: AtomicU32::new(0),
             egress: AtomicU32::new(0),
+            handle: None,
         }
     }
 
@@ -33,12 +35,16 @@ impl Metrics {
         self.ingress.fetch_add(1, Ordering::SeqCst);
     }
 
-    pub fn start(
+    pub fn start(&'static mut self, term_sig: Arc<AtomicBool>, barrier: Arc<Barrier>) {
+        log::info!("requested start");
+        self.handle = Some(self.work(term_sig, barrier));
+    }
+
+    fn work(
         &'static self,
         term_sig: Arc<AtomicBool>,
         barrier: Arc<Barrier>,
     ) -> std::thread::JoinHandle<()> {
-        log::info!("requested start");
         thread::spawn({
             move || {
                 while !term_sig.load(Ordering::Relaxed) {
@@ -52,6 +58,9 @@ impl Metrics {
         })
     }
 
+    /// # Errors
+    ///
+    /// Yields `StopError` when failed to stop gracefully
     #[allow(clippy::unused_self)]
     pub fn stop(&self) -> Result<(), StopError> {
         log::debug!("requested stop");
@@ -82,6 +91,14 @@ impl Metrics {
 
         self.ingress.fetch_sub(ingress, Ordering::SeqCst);
         self.egress.fetch_sub(egress, Ordering::SeqCst);
+    }
+}
+
+impl Drop for Metrics {
+    fn drop(&mut self) {
+        if let Some(handle) = self.handle.take() {
+            handle.join().expect("failed to join thread");
+        }
     }
 }
 
