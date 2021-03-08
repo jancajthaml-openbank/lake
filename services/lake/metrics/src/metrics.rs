@@ -7,13 +7,18 @@ use std::thread;
 use std::time::{Duration, SystemTime};
 use systemstat::{saturating_sub_bytes, Platform, System};
 
+/// statsd metrics subroutine
 pub struct Metrics {
+    /// statsd server endpoint
     statsd_endpoint: String,
+    /// ingress counter
     ingress: Arc<AtomicU32>,
+    /// egress counter
     egress: Arc<AtomicU32>,
 }
 
 impl Metrics {
+    /// creates new metrics fascade
     #[must_use]
     pub fn new(config: &Configuration) -> Metrics {
         Metrics {
@@ -23,14 +28,17 @@ impl Metrics {
         }
     }
 
+    /// increments egress counter
     pub fn message_egress(&self) {
         self.egress.fetch_add(1, Ordering::SeqCst);
     }
 
+    /// increments ingress counter
     pub fn message_ingress(&self) {
         self.ingress.fetch_add(1, Ordering::SeqCst);
     }
 
+    /// starts thread reporting flushing metrics to statsd client each second
     #[must_use]
     pub fn start(&self, term_sig: Arc<AtomicBool>) -> std::thread::JoinHandle<()> {
         let statsd_endpoint = self.statsd_endpoint.clone();
@@ -70,7 +78,7 @@ impl Metrics {
 
     /// # Errors
     ///
-    /// Yields `StopError` when failed to stop gracefully
+    /// yields `StopError` when failed to stop gracefully
     #[allow(clippy::unused_self)]
     pub fn stop(&self) -> Result<(), StopError> {
         log::debug!("requested stop");
@@ -78,6 +86,7 @@ impl Metrics {
     }
 }
 
+// send metrics to statsd client
 #[allow(clippy::cast_precision_loss)]
 fn send_metrics(
     client: &Client,
