@@ -30,7 +30,7 @@ fi
 
 ################################################################################
 
-lifecycle::go::test() {
+lifecycle::rust::test() {
   local dir="$1"
   if [ -z ${dir} -o ! -d ${dir} ] ; then
     return
@@ -43,43 +43,50 @@ lifecycle::go::test() {
 
   mkdir -p ${output}
 
-  # run unit tests and collect coverage
-  cd ${dir} && \
+  CARGO_HOME=${dir}/target \
   \
-  GOMAXPROCS=1 \
-  go test \
-    -v ./... \
-    -coverprofile=${coverage_out} \
-    -covermode=count \
-    -coverpkg=./... \
-    -timeout=20s \
-  | grc tee ${test_out}
+  cargo test \
+    --manifest-path=${dir}/Cargo.toml
 
-  go2xunit \
-    -fail \
-    -input ${test_out} \
-    -output ${output}/${target}-results.xml
+  #https://github.com/mozilla/grcov
 
-  mkdir -p ${output}/${target}-coverage
-
-  go tool cover \
-    --html=${coverage_out} \
-    -o ${output}/${target}-coverage/index.html
-
-  # run only benchmarks
-  cd ${dir} && \
-  \
-  GOMAXPROCS=1 \
-    grc go test \
-    -v ./... \
-    -run=^$ \
-    -bench=. \
-    -benchmem \
-    -benchtime=10000x
+  #  # run unit tests and collect coverage
+  #  cd ${dir} && \
+  #  \
+  #  GOMAXPROCS=1 \
+  #  go test \
+  #    -v ./... \
+  #    -coverprofile=${coverage_out} \
+  #    -covermode=count \
+  #    -coverpkg=./... \
+  #    -timeout=20s \
+  #  | grc tee ${test_out}
+  #
+  #  go2xunit \
+  #    -fail \
+  #    -input ${test_out} \
+  #    -output ${output}/${target}-results.xml
+  #
+  #  mkdir -p ${output}/${target}-coverage
+  #
+  #  go tool cover \
+  #    --html=${coverage_out} \
+  #    -o ${output}/${target}-coverage/index.html
+  #
+  #  # run only benchmarks
+  #  cd ${dir} && \
+  #  \
+  #  GOMAXPROCS=1 \
+  #    grc go test \
+  #    -v ./... \
+  #    -run=^$ \
+  #    -bench=. \
+  #    -benchmem \
+  #    -benchtime=10000x
 }
 
 ################################################################################
 
-lifecycle::go::test \
+lifecycle::rust::test \
   ${SOURCE} \
   ${OUTPUT}

@@ -23,28 +23,25 @@ fi
 
 ################################################################################
 
-lifecycle::go::lint() {
+lifecycle::rust::lint() {
   local dir="$1"
   if [ -z ${dir} -o ! -d ${dir} ] ; then
     return
   fi
-  find $dir \
-    -name "*.go" \
-    -not \
-    -path "*vendor/*" \
-  \
-  | sort -u \
-  | while read file ; do
-    (gofmt -s -w ${file} || :)
-    (/go/bin/golint -min_confidence 0.5 ${file} || :)
-    (/go/bin/misspell -q -locale US -source=text -w ${file} || :)
-    (/go/bin/prealloc ${file} || :)
-    (/go/bin/goconst ${file} || :)
-  done
-  cd $dir && (/go/bin/ineffassign ./... || :)
+
+  cd $dir && \
+  CARGO_HOME=${dir}/target \
+  cargo fmt
+
+  cd $dir && \
+  CARGO_HOME=${dir}/target \
+  cargo clippy \
+    -- \
+    -D warnings \
+    -W clippy::pedantic
 }
 
 ################################################################################
 
-lifecycle::go::lint \
+lifecycle::rust::lint \
   ${SOURCE}

@@ -18,10 +18,8 @@ jobs:
     steps:
 
     - name: Prepare
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.14
-      id: go
+      uses: icepuma/rust-action@master
+      id: rust
 
     - name: Checkout
       uses: actions/checkout@v2
@@ -35,11 +33,9 @@ jobs:
     - name: Install static dependencies
       run: |
         cd services/lake
-        GO111MODULE=on go mod verify
-        GO111MODULE=on go mod tidy
-        GO111MODULE=on go mod vendor
+        cargo fetch
 
     - name: Unit Test
       run:  |
         cd services/lake
-        go test -v ./... -timeout=10s
+        cargo test

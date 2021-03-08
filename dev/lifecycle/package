@@ -35,24 +35,18 @@ OUTPUT_FILE=${OUTPUT}/$(basename ${SOURCE})-${PLATFORM}-${ARCH}
 
 ################################################################################
 
-lifecycle::go::clean() {
-  local source="$1"
-  if [ -z ${source} -o ! -d ${source} ] ; then
+lifecycle::rust::clean() {
+  local output_file="$1"
+  if [ -z ${output_file} -o ! -f ${output_file} ] ; then
     return
   fi
-  local output="$2"
-  if [ -z ${output} -o ! -d ${output} ] ; then
-    return
-  fi
+  
+  rm ${output_file}
 
-  find "${output}" -name "$(basename ${source})*${ARCH}*" -exec rm -f {} \;
-  echo "[info] ${output} cleaned"
-
-  cd ${source} && go clean
-  echo "[info] ${source} cleaned"
+  echo "[info] ${output_file} cleaned"
 }
 
-lifecycle::go::build() {
+lifecycle::rust::build() {
   local source="$1"
   if [ -z ${source} -o ! -d ${source} ] ; then
     return
@@ -63,54 +57,70 @@ lifecycle::go::build() {
     return
   fi
 
-
-
   case ${ARCH} in
 
     armhf)
-      cd ${source} && \
-      \
-      GOOS=${PLATFORM} \
-      GOARM=7 \
-      GOARCH=arm \
-      CGO_ENABLED=1 \
-      GOFLAGS=-buildmode=pie \
       CC=arm-linux-gnueabihf-gcc \
+      LIBZMQ_INCLUDE_DIR=/usr/include \
+      LIBZMQ_LIB_DIR=/usr/lib/arm-linux-gnueabihf \
+      PKG_CONFIG_ALLOW_CROSS=0 \
+      CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=arm-linux-gnueabihf-gcc \
+      CARGO_HOME=${source}/target \
       \
-      go build -a -o ${output} || {
+      cargo build \
+        --release \
+        --target=armv7-unknown-linux-gnueabihf \
+        --manifest-path=${source}/Cargo.toml \
+        --target-dir=${source}/target || {
         (>&2 echo "[error] ${output} unable to build")
         exit 1
       }
+
+      mkdir -p $(dirname "${output}")
+      cp "${source}/target/armv7-unknown-linux-gnueabihf/release/main" "${output}"
     ;;
 
     arm64)
-      cd ${source} && \
-      \
-      GOOS=${PLATFORM} \
-      GOARCH=arm64 \
-      CGO_ENABLED=1 \
-      GOFLAGS=-buildmode=pie \
       CC=aarch64-linux-gnu-gcc \
+      LIBZMQ_INCLUDE_DIR=/usr/include \
+      LIBZMQ_LIB_DIR=/usr/lib/aarch64-linux-gnu \
+      PKG_CONFIG_ALLOW_CROSS=0 \
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc \
+      CARGO_HOME=${source}/target \
       \
-      go build -a -o ${output} || {
+      cargo build \
+        --release \
+        --target=aarch64-unknown-linux-gnu \
+        --manifest-path=${source}/Cargo.toml \
+        --target-dir=${source}/target || {
         (>&2 echo "[error] ${output} unable to build")
         exit 1
       }
+
+      mkdir -p $(dirname "${output}")
+      cp "${source}/target/aarch64-unknown-linux-gnu/release/main" "${output}"
     ;;
 
     amd64)
-      cd ${source} && \
-      \
-      GOOS=${PLATFORM} \
-      GOARCH=amd64 \
-      CGO_ENABLED=1 \
-      GOFLAGS=-buildmode=pie \
+      #RUSTFLAGS="-Clink-arg=-fuse-ld=lld" \
       CC=gcc \
+      LIBZMQ_INCLUDE_DIR=/usr/include \
+      LIBZMQ_LIB_DIR=/usr/lib/x86_64-linux-gnu \
+      PKG_CONFIG_ALLOW_CROSS=0 \
+      CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=gcc \
+      CARGO_HOME=${source}/target \
       \
-      go build -a -o ${output} || {
+      cargo build \
+        --release \
+        --target=x86_64-unknown-linux-gnu \
+        --manifest-path=${source}/Cargo.toml \
+        --target-dir=${source}/target || {
         (>&2 echo "[error] ${output} unable to build")
         exit 1
       }
+
+      mkdir -p $(dirname "${output}")
+      cp "${source}/target/x86_64-unknown-linux-gnu/release/main" "${output}"
     ;;
 
     *)
@@ -125,7 +135,7 @@ lifecycle::go::build() {
   echo "[info] ${output} compiled"
 }
 
-lifecycle::go::strip() {
+lifecycle::rust::strip() {
   local output="$1"
   if [ -z ${output} -o ! -f ${output} ] ; then
     return
@@ -155,15 +165,14 @@ lifecycle::go::strip() {
 
 ################################################################################
 
-lifecycle::go::clean \
-  ${SOURCE} \
-  ${OUTPUT}
+lifecycle::rust::clean \
+  ${OUTPUT_FILE}
 
-lifecycle::go::build \
+lifecycle::rust::build \
   ${SOURCE} \
   ${OUTPUT_FILE}
 
-lifecycle::go::strip \
+lifecycle::rust::strip \
   ${OUTPUT_FILE}
 
 du -hs ${OUTPUT_FILE}

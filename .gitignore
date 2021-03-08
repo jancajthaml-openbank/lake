@@ -3,4 +3,4 @@ coverage
 *.deb
 *.buildinfo
 *.changes
-**/*/vendor
+**/*/target

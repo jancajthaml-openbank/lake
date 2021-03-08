@@ -138,7 +138,7 @@ class ApplianceManager(object):
 
   def configure(self) -> None:
     options = {
-      'LOG_LEVEL': 'INFO',
+      'LOG_LEVEL': 'DEBUG',
       'PORT_PULL': '5562',
       'PORT_PUB': '5561',
       'STATSD_ENDPOINT': '127.0.0.1:8125',

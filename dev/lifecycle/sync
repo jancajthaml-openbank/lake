@@ -23,26 +23,20 @@ fi
 
 ################################################################################
 
-lifecycle::go::sync() {
+lifecycle::rust::sync() {
   local dir="$1"
   if [ -z ${dir} -o ! -d ${dir} ] ; then
     return
   fi
 
-  if [ -d ${dir}/vendor ] ; then
-    rm -rf ${dir}/vendor
-  fi
-
-  if [ -f ${dir}/go.sum ] ; then
-    rm -f ${dir}/go.sum
-  fi
-
-  cd ${dir} && go mod verify
-  cd ${dir} && go mod tidy
-  cd ${dir} && go mod vendor
+  CARGO_HOME=${dir}/target \
+  \
+  cargo fetch \
+    --verbose \
+    --manifest-path=${dir}/Cargo.toml
 }
 
 ################################################################################
 
-lifecycle::go::sync \
+lifecycle::rust::sync \
   ${SOURCE}
