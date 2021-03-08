@@ -12,12 +12,16 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 pub struct Program {
+    /// configuration
     config: Configuration,
+    /// statsd metrics
     metrics: Arc<Metrics>,
+    /// message relay
     relay: Arc<Relay>,
 }
 
 impl Program {
+    /// initializes program
     #[must_use]
     pub fn new() -> Program {
         let config = Configuration::load();
@@ -31,6 +35,8 @@ impl Program {
         }
     }
 
+    /// setups logging from configuration
+    /// on invalid log level falls back to log level info
     fn setup_logging(&self) -> Result<(), LifecycleError> {
         SimpleLogger::new().init()?;
 
@@ -56,18 +62,23 @@ impl Program {
         Ok(())
     }
 
+    /// initializes program
+    ///
     /// # Errors
     ///
-    /// Yields `LifecycleError` when failed to setup
+    /// yields `LifecycleError` when failed to setup
     pub fn setup(&self) -> Result<(), LifecycleError> {
         self.setup_logging()?;
         log::info!("Program Setup");
         Ok(())
     }
 
+    /// starts all program subroutines, interuptable by terminal
+    /// signals
+    ///
     /// # Errors
     ///
-    /// Yields `StopError` when failed to start
+    /// yields `LifecycleError` when failed to start
     pub fn start(&self) -> Result<(), LifecycleError> {
         log::info!("Program Starting");
 
@@ -94,6 +105,7 @@ impl Program {
         Ok(())
     }
 
+    /// sends `SIGQUIT` to program
     #[allow(clippy::unused_self)]
     pub fn stop(&self) {
         low_level::raise(SIGQUIT).unwrap();

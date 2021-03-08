@@ -286,9 +286,11 @@ name = "relay"
 version = "0.1.0"
 dependencies = [
  "config",
+ "libc",
  "log",
  "metrics",
  "zmq",
+ "zmq-sys",
 ]
 
 [[package]]
