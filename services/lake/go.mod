@@ -3,7 +3,7 @@ module github.com/jancajthaml-openbank/lake
 go 1.14
 
 require (
-	github.com/DataDog/datadog-go v4.8.1+incompatible
+	github.com/DataDog/datadog-go v4.8.2+incompatible
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/pebbe/zmq4 v1.2.7
 	github.com/rs/zerolog v1.25.0
