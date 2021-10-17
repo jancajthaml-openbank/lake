@@ -41,13 +41,13 @@ class ApplianceManager(object):
       raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
 
     (code, result, error) = execute([
-      "systemctl", "-t", "service", "--no-legend"
+      "systemctl", "-t", "service", "--all", "--no-legend"
     ])
 
     if code != 0:
       raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
 
-    self.services = set([x.split(' ')[0].split('@')[0].split('.service')[0] for x in result.splitlines()])
+    self.services = set([item.replace('*', '').strip().split(' ')[0].split('@')[0].split('.service')[0] for item in result.split(os.linesep)])
 
 
   def __download(self):
