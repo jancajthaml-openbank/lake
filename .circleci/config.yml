@@ -508,7 +508,7 @@ jobs:
               echo -e "${META}" > /home/circleci/project/META
             else
               echo -e "${CIRCLE_TAG#v}" > /home/circleci/project/VERSION
-              echo -e "-main" > /home/circleci/project/META
+              echo -e "main" > /home/circleci/project/META
             fi
       - run:
           name: Run blackbox tests
