@@ -26,7 +26,7 @@ def step_impl(context, package, operation):
 @given('systemctl contains following active units')
 @then('systemctl contains following active units')
 def step_impl(context):
-  (code, result, error) = execute(["systemctl", "list-units", "--all", "--no-legend", "--state=active", ])
+  (code, result, error) = execute(["systemctl", "list-units", "--all", "--no-legend", "--state=active"])
   assert code == 'OK', str(result) + ' ' + str(error)
   items = []
   for row in context.table:
