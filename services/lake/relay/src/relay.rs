@@ -185,7 +185,7 @@ fn pull_to_pub(
         if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as c_int) } == -1 {
             return Err(zmq::Error::from_raw(unsafe { zmq_sys::zmq_errno() }));
         };
-        // metrics.message_ingress(); // FIXME this seems to be slowing the code from 23s to 53s (1M -> 500k / sec)
+        metrics.message_ingress(); // FIXME this seems to be slowing the code from 23s to 53s (1M -> 500k / sec)
         if unsafe {
             let data = zmq_sys::zmq_msg_data(ptr);
             let len = zmq_sys::zmq_msg_size(ptr) as usize;
@@ -194,7 +194,7 @@ fn pull_to_pub(
         {
             return Err(zmq::Error::from_raw(unsafe { zmq_sys::zmq_errno() }));
         };
-        //metrics.message_egress(); // FIXME this seems to be slowing the code from 23s to 53s (1M -> 500k / sec)
+        metrics.message_egress(); // FIXME this seems to be slowing the code from 23s to 53s (1M -> 500k / sec)
     }
 }
 
