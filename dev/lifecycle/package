@@ -40,7 +40,7 @@ lifecycle::rust::clean() {
   if [ -z ${output_file} -o ! -f ${output_file} ] ; then
     return
   fi
-  
+
   rm ${output_file}
 
   echo "[info] ${output_file} cleaned"
@@ -119,6 +119,7 @@ lifecycle::rust::build() {
         exit 1
       }
 
+			rustc --version
       mkdir -p $(dirname "${output}")
       cp "${source}/target/x86_64-unknown-linux-gnu/release/main" "${output}"
     ;;
