@@ -179,17 +179,19 @@ fn pull_to_pub(
     // INFO does not unbinds on drop
 
     // FIXME inline
+
+	  let mut msg= Message::new();
+		let ptr = msg_ptr(&mut msg);
+		let mut len = -1;
     loop {
-        let mut msg = Message::new();
-        let ptr = msg_ptr(&mut msg);
-        if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as c_int) } == -1 {
+			len = unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as c_int) };
+        if  len == -1 {
             return Err(zmq::Error::from_raw(unsafe { zmq_sys::zmq_errno() }));
         };
         metrics.message_ingress(); // FIXME this seems to be slowing the code from 23s to 53s (1M -> 500k / sec)
         if unsafe {
             let data = zmq_sys::zmq_msg_data(ptr);
-            let len = zmq_sys::zmq_msg_size(ptr) as usize;
-            zmq_sys::zmq_send(publisher.sock, data, len, 0 as c_int)
+            zmq_sys::zmq_send(publisher.sock, data, len as usize, 0 as c_int)
         } == -1
         {
             return Err(zmq::Error::from_raw(unsafe { zmq_sys::zmq_errno() }));
