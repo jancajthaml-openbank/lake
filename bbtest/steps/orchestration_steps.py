@@ -11,13 +11,13 @@ from helpers.eventually import eventually
 def step_impl(context, package, operation):
   if operation == 'installed':
     (code, result, error) = execute(["apt-get", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "-o=Dpkg::Options::=--force-confold", context.unit.binary])
-    assert code == 0, "unable to install with code {} and {} {}".format(code, result, error)
+    assert code == 'OK', "unable to install with code {} and {} {}".format(code, result, error)
     assert os.path.isfile('/etc/lake/conf.d/init.conf') is True
   elif operation == 'uninstalled':
     (code, result, error) = execute(["apt-get", "-y", "remove", package])
-    assert code == 0, "unable to uninstall with code {} and {} {}".format(code, result, error)
+    assert code == 'OK', "unable to uninstall with code {} and {} {}".format(code, result, error)
     (code, result, error) = execute(["apt-get", "-y", "purge", package])
-    assert code == 0, "unable to purge with code {} and {} {}".format(code, result, error)
+    assert code == 'OK', "unable to purge with code {} and {} {}".format(code, result, error)
     assert os.path.isfile('/etc/lake/conf.d/init.conf') is False
   else:
     assert False, 'unknown operation {}'.format(operation)
@@ -26,12 +26,12 @@ def step_impl(context, package, operation):
 @given('systemctl contains following active units')
 @then('systemctl contains following active units')
 def step_impl(context):
-  (code, result, error) = execute(["systemctl", "list-units", "--no-legend", "--state=active"])
-  assert code == 0, str(result) + ' ' + str(error)
+  (code, result, error) = execute(["systemctl", "list-units", "--all", "--no-legend", "--state=active", ])
+  assert code == 'OK', str(result) + ' ' + str(error)
   items = []
   for row in context.table:
     items.append(row['name'] + '.' + row['type'])
-  result = [item.split(' ')[0].strip() for item in result.split(os.linesep)]
+  result = [item.replace('*', '').strip().split(' ')[0].strip() for item in result.split(os.linesep)]
   result = [item for item in result if item in items]
   assert len(result) > 0, 'units not found'
 
@@ -39,12 +39,12 @@ def step_impl(context):
 @given('systemctl does not contain following active units')
 @then('systemctl does not contain following active units')
 def step_impl(context):
-  (code, result, error) = execute(["systemctl", "list-units", "--no-legend", "--state=active"])
-  assert code == 0, str(result) + ' ' + str(error)
+  (code, result, error) = execute(["systemctl", "list-units", "--all", "--no-legend", "--state=active"])
+  assert code == 'OK', str(result) + ' ' + str(error)
   items = []
   for row in context.table:
     items.append(row['name'] + '.' + row['type'])
-  result = [item.split(' ')[0].strip() for item in result.split(os.linesep)]
+  result = [item.replace('*', '').strip().split(' ')[0].strip() for item in result.split(os.linesep)]
   result = [item for item in result if item in items]
   assert len(result) == 0, '{} units found'.format(result)
 
@@ -55,7 +55,7 @@ def unit_running(context, unit):
   @eventually(10)
   def wait_for_unit_state_change():
     (code, result, error) = execute(["systemctl", "show", "-p", "SubState", unit])
-    assert code == 0, str(result) + ' ' + str(error)
+    assert code == 'OK', str(result) + ' ' + str(error)
     assert 'SubState=running' in result, result
 
   wait_for_unit_state_change()
@@ -67,7 +67,7 @@ def unit_not_running(context, unit):
   @eventually(10)
   def wait_for_unit_state_change():
     (code, result, error) = execute(["systemctl", "show", "-p", "SubState", unit])
-    assert code == 0, str(result) + ' ' + str(error)
+    assert code == 'OK', str(result) + ' ' + str(error)
     assert 'SubState=running' not in result, str(result) + ' ' + str(error)
 
   wait_for_unit_state_change()
@@ -77,7 +77,7 @@ def unit_not_running(context, unit):
 @when('{operation} unit "{unit}"')
 def operation_unit(context, operation, unit):
   (code, result, error) = execute(["systemctl", operation, unit])
-  assert code == 0, str(result) + ' ' + str(error)
+  assert code == 'OK', str(result) + ' ' + str(error)
 
 
 @given('{unit} is configured with')

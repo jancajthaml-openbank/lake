@@ -43,7 +43,7 @@ class UnitHelper(object):
     cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
 
     (code, result, error) = execute(['dpkg', '-c', file])
-    if code != 0:
+    if code != 'OK':
       raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
     else:
       os.makedirs('{}/reports/blackbox-tests/meta'.format(cwd), exist_ok=True)
@@ -137,13 +137,13 @@ class UnitHelper(object):
     os.makedirs('{}/reports/blackbox-tests/logs'.format(cwd), exist_ok=True)
 
     (code, result, error) = execute(['journalctl', '-o', 'cat', '--no-pager'])
-    if code == 0:
+    if code == 'OK':
       with open('{}/reports/blackbox-tests/logs/journal.log'.format(cwd), 'w') as fd:
         fd.write(result)
 
     for unit in set(self.__get_systemd_units() + self.units):
       (code, result, error) = execute(['journalctl', '-o', 'cat', '-u', unit, '--no-pager'])
-      if code != 0 or not result:
+      if code != 'OK' or not result:
         continue
       with open('{}/reports/blackbox-tests/logs/{}.log'.format(cwd, unit), 'w') as fd:
         fd.write(result)
@@ -155,7 +155,7 @@ class UnitHelper(object):
     self.collect_logs()
 
   def __get_systemd_units(self):
-    (code, result, error) = execute(['systemctl', 'list-units', '--no-legend'])
-    result = [item.split(' ')[0].strip() for item in result.split(os.linesep)]
+    (code, result, error) = execute(['systemctl', 'list-units', '--all', '--no-legend'])
+    result = [item.replace('*', '').strip().split(' ')[0].strip() for item in result.split(os.linesep)]
     result = [item for item in result if "lake" in item and not item.endswith('unit.slice')]
     return result
