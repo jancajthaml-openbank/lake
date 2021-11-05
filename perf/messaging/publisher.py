@@ -43,7 +43,6 @@ def PusherWorker(number_of_messages):
         return
       except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
-          print('EAGAIN')
           continue
         else:
           raise e
