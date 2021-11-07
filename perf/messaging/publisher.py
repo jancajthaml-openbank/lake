@@ -10,8 +10,7 @@ from multiprocessing import Process
 
 def Publisher(number_of_messages):
   running_tasks = []
-  running_tasks.append(Process(target=PusherWorker, args=(number_of_messages,5562,)))
-  running_tasks.append(Process(target=PusherWorker, args=(number_of_messages,2250,))) # stub for native tcp implementation
+  running_tasks.append(Process(target=PusherWorker, args=(number_of_messages,)))
   running_tasks.append(Process(target=SubscriberWorker, args=(number_of_messages,)))
 
   for running_task in running_tasks:
@@ -21,8 +20,8 @@ def Publisher(number_of_messages):
     running_task.join()
 
 
-def PusherWorker(number_of_messages, port):
-  push_url = 'tcp://127.0.0.1:{}'.format(port)
+def PusherWorker(number_of_messages):
+  push_url = 'tcp://127.0.0.1:5562'
 
   ctx = zmq.Context.instance()
 
