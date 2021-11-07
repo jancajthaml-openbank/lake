@@ -43,13 +43,15 @@ async fn main() -> Result<(), Error> {
         loop {
             tokio::select! {
                 _ = term_sig.recv() => {
-                    println!("TERM signal received");
                     shutdown_order.send(true);
                     break
                 }
             }
         }
     });
+
+    // Accept from PUB
+    // FIXME TBD when connection is accepted/dropped from PUB need to keep track of subscribers
 
     // Accept from PULL
     tokio::spawn(async move {
@@ -87,16 +89,19 @@ async fn main() -> Result<(), Error> {
 
                     // FIXME eventually we should see "YXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXZ"
                     // messages accepted here via ZMQ PUSH from perf testing
+
+                    // FIXME finally we need to send just recieved message to all current subscribers
                 },
                 _ = stop.recv() => {
                     println!("Loop Stopped");
                     stopping();
+                    // FIXME this should not be needed once this is only "main blocking" block, after this loops end
+                    // program should end with OK(())
                     std::process::exit(0);
                     break
                 }
             }
         }
-        //Ok(())
     });
     // <<< INFO low level straight forward implementation END
 
@@ -132,7 +137,6 @@ async fn main() -> Result<(), Error> {
                     .expect("Failed to bind SEND message");
                 metrics.message_egress();
             },
-            // FIXME add term signal handler for coordinated shutdown
         };
     }
 
