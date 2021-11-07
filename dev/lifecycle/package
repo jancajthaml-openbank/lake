@@ -77,7 +77,7 @@ lifecycle::rust::build() {
       }
 
       mkdir -p $(dirname "${output}")
-      cp "${source}/target/armv7-unknown-linux-gnueabihf/release/relay" "${output}"
+      cp "${source}/target/armv7-unknown-linux-gnueabihf/release/main" "${output}"
     ;;
 
     arm64)
@@ -98,7 +98,7 @@ lifecycle::rust::build() {
       }
 
       mkdir -p $(dirname "${output}")
-      cp "${source}/target/aarch64-unknown-linux-gnu/release/relay" "${output}"
+      cp "${source}/target/aarch64-unknown-linux-gnu/release/main" "${output}"
     ;;
 
     amd64)
@@ -121,7 +121,7 @@ lifecycle::rust::build() {
 
 			rustc --version
       mkdir -p $(dirname "${output}")
-      cp "${source}/target/x86_64-unknown-linux-gnu/release/relay" "${output}"
+      cp "${source}/target/x86_64-unknown-linux-gnu/release/main" "${output}"
     ;;
 
     *)
