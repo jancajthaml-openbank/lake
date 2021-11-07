@@ -5,11 +5,12 @@ from behave import *
 from helpers.shell import execute
 import os
 from helpers.eventually import eventually
-
+import time
 
 @given('package {package} is {operation}')
 def step_impl(context, package, operation):
   if operation == 'installed':
+    # time.sleep(1000000)
     (code, result, error) = execute(["apt-get", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "-o=Dpkg::Options::=--force-confold", context.unit.binary])
     assert code == 'OK', "unable to install with code {} and {} {}".format(code, result, error)
     assert os.path.isfile('/etc/lake/conf.d/init.conf') is True

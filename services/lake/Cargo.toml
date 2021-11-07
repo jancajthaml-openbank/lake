@@ -1,9 +1,11 @@
-[workspace]
+[package]
+name = "relay"
+version = "0.2.0"
+edition = "2018"
 
-members = [
-	"config",
-	"boot",
-	"metrics",
-	"relay",
-	"main",
-]
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+zmq = "0.9.2"
+log = "0.4.14"
+statsd = { version = "0.13.1" }
+systemstat = { version = "0.1.7" }
