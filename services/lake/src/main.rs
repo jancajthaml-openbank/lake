@@ -3,16 +3,13 @@ mod metrics;
 
 use crate::config::Configuration;
 use crate::metrics::Metrics;
-//use log::{debug, error, info, warn, LevelFilter};
 use std::os::unix::net::UnixDatagram;
 use std::process::exit;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::{env, io};
 use tokio::io::Error;
-use zmq::Message;
-
-// FIXME lets try tokio compatible zmq native implementation ( https://github.com/zeromq/zmq.rs )
+use zeromq::*;
 
 //#[tokio::main(flavor = "multi_thread")]
 #[tokio::main(flavor = "current_thread")]
@@ -28,27 +25,18 @@ async fn main() -> Result<(), Error> {
     // STUB for setup logging and bbtests
     println!("Log level set to {}", config.log_level);
 
-    let ctx = zmq::Context::new();
-
-    //println!("STARTING B");
-    let socket_pull = ctx.socket(zmq::PULL).unwrap();
-    socket_pull.set_conflate(false);
-    socket_pull.set_immediate(true);
-    socket_pull.set_linger(0);
-    socket_pull.set_rcvhwm(0);
+    //let mut pull = zeromq::RepSocket::new();
+    let mut socket_pull = zeromq::PullSocket::new();
     socket_pull
         .bind(&format!("tcp://127.0.0.1:{}", config.pull_port))
-        .unwrap();
+        .await
+        .expect("Failed to bind PULL socket");
 
-    //println!("STARTING C");
-    let socket_pub = ctx.socket(zmq::PUB).unwrap();
-    socket_pub.set_conflate(false);
-    socket_pub.set_immediate(true);
-    socket_pub.set_linger(0);
-    socket_pub.set_rcvhwm(0);
+    let mut socket_pub = zeromq::PubSocket::new();
     socket_pub
         .bind(&format!("tcp://127.0.0.1:{}", config.pub_port))
-        .unwrap();
+        .await
+        .expect("Failed to bind PUB socket");
 
     ready();
 
@@ -56,39 +44,20 @@ async fn main() -> Result<(), Error> {
     let stub_term = Arc::new(AtomicBool::new(false));
     metrics.start(stub_term);
 
-    //println!("STARTING D");
+    // current thoughtput ~100k msg/sec
 
-    // setup_logging()
-    //debug!("Starting");
-    //info!("Starting");
-    //warn!("Starting");
-    //error!("Starting");
-
-    //println!("Entering Relay Loop");
-
-    //let mut msg: Message = Message::new();
     loop {
-        //println!("looping");
-        // FIXME alas alocating new and new message for ech recv
-        match socket_pull.recv_msg(0) {
-            Ok(msg) => {
+        tokio::select! {
+            message = socket_pull.recv() => {
                 metrics.message_ingress();
-                socket_pub.send(msg, 0);
-                //println!("message relayed");
+                socket_pub
+                    .send(message)
+                    .await
+                    .expect("Failed to bind SEND message");
                 metrics.message_egress();
-
-                //tokio::spawn(async move {
-                //socket_pub.send(msg, 0);
-                //metrics.message_egress();
-                //});
-            }
-            Err(e) => {
-                // FIXME break from loop instead
-                eprintln!("{}", e);
-                stopping();
-                exit(0);
-            }
-        }
+            },
+            // FIXME add term signal handler for coordinated shutdown
+        };
     }
     //println!(">>> END");
     //Result::Err(Error::from_raw_os_error(1))

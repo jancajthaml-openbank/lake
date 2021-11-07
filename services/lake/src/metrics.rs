@@ -12,9 +12,9 @@ pub struct Metrics {
     /// statsd server endpoint
     statsd_endpoint: String,
     /// ingress counter
-    ingress: Arc<AtomicU32>,
+    ingress: Arc<AtomicU32>, // FIXME ideally Arc<u32>
     /// egress counter
-    egress: Arc<AtomicU32>,
+    egress: Arc<AtomicU32>, // FIXME ideally Arc<u32>
 }
 
 impl Metrics {
