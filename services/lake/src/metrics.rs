@@ -1,3 +1,4 @@
+use crate::config::Configuration;
 use statsd::Client;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
@@ -5,7 +6,6 @@ use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, SystemTime};
 use systemstat::{saturating_sub_bytes, Platform, System};
-use crate::config::Configuration;
 
 /// statsd metrics subroutine
 pub struct Metrics {

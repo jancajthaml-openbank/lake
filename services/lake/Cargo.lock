@@ -105,6 +105,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "main"
+version = "0.2.0"
+dependencies = [
+ "log",
+ "statsd",
+ "systemstat",
+ "tokio",
+ "zmq",
+]
+
+[[package]]
 name = "memchr"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -313,17 +324,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8383f39639269cde97d255a32bdb68c047337295414940c68bdd30c2e13203ff"
 dependencies = [
  "bitflags",
-]
-
-[[package]]
-name = "relay"
-version = "0.2.0"
-dependencies = [
- "log",
- "statsd",
- "systemstat",
- "tokio",
- "zmq",
 ]
 
 [[package]]
