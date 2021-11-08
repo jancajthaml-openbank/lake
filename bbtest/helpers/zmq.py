@@ -39,6 +39,7 @@ class ZMQHelper(threading.Thread):
           self.backlog.append(data)
         last_data = data
       except Exception as ex:
+        print('error {}'.format(ex))
         if ex.errno != 11:
           return
 
