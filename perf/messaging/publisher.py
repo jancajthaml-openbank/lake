@@ -63,14 +63,12 @@ def SubscriberWorker(number_of_messages):
   ctx = zmq.Context.instance()
 
   region = 'PERF'
-  msg = ' '.join(([('X' * 8)] * 7))
-  msg = '{} {}'.format(region, msg).encode()
   topic = '{} '.format(region).encode()
 
   sub = ctx.socket(zmq.SUB)
   sub.connect(sub_url)
   sub.setsockopt(zmq.SUBSCRIBE, topic)
-  sub.setsockopt(zmq.RCVTIMEO, 1000)
+  sub.setsockopt(zmq.RCVTIMEO, 2000)
 
   number_of_messages = int(number_of_messages)
 
@@ -80,7 +78,7 @@ def SubscriberWorker(number_of_messages):
     try:
       sub.recv()
     except:
-      if fails > 2:
+      if fails > 5:
         break
       else:
         fails += 1
