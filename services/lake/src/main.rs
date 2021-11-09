@@ -3,6 +3,7 @@ use std::process::exit;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::{env, io};
+use log::LevelFilter;
 
 use tokio::io::Error;
 use tokio::sync::mpsc;
@@ -10,14 +11,18 @@ use zeromq::*;
 
 use crate::config::Configuration;
 use crate::metrics::Metrics;
+use crate::program::Program;
 
 mod config;
 mod metrics;
+mod program;
 
 //#[tokio::main(flavor = "multi_thread")]
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Error> {
     let config = Configuration::load();
+		let program = Program::new();
+		program.setup();  // for logging now only
 
     // STUB for setup logging and bbtests
     println!("Log level set to {}", config.log_level);
@@ -42,7 +47,7 @@ async fn main() -> Result<(), Error> {
     let metrics = Metrics::new(&config);
     metrics.start(stub_term.clone());
 
-    let (sub_results_sender, mut sub_results) = mpsc::channel::<ZmqMessage>(1_000_000);
+    let (sub_results_sender, mut sub_results) = mpsc::channel::<ZmqMessage>(10);
 
     tokio::spawn(async move {
         loop {
@@ -82,43 +87,18 @@ async fn main() -> Result<(), Error> {
     }
 }
 
-// fn setup_logging(&self) -> Result<(), LifecycleError> {
-// 	SimpleLogger::new().init()?;
-//
-// 	log::set_max_level(LevelFilter::Info);
-//
-// 	let level = match &*self.config.log_level {
-// 		"DEBUG" => LevelFilter::Debug,
-// 		"INFO" => LevelFilter::Info,
-// 		"WARN" => LevelFilter::Warn,
-// 		"ERROR" => LevelFilter::Error,
-// 		_ => {
-// 			log::warn!(
-//                     "Invalid log level {}, using level INFO",
-//                     self.config.log_level
-//                 );
-// 			LevelFilter::Info
-// 		}
-// 	};
-//
-// 	log::info!("Log level set to {}", level.as_str());
-// 	log::set_max_level(level);
-//
-// 	Ok(())
-// }
-
 /// tries to notify host os that service is ready
 fn ready() {
-    if let Err(e) = notify("READY=1") {
-        println!("unable to notify host os about READY with {}", e);
-    }
+	if let Err(e) = notify("READY=1") {
+		println!("unable to notify host os about READY with {}", e);
+	}
 }
 
 /// tries to notify host os that service is stopping
 fn stopping() {
-    if let Err(e) = notify("STOPPING=1") {
-        println!("unable to notify host os about STOPPING with {}", e)
-    }
+	if let Err(e) = notify("STOPPING=1") {
+		println!("unable to notify host os about STOPPING with {}", e)
+	}
 }
 
 /// sends msg to `NOTIFY_SOCKET` via udp
