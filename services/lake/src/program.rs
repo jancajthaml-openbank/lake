@@ -14,8 +14,8 @@ use crate::metrics::Metrics;
 pub struct Program {
     /// configuration
     config: Configuration,
-    /// statsd metrics
-    metrics: Arc<Metrics>,
+    // statsd metrics
+    // metrics: Arc<Metrics>,
     // message relay
     // relay: Arc<Relay>,
 }
@@ -25,12 +25,12 @@ impl Program {
     #[must_use]
     pub fn new() -> Program {
         let config = Configuration::load();
-        let metrics = Arc::new(Metrics::new(&config));
+        // let metrics = Arc::new(Metrics::new(&config));
         // let relay = Arc::new(Relay::new(&config, Arc::clone(&metrics)));
 
         Program {
             config,
-            metrics,
+            // metrics,
             // relay,
         }
     }
@@ -84,7 +84,7 @@ impl Program {
 
         let term_now = Arc::new(AtomicBool::new(false));
 
-        let metrics_handle = self.metrics.start(term_now.clone());
+        // let metrics_handle = self.metrics.start(term_now.clone());
         // let relay_handle = self.relay.start(term_now.clone());
 
         log::info!("Program Started");
@@ -94,10 +94,10 @@ impl Program {
         log::info!("signal received, going down");
         term_now.store(true, Ordering::Relaxed);
 
-        self.metrics.stop()?;
+        // self.metrics.stop()?;
         // self.relay.stop()?;
 
-        metrics_handle.join()?;
+        // metrics_handle.join()?;
         // relay_handle.join()?;
 
         log::info!("Program Stopping");
