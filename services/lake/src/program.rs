@@ -1,23 +1,23 @@
-use config::Configuration;
+use std::error::Error;
 use log::LevelFilter;
-use metrics::Metrics;
-use relay::Relay;
+use std::fmt;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use signal_hook::consts::{SIGQUIT, TERM_SIGNALS};
 use signal_hook::iterator::Signals;
 use signal_hook::low_level;
 use simple_logger::SimpleLogger;
-use std::error::Error;
-use std::fmt;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use crate::config::Configuration;
+use crate::metrics;
+use crate::metrics::Metrics;
 
 pub struct Program {
     /// configuration
     config: Configuration,
     /// statsd metrics
     metrics: Arc<Metrics>,
-    /// message relay
-    relay: Arc<Relay>,
+    // message relay
+    // relay: Arc<Relay>,
 }
 
 impl Program {
@@ -26,12 +26,12 @@ impl Program {
     pub fn new() -> Program {
         let config = Configuration::load();
         let metrics = Arc::new(Metrics::new(&config));
-        let relay = Arc::new(Relay::new(&config, Arc::clone(&metrics)));
+        // let relay = Arc::new(Relay::new(&config, Arc::clone(&metrics)));
 
         Program {
             config,
             metrics,
-            relay,
+            // relay,
         }
     }
 
@@ -85,7 +85,7 @@ impl Program {
         let term_now = Arc::new(AtomicBool::new(false));
 
         let metrics_handle = self.metrics.start(term_now.clone());
-        let relay_handle = self.relay.start(term_now.clone());
+        // let relay_handle = self.relay.start(term_now.clone());
 
         log::info!("Program Started");
 
@@ -95,10 +95,10 @@ impl Program {
         term_now.store(true, Ordering::Relaxed);
 
         self.metrics.stop()?;
-        self.relay.stop()?;
+        // self.relay.stop()?;
 
         metrics_handle.join()?;
-        relay_handle.join()?;
+        // relay_handle.join()?;
 
         log::info!("Program Stopping");
 
@@ -149,11 +149,11 @@ impl From<metrics::StopError> for LifecycleError {
     }
 }
 
-impl From<relay::StopError> for LifecycleError {
-    fn from(err: relay::StopError) -> Self {
-        LifecycleError::new(&err.to_string())
-    }
-}
+// impl From<relay::StopError> for LifecycleError {
+//     fn from(err: relay::StopError) -> Self {
+//         LifecycleError::new(&err.to_string())
+//     }
+// }
 
 impl From<log::SetLoggerError> for LifecycleError {
     fn from(err: log::SetLoggerError) -> Self {
