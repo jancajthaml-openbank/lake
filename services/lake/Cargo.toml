@@ -4,11 +4,10 @@ version = "0.2.0"
 edition = "2018"
 
 [dependencies]
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1.13", features = ["full"] }
 zeromq = { version = "0.3.0", default-features = false, features = ["tokio-runtime", "tcp-transport"] }
 statsd = { version = "0.13.1" }
 systemstat = { version = "0.1.7" }
-
 log = "0.4.14"
 simple_logger = { version = "1.11.0" }
 signal-hook = { version = "0.3.4" }
