@@ -1,6 +1,8 @@
 use tokio::io::AsyncReadExt;
 use tokio::net::tcp::ReadHalf;
 
+// https://v0-1--tokio.netlify.app/docs/io/reading_writing_data/
+
 pub async fn read_frame<'a>(reader: &mut ReadHalf<'a>) -> Result<(Vec<u8>, bool, bool), String> {
     let frame_type = match reader.read_u8().await {
         Ok(v) => v,
@@ -46,10 +48,23 @@ pub async fn read_frame<'a>(reader: &mut ReadHalf<'a>) -> Result<(Vec<u8>, bool,
         return Err("Short read".to_owned());
     }
 
+    //println!("red total {} bytes", 1 + 1 + n);
+
     Ok((frame_buffer, is_last, is_cmd))
 }
 
+// 13000 / s
 pub async fn read_message<'a>(reader: &mut ReadHalf<'a>) -> Result<Vec<u8>, String> {
+    let mut frame_buffer = vec![0 as u8; 69];
+
+    match reader.read_exact(&mut frame_buffer).await {
+        Ok(_) => Ok(frame_buffer),
+        Err(_) => Err("Error Reading TCP Packet".to_owned()),
+    }
+}
+
+// 9000 / s
+pub async fn read_message_actual<'a>(reader: &mut ReadHalf<'a>) -> Result<Vec<u8>, String> {
     let mut frame = match read_frame(reader).await {
         Ok((_, _, true)) => return Err("Command red instead of Message".to_owned()),
         Ok((a, true, false)) => return Ok(a),

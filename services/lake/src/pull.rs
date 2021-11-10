@@ -4,13 +4,13 @@ use tokio::net::tcp::ReadHalf;
 use tokio::net::tcp::WriteHalf;
 use tokio::net::TcpListener;
 use tokio::sync::mpsc;
-use tokio::sync::mpsc::Receiver;
+use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::task::JoinHandle;
 
 use crate::codec::{read_frame, read_message};
 
 pub struct PullRoutine {
-    receiver: Receiver<Vec<u8>>,
+    receiver: UnboundedReceiver<Vec<u8>>,
     handler: JoinHandle<u8>,
 }
 
@@ -20,10 +20,12 @@ impl Drop for PullRoutine {
     }
 }
 
+// FIXME https://en.wikipedia.org/wiki/Fair_queuing
+
 impl PullRoutine {
     #[must_use]
     pub fn new(port: u16) -> PullRoutine {
-        let (sender, receiver) = mpsc::channel::<Vec<u8>>(1);
+        let (sender, receiver) = mpsc::unbounded_channel::<Vec<u8>>();
 
         let handler = tokio::spawn(async move {
             let pull_listener = TcpListener::bind(("127.0.0.1", port))
@@ -57,7 +59,7 @@ impl PullRoutine {
 
                     loop {
                         match read_message(&mut reader).await {
-                            Ok(message) => match s2.send(message).await {
+                            Ok(message) => match s2.send(message) {
                                 Ok(_) => {}
                                 Err(err) => {
                                     println!("Unable to add message to inner queue {:?}", err)
