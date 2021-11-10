@@ -51,7 +51,7 @@ def PusherWorker(number_of_messages):
     do_it()
 
   push.disconnect(push_url)
-  
+
   del push
 
   return None
@@ -68,7 +68,7 @@ def SubscriberWorker(number_of_messages):
   sub = ctx.socket(zmq.SUB)
   sub.connect(sub_url)
   sub.setsockopt(zmq.SUBSCRIBE, topic)
-  sub.setsockopt(zmq.RCVTIMEO, 2000)
+  sub.setsockopt(zmq.RCVTIMEO, 1000)
 
   number_of_messages = int(number_of_messages)
 
@@ -78,7 +78,7 @@ def SubscriberWorker(number_of_messages):
     try:
       sub.recv()
     except:
-      if fails > 5:
+      if fails > 2:
         break
       else:
         fails += 1

@@ -67,10 +67,10 @@ async fn main() -> Result<(), Error> {
 	loop {
 		match socket_pull.recv().await {
 			Ok(m) => {
-				metrics.message_ingress();
+				// metrics.message_ingress().await;
 				match sub_results_sender.send(m).await {
 					Ok(_) => {
-						metrics.message_egress();  // TODO move up to send
+						// metrics.message_egress().await;  // TODO move up to send
 					}
 					Err(e) => {
 						eprintln!("Error sending to queue");
