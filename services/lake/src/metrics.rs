@@ -54,6 +54,8 @@ impl Metrics {
 						match Client::new(&endpoint, "openbank.lake") {
 							Ok(client) => {
 								send_metrics2(&client, &system, &ingress, &egress);
+								ingress = 0;  // TODO reset counter in sending success or always?
+								egress = 0;
 							}
 							Err(e) => eprintln!("{}", e)
 						}
