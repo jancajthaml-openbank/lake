@@ -58,7 +58,7 @@ def SubscriberWorker(number_of_messages, port):
   sub = ctx.socket(zmq.SUB)
   sub.connect(sub_url)
   sub.setsockopt(zmq.SUBSCRIBE, topic)
-  sub.setsockopt(zmq.RCVTIMEO, 2000)
+  sub.setsockopt(zmq.RCVTIMEO, 1000)
 
   number_of_messages = int(number_of_messages)
 
