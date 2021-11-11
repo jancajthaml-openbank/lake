@@ -12,8 +12,8 @@ from multiprocessing import Process
 def Publisher(number_of_messages):
   running_tasks = []
 
-  running_tasks.append(Process(target=PusherWorker, args=(number_of_messages,)))
-  running_tasks.append(Process(target=SubscriberWorker, args=(number_of_messages,)))
+  running_tasks.append(Process(target=PusherWorker, args=(number_of_messages,5562,)))
+  running_tasks.append(Process(target=SubscriberWorker, args=(number_of_messages,5561,)))
 
   for running_task in running_tasks:
     running_task.start()
@@ -22,8 +22,8 @@ def Publisher(number_of_messages):
     running_task.join()
 
 
-def PusherWorker(number_of_messages):
-  push_url = 'tcp://127.0.0.1:5562'
+def PusherWorker(number_of_messages, port):
+  push_url = 'tcp://127.0.0.1:{}'.format(port)
 
   ctx = zmq.Context.instance()
   ctx.set(zmq.IO_THREADS, 1)
