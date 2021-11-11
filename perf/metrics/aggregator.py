@@ -30,7 +30,6 @@ class MetricsAggregator(threading.Thread):
         return
   
   def strip_trailing_zero_values(self) -> None:
-    #print(self.__store)
     to_delete = list()
     last_not_nil = None
     in_deletion_stage = False
@@ -42,7 +41,7 @@ class MetricsAggregator(threading.Thread):
         in_deletion_stage = True
       elif in_deletion_stage:
         to_delete.append(key)
-    #print(to_delete)
+
     for key in to_delete:
       del self.__store[key]
     

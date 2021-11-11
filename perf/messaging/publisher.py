@@ -9,11 +9,9 @@ from multiprocessing import Process
 
 
 def Publisher(number_of_messages):
-  pool_size = 2
-
   running_tasks = []
-  running_tasks.append(Process(target=PusherWorker, args=(number_of_messages,)))
-  running_tasks.append(Process(target=SubscriberWorker, args=(number_of_messages,)))
+  running_tasks.append(Process(target=PusherWorker, args=(number_of_messages,5562,)))
+  running_tasks.append(Process(target=SubscriberWorker, args=(number_of_messages,5561,)))
 
   for running_task in running_tasks:
     running_task.start()
@@ -22,13 +20,13 @@ def Publisher(number_of_messages):
     running_task.join()
 
 
-def PusherWorker(number_of_messages):
-  push_url = 'tcp://127.0.0.1:5562'
+def PusherWorker(number_of_messages, port):
+  push_url = 'tcp://127.0.0.1:{}'.format(port)
 
   ctx = zmq.Context.instance()
 
   region = 'PERF'
-  msg = ' '.join(([('X' * 8)] * 7))
+  msg = "YXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXZ"
   msg = '{} {}'.format(region, msg).encode()
 
   push = ctx.socket(zmq.PUSH)
@@ -53,20 +51,18 @@ def PusherWorker(number_of_messages):
     do_it()
 
   push.disconnect(push_url)
-  
+
   del push
 
   return None
 
 
-def SubscriberWorker(number_of_messages):
-  sub_url = 'tcp://127.0.0.1:5561'
+def SubscriberWorker(number_of_messages, port):
+  sub_url = 'tcp://127.0.0.1:{}'.format(port)
 
   ctx = zmq.Context.instance()
 
   region = 'PERF'
-  msg = ' '.join(([('X' * 8)] * 7))
-  msg = '{} {}'.format(region, msg).encode()
   topic = '{} '.format(region).encode()
 
   sub = ctx.socket(zmq.SUB)
