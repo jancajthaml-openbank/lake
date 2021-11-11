@@ -89,6 +89,7 @@ impl Metrics {
 					}
 					Ok(cmd) if cmd == TERM => {
 						log::info!("TERMINATING metrics loop");
+						break;
 						// return Err("TERMINATING metrics loop".to_owned());
 					}
 					Ok(_) => {
@@ -96,6 +97,7 @@ impl Metrics {
 					}
 					Err(_) => {
 						log::warn!("Err receiving");
+						break;
 						// return Err("Err receiving".to_owned());
 					}
 				}
