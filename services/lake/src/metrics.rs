@@ -1,22 +1,18 @@
+use crate::config::Configuration;
+use crate::metrics::MetricCmdType::{DUMP, EGRESS, INGRESS, TERM};
+use log::info;
+use statsd::Client;
 use std::fmt;
 use std::process::exit;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::mpsc::{channel, Sender};
 use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, SystemTime};
-
-use statsd::Client;
 use systemstat::{saturating_sub_bytes, DateTime, Platform, System, Utc};
-//use tokio::sync::mpsc::{channel, Sender};
-use std::sync::mpsc::{channel, Sender};
 use tokio::sync::broadcast;
 use tokio::task::JoinHandle;
 use tokio::{task, time};
-
-use crate::config::Configuration;
-use crate::metrics::MetricCmdType::{DUMP, EGRESS, INGRESS};
-use log::info;
-//use tokio::time::sleep;
 
 #[derive(Clone, Eq, PartialEq)]
 pub enum MetricCmdType {
@@ -28,60 +24,54 @@ pub enum MetricCmdType {
 
 /// statsd metrics subroutine
 pub struct Metrics {
-    dump_handle: JoinHandle<String>,
-    receiving_handle: JoinHandle<String>,
+    ticker_handler: JoinHandle<String>,
+    receiving_handle: JoinHandle<Result<(), String>>,
     pub sender: Sender<MetricCmdType>,
+}
+
+impl Drop for Metrics {
+    fn drop(&mut self) {
+        let _ = self.sender.send(TERM);
+        drop(&self.receiving_handle);
+        let _ = self.ticker_handler.abort();
+        drop(&self.ticker_handler);
+        drop(&self.sender);
+    }
 }
 
 impl Metrics {
     /// creates new metrics fascade
     #[must_use]
     pub fn new(config: &Configuration) -> Metrics {
-        let (metrics_sender, mut metrics_receiver) = channel::<MetricCmdType>();
+        let (metrics_sender, metrics_receiver) = channel::<MetricCmdType>();
         info!("Setting up metrics");
 
-        let s = metrics_sender.clone();
+        let s1 = metrics_sender.clone();
         let s2 = metrics_sender.clone();
-        // INFO spawn_blocking (if task is safe to be blocking)
-        // reduces number of syscalls by order or magnitude
-        let handle1 = tokio::task::spawn_blocking(move || {
-            // TODO convert to thread
+
+        let ticker_handler = tokio::task::spawn_blocking(move || {
             let duration = Duration::from_secs(1);
             loop {
                 thread::sleep(duration);
-                //let _ = s.send(MetricCmdType::DUMP).await;
-                let _ = s.send(MetricCmdType::DUMP);
+                let _ = s1.send(DUMP);
             }
         });
 
         let endpoint: String = config.statsd_endpoint.clone();
-        let handle2 = tokio::task::spawn_blocking(move || {
-            // TODO convert to thread
+        let messaging_handle = tokio::task::spawn_blocking(move || {
             let mut ingress: u32 = 0;
             let mut egress: u32 = 0;
+            let client = match Client::new(&endpoint, "openbank.lake") {
+                Ok(client) => client,
+                Err(_) => return Err("unable to initialise statsd client".to_owned()),
+            };
             let system = System::new();
             loop {
                 match metrics_receiver.recv() {
                     Ok(cmd) if cmd == DUMP => {
-                        let now = SystemTime::now();
-                        let now: DateTime<Utc> = now.into();
-                        info!(
-                            "Metrics dump {} -> {}/{}",
-                            now.to_rfc3339(),
-                            ingress,
-                            egress
-                        );
-                        ingress = 0; // TODO reset counter in sending success or always?
+                        send_metrics(&client, &system, &ingress, &egress);
+                        ingress = 0;
                         egress = 0;
-
-                        // match Client::new(&endpoint, "openbank.lake") {
-                        // 	Ok(client) => {
-                        // 		send_metrics2(&client, &system, &ingress, &egress);
-                        // 		ingress = 0;  // TODO reset counter in sending success or always?
-                        // 		egress = 0;
-                        // 	}
-                        // 	Err(e) => eprintln!("{}", e)
-                        // }
                     }
                     Ok(cmd) if cmd == INGRESS => {
                         ingress += 1;
@@ -91,22 +81,22 @@ impl Metrics {
                     }
                     Ok(cmd) if cmd == TERM => {
                         log::info!("TERMINATING metrics loop");
-                        break;
+                        return Err("TERMINATING metrics loop".to_owned());
                     }
                     Ok(_) => {
                         log::info!("OK_")
                     }
                     Err(_) => {
                         log::warn!("Err receiving");
-                        break;
+                        return Err("Err receiving".to_owned());
                     }
                 }
             }
         });
 
         Metrics {
-            dump_handle: handle1,
-            receiving_handle: handle2,
+            ticker_handler: ticker_handler,
+            receiving_handle: messaging_handle,
             sender: s2,
         }
     }
@@ -120,20 +110,20 @@ impl Metrics {
     pub fn message_ingress(&self) {
         let _ = self.sender.send(INGRESS);
     }
-
-    /// # Errors
-    ///
-    /// yields `StopError` when failed to stop gracefully
-    #[allow(clippy::unused_self)]
-    pub fn stop(&self) -> Result<(), StopError> {
-        log::debug!("requested stop");
-        Ok(())
-    }
 }
 
 // send metrics to statsd client
 #[allow(clippy::cast_precision_loss)]
-fn send_metrics2(client: &Client, system: &System, ingress: &u32, egress: &u32) {
+fn send_metrics(client: &Client, system: &System, ingress: &u32, egress: &u32) {
+    let now = SystemTime::now();
+    let now: DateTime<Utc> = now.into();
+    info!(
+        "Metrics dump {} -> {}/{}",
+        now.to_rfc3339(),
+        *ingress,
+        *egress
+    );
+
     let mut pipe = client.pipeline();
 
     if let Ok(mem) = system.memory() {
@@ -147,12 +137,4 @@ fn send_metrics2(client: &Client, system: &System, ingress: &u32, egress: &u32) 
     pipe.count("message.egress", *egress as _);
 
     pipe.send(client);
-}
-
-pub struct StopError;
-
-impl fmt::Display for StopError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "unable to stop metrics")
-    }
 }
