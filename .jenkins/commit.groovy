@@ -164,7 +164,7 @@ pipeline {
                         ${env.WORKSPACE}/dev/lifecycle/package \
                         --arch linux/${env.ARCH} \
                         --source ${env.WORKSPACE}/services/lake \
-                        --output ${env.WORKSPACE}/packaging/bin || :
+                        --output ${env.WORKSPACE}/packaging/bin
                     """
                 }
             }
