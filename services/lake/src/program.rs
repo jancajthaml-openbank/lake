@@ -1,15 +1,15 @@
-use std::error::Error;
+use crate::config::Configuration;
 use log::LevelFilter;
-use std::fmt;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 use signal_hook::consts::{SIGQUIT, TERM_SIGNALS};
 use signal_hook::iterator::Signals;
 use signal_hook::low_level;
 use simple_logger::SimpleLogger;
-use crate::config::Configuration;
-use crate::metrics;
-use crate::metrics::Metrics;
+use std::error::Error;
+use std::fmt;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+//use crate::metrics;
+//use crate::metrics::Metrics;
 
 pub struct Program {
     /// configuration
@@ -143,11 +143,11 @@ impl fmt::Display for LifecycleError {
     }
 }
 
-impl From<metrics::StopError> for LifecycleError {
-    fn from(err: metrics::StopError) -> Self {
-        LifecycleError::new(&err.to_string())
-    }
-}
+//impl From<metrics::StopError> for LifecycleError {
+//  fn from(err: metrics::StopError) -> Self {
+//    LifecycleError::new(&err.to_string())
+//}
+//}
 
 // impl From<relay::StopError> for LifecycleError {
 //     fn from(err: relay::StopError) -> Self {

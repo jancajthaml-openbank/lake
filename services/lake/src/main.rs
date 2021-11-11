@@ -24,9 +24,6 @@ async fn main() -> Result<(), Error> {
     let program = Program::new();
     let _ = program.setup(); // for logging now only
 
-    // STUB for setup logging and bbtests
-    println!("Log level set to {}", config.log_level);
-
     ready();
 
     let mut socket_pull = zeromq::PullSocket::new();
@@ -40,9 +37,6 @@ async fn main() -> Result<(), Error> {
         .bind(&format!("tcp://127.0.0.1:{}", config.pub_port))
         .await
         .expect("Failed to bind PUB socket");
-
-    // FIXME better with tokio not native thread
-    let stub_term = Arc::new(AtomicBool::new(false));
 
     let metrics = Metrics::new(&config);
 
