@@ -10,6 +10,7 @@ use tokio::sync::mpsc;
 use zeromq::*;
 
 use crate::config::Configuration;
+use crate::metrics::MetricCmdType::EGRESS;
 use crate::metrics::Metrics;
 use crate::program::Program;
 
@@ -41,13 +42,14 @@ async fn main() -> Result<(), Error> {
     let metrics = Metrics::new(&config);
 
     let (sub_results_sender, mut sub_results) = mpsc::channel::<ZmqMessage>(10);
+		let metrics_sender = metrics.sender.clone();
 
     tokio::spawn(async move {
         loop {
             match sub_results.recv().await {
                 Some(m) => {
                     let _ = socket_pub.send(m);
-                    // metrics.message_egress();  TODO enable here
+                    metrics_sender.send(EGRESS);
                 }
                 None => {
                     eprintln!("Error processing queue");
@@ -63,9 +65,7 @@ async fn main() -> Result<(), Error> {
             Ok(m) => {
                 metrics.message_ingress();
                 match sub_results_sender.send(m).await {
-                    Ok(_) => {
-                        metrics.message_egress(); // TODO move up to send
-                    }
+                    Ok(_) => {}
                     Err(e) => {
                         eprintln!("Error sending to queue");
                         stopping();
