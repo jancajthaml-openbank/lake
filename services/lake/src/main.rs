@@ -10,7 +10,7 @@ use tokio::sync::mpsc;
 use zeromq::*;
 
 use crate::config::Configuration;
-use crate::metrics::MetricCmdType::EGRESS;
+use crate::metrics::MetricCmdType::{EGRESS, INGRESS};
 use crate::metrics::Metrics;
 use crate::program::Program;
 
@@ -41,15 +41,16 @@ async fn main() -> Result<(), Error> {
 
     let metrics = Metrics::new(&config);
 
-    let (sub_results_sender, mut sub_results) = mpsc::channel::<ZmqMessage>(10);
-		let metrics_sender = metrics.sender.clone();
+    let (sub_results_sender, mut sub_results) = mpsc::channel::<ZmqMessage>(10_000_000);
+    let metrics_sender_1 = metrics.sender.clone();
+    let metrics_sender_2 = metrics.sender.clone();
 
     tokio::spawn(async move {
         loop {
             match sub_results.recv().await {
                 Some(m) => {
-                    let _ = socket_pub.send(m);
-                    metrics_sender.send(EGRESS);
+                    let _ = socket_pub.send(m).await;
+                    let _ = metrics_sender_1.send(EGRESS);
                 }
                 None => {
                     eprintln!("Error processing queue");
@@ -63,7 +64,7 @@ async fn main() -> Result<(), Error> {
     loop {
         match socket_pull.recv().await {
             Ok(m) => {
-                metrics.message_ingress();
+                let _ = metrics_sender_2.send(INGRESS);
                 match sub_results_sender.send(m).await {
                     Ok(_) => {}
                     Err(e) => {
@@ -75,7 +76,8 @@ async fn main() -> Result<(), Error> {
             }
             Err(_) => {
                 eprintln!("ZMQ error");
-                stopping()
+                stopping();
+                exit(0)
             }
         }
     }
