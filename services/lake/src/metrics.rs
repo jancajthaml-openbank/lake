@@ -26,17 +26,15 @@ pub enum MetricCmdType {
 
 /// statsd metrics subroutine
 pub struct Metrics {
-	ticker_handler: JoinHandle<String>,
-	receiving_handle: JoinHandle<Result<(), String>>,
 	pub sender: Sender<MetricCmdType>,
 }
 
 impl Drop for Metrics {
 	fn drop(&mut self) {
 		let _ = self.sender.send(TERM);
-		drop(&self.receiving_handle);
-		let _ = self.ticker_handler.abort();
-		drop(&self.ticker_handler);
+		// drop(&self.receiving_handle);
+		// let _ = self.ticker_handler.abort();
+		// drop(&self.ticker_handler);
 		drop(&self.sender);
 	}
 }
@@ -51,12 +49,12 @@ impl Metrics {
 		let s1 = metrics_sender.clone();
 		let s2 = metrics_sender.clone();
 
-		let ticker_handler = tokio::task::spawn_blocking(move || {
-			let duration = Duration::from_secs(1);
-			loop {
-				thread::sleep(duration);
-				let _ = s1.send(DUMP);
-			}
+		let messaging_handle = thread::spawn(move || {
+				let duration = Duration::from_secs(1);
+				loop {
+					thread::sleep(duration);
+					let _ = s1.send(DUMP);
+				}
 		});
 
 		let endpoint: String = config.statsd_endpoint.clone();
@@ -68,7 +66,7 @@ impl Metrics {
 			}
 		};
 
-		let messaging_handle = tokio::task::spawn_blocking(move || {
+		let messaging_handle = thread::spawn(move || {
 			let mut ingress: u32 = 0;
 			let mut egress: u32 = 0;
 
@@ -82,28 +80,29 @@ impl Metrics {
 					}
 					Ok(cmd) if cmd == INGRESS => {
 						ingress += 1;
+						// if ingress % 1_000_000 == 0 {
+						// 	metrics_sender.send(DUMP);
+						// }
 					}
 					Ok(cmd) if cmd == EGRESS => {
 						egress += 1;
 					}
 					Ok(cmd) if cmd == TERM => {
 						log::info!("TERMINATING metrics loop");
-						return Err("TERMINATING metrics loop".to_owned());
+						// return Err("TERMINATING metrics loop".to_owned());
 					}
 					Ok(_) => {
 						log::info!("OK_")
 					}
 					Err(_) => {
 						log::warn!("Err receiving");
-						return Err("Err receiving".to_owned());
+						// return Err("Err receiving".to_owned());
 					}
 				}
 			}
 		});
 
 		Metrics {
-			ticker_handler: ticker_handler,
-			receiving_handle: messaging_handle,
 			sender: s2,
 		}
 	}
