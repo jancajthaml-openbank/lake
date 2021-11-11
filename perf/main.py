@@ -54,7 +54,7 @@ def main():
 
   messages_to_push = int(os.environ.get('MESSAGES_PUSHED', '100000'))
 
-  i = 1000
+  i = 1_000
   while i <= messages_to_push:
     info('pushing {:,.0f} messages throught ZMQ'.format(i))
     with timeit('{:,.0f} messages'.format(i)):
@@ -62,7 +62,7 @@ def main():
         Publisher(i)
 
     info('generating graph for {:,.0f} messages'.format(i))
-    with timeit('{:,.0f} graph'.format(i)):
+    with timeit('{:,.0f} ingress graph'.format(i)):
       Graph(Metrics('{}/../reports/perf-tests/metrics/metrics.count_{}.json'.format(cwd, i)))
 
     i *= 10
