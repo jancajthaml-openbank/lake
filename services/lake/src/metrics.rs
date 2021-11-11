@@ -88,6 +88,7 @@ impl Metrics {
                         egress += 1;
                     }
                     Ok(cmd) if cmd == TERM => {
+                        send_metrics(&client, &system, &ingress, &egress);
                         log::info!("TERMINATING metrics loop");
                         break;
                         // return Err("TERMINATING metrics loop".to_owned());
