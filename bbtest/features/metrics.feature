@@ -4,8 +4,7 @@ Feature: Metrics test
 
   	When restart unit "lake.service"
     And lake recieves "A B"
-
-#    Then lake responds with "A B"
+    Then lake responds with "A B"
     Then metrics reports:
       | key                            | type  | value |
       | openbank.lake.message.ingress  | count |     1 |
