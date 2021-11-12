@@ -9,9 +9,6 @@ use std::time::{Duration, SystemTime};
 use log::info;
 use statsd::Client;
 use systemstat::{saturating_sub_bytes, DateTime, Platform, System, Utc};
-use tokio::sync::broadcast;
-use tokio::task::JoinHandle;
-use tokio::{task, time};
 
 use crate::config::Configuration;
 use crate::metrics::MetricCmdType::{DUMP, EGRESS, INGRESS, TERM};
@@ -80,9 +77,6 @@ impl Metrics {
                     }
                     Ok(cmd) if cmd == INGRESS => {
                         ingress += 1;
-                        // if ingress % 1_000_000 == 0 {
-                        // 	metrics_sender.send(DUMP);
-                        // }
                     }
                     Ok(cmd) if cmd == EGRESS => {
                         egress += 1;
@@ -91,7 +85,6 @@ impl Metrics {
                         send_metrics(&client, &system, &ingress, &egress);
                         log::info!("TERMINATING metrics loop");
                         break;
-                        // return Err("TERMINATING metrics loop".to_owned());
                     }
                     Ok(_) => {
                         log::info!("OK_")
@@ -99,7 +92,6 @@ impl Metrics {
                     Err(_) => {
                         log::warn!("Err receiving");
                         break;
-                        // return Err("Err receiving".to_owned());
                     }
                 }
             }

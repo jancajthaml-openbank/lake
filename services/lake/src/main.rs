@@ -1,50 +1,90 @@
 use std::os::unix::net::UnixDatagram;
 use std::process::exit;
 use std::sync::atomic::AtomicBool;
-use std::sync::Arc;
+//use std::sync::Arc;
 use std::{env, io};
 
 use log::LevelFilter;
-use tokio::io::Error;
-use tokio::sync::mpsc;
-use zeromq::*;
+//use tokio::io::Error;
+//use tokio::sync::mpsc;
+//use zeromq::*;
+use zmq;
+use zmq_sys;
+//use zmq_sys::libc::c_int;
+
+use libc::c_int;
 
 use crate::config::Configuration;
+use crate::message::{msg_ptr, Message};
+use crate::relay::{Context, Socket};
+
 use crate::metrics::MetricCmdType::{EGRESS, INGRESS};
 use crate::metrics::Metrics;
 use crate::program::Program;
 
 mod config;
+mod message;
 mod metrics;
 mod program;
+mod relay;
 
 // #[tokio::main(flavor = "multi_thread")]
-#[tokio::main(flavor = "current_thread")]
-async fn main() -> Result<(), Error> {
+//#[tokio::main(flavor = "current_thread")]
+fn main() -> Result<(), zmq::Error> {
     let config = Configuration::load();
     let program = Program::new();
     let _ = program.setup(); // for logging now only
 
     ready();
 
-    let mut socket_pull = zeromq::PullSocket::new();
-    socket_pull
-        .bind(&format!("tcp://127.0.0.1:{}", config.pull_port))
-        .await
-        .expect("Failed to bind PULL socket");
+    let ctx = Context::new();
 
-    let mut socket_pub = zeromq::PubSocket::new();
-    socket_pub
-        .bind(&format!("tcp://127.0.0.1:{}", config.pub_port))
-        .await
-        .expect("Failed to bind PUB socket");
+    let puller = Socket::new(ctx.underlying, zmq_sys::ZMQ_PULL as c_int)?;
+    puller.set_option(zmq_sys::ZMQ_CONFLATE as c_int, 0)?;
+    puller.set_option(zmq_sys::ZMQ_IMMEDIATE as c_int, 1)?;
+    puller.set_option(zmq_sys::ZMQ_LINGER as c_int, 0)?;
+    puller.set_option(zmq_sys::ZMQ_RCVHWM as c_int, 0)?;
+    puller.bind(&format!("tcp://127.0.0.1:{}", config.pull_port))?;
+    // INFO does not unbinds on drop
+
+    let publisher = Socket::new(ctx.underlying, zmq_sys::ZMQ_PUB as c_int)?;
+    publisher.set_option(zmq_sys::ZMQ_CONFLATE as c_int, 0)?;
+    publisher.set_option(zmq_sys::ZMQ_IMMEDIATE as c_int, 1)?;
+    publisher.set_option(zmq_sys::ZMQ_LINGER as c_int, 0)?;
+    publisher.set_option(zmq_sys::ZMQ_SNDHWM as c_int, 0)?;
+    publisher.bind(&format!("tcp://127.0.0.1:{}", config.pub_port))?;
 
     let metrics = Metrics::new(&config);
 
-    let (sub_results_sender, mut sub_results) = mpsc::channel::<ZmqMessage>(10_000_000);
+    //let (sub_results_sender, mut sub_results) = mpsc::channel::<ZmqMessage>(10_000_000);
     let metrics_sender_1 = metrics.sender.clone();
-    let metrics_sender_2 = metrics.sender.clone();
+    //let metrics_sender_2 = metrics.sender.clone();
 
+    // INFO does not unbinds on drop
+
+    // FIXME inline
+    loop {
+        let mut msg = Message::new();
+        let ptr = msg_ptr(&mut msg);
+        if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as c_int) } == -1 {
+            return Err(zmq::Error::from_raw(unsafe { zmq_sys::zmq_errno() }));
+        };
+        let _ = metrics_sender_1.send(INGRESS);
+        //metrics.message_ingress(); // FIXME this seems to be slowing the code from 23s to 53s (1M -> 500k / sec)
+        if unsafe {
+            let data = zmq_sys::zmq_msg_data(ptr);
+            let len = zmq_sys::zmq_msg_size(ptr) as usize;
+            zmq_sys::zmq_send(publisher.sock, data, len, 0 as c_int)
+        } == -1
+        {
+            return Err(zmq::Error::from_raw(unsafe { zmq_sys::zmq_errno() }));
+        };
+        let _ = metrics_sender_1.send(EGRESS);
+        //metrics.message_egress(); // FIXME this seems to be slowing the code from 23s to 53s (1M -> 500k / sec)
+    }
+
+    Ok(())
+    /*
     tokio::spawn(async move {
         loop {
             match sub_results.recv().await {
@@ -87,6 +127,7 @@ async fn main() -> Result<(), Error> {
             }
         }
     }
+    */
 }
 
 /// tries to notify host os that service is ready
