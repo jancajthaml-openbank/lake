@@ -16,7 +16,6 @@ package metrics
 
 import (
 	"runtime"
-	"sync/atomic"
 
 	"github.com/DataDog/datadog-go/statsd"
 )
@@ -53,7 +52,7 @@ func (instance *StatsdMetrics) MessageEgress() {
 	if instance == nil {
 		return
 	}
-	atomic.AddInt64(&(instance.messageEgress), 1)
+	instance.messageEgress +=1
 }
 
 // MessageIngress increment number of incomming messages
@@ -61,7 +60,7 @@ func (instance *StatsdMetrics) MessageIngress() {
 	if instance == nil {
 		return
 	}
-	atomic.AddInt64(&(instance.messageIngress), 1)
+	instance.messageIngress +=1
 }
 
 // Setup does nothing
@@ -89,10 +88,8 @@ func (instance *StatsdMetrics) Work() {
 	}
 
 	egress := instance.messageEgress
-	ingress := instance.messageIngress
-
-	atomic.AddInt64(&(instance.messageEgress), -egress)
-	atomic.AddInt64(&(instance.messageIngress), -ingress)
+	ingress := instance.messageIngress	
+	
 
 	var stats = new(runtime.MemStats)
 	runtime.ReadMemStats(stats)
@@ -100,4 +97,7 @@ func (instance *StatsdMetrics) Work() {
 	instance.client.Count("openbank.lake.message.ingress", ingress, nil, 1)
 	instance.client.Count("openbank.lake.message.egress", egress, nil, 1)
 	instance.client.Gauge("openbank.lake.memory.bytes", float64(stats.Sys), nil, 1)
+
+	instance.messageEgress -= egress
+	instance.messageIngress -= ingress
 }
