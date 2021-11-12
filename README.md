@@ -1,6 +1,6 @@
 # lake
 
-Distributed services message relay
+Remoting message relay
 
 ![Health Check](https://github.com/jancajthaml-openbank/lake/workflows/Health%20Check/badge.svg)
 [![CircleCI](https://circleci.com/gh/jancajthaml-openbank/lake/tree/main.svg?style=shield)](https://circleci.com/gh/jancajthaml-openbank/lake/tree/main)
@@ -9,11 +9,11 @@ Distributed services message relay
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/jancajthaml-openbank/lake)](https://goreportcard.com/report/github.com/jancajthaml-openbank/lake) [![codebeat badge](https://codebeat.co/badges/2a0d56a6-dcb9-4e19-8aa5-bc17927defdc)](https://codebeat.co/projects/github-com-jancajthaml-openbank-lake-main)
 
-Build for partition tolerance and availability, consumer is to take care of workflow consistency.
+Communicates over TCP using NULL mechanism of [ZMTP 3.0](https://rfc.zeromq.org/spec/23/) allowing services to cross-talk without need to bind.
 
 ## Performance
 
-messages throughput in time, approximately 500 000 messages / sec
+throughput average 500,000 messages / sec
 
 (2GB RAM 1 CPU)
 
