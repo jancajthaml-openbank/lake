@@ -1,7 +1,3 @@
-use std::fmt;
-use std::ops::{Deref, DerefMut};
-use std::slice;
-//use zmq;
 use zmq_sys;
 
 use crate::error;

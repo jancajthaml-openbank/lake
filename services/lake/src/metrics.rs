@@ -1,14 +1,13 @@
-use std::fmt;
-use std::process::exit;
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::mpsc::{channel, Sender};
-use std::sync::Arc;
 use std::thread;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
 use log::info;
 use statsd::Client;
-use systemstat::{saturating_sub_bytes, DateTime, Platform, System, Utc};
+use systemstat::{saturating_sub_bytes, Platform, System};
+
+use signal_hook::consts::SIGQUIT;
+use signal_hook::low_level;
 
 use crate::config::Configuration;
 use crate::metrics::MetricCmdType::{DUMP, EGRESS, INGRESS, TERM};
@@ -29,9 +28,6 @@ pub struct Metrics {
 impl Drop for Metrics {
     fn drop(&mut self) {
         let _ = self.sender.send(TERM);
-        // drop(&self.receiving_handle);
-        // let _ = self.ticker_handler.abort();
-        // drop(&self.ticker_handler);
         drop(&self.sender);
     }
 }
@@ -39,14 +35,14 @@ impl Drop for Metrics {
 impl Metrics {
     /// creates new metrics fascade
     #[must_use]
-    pub fn new(config: &Configuration) -> Metrics {
+    pub fn new(config: &Configuration) -> Result<Metrics, String> {
         let (metrics_sender, metrics_receiver) = channel::<MetricCmdType>();
         info!("Setting up metrics");
 
         let s1 = metrics_sender.clone();
         let s2 = metrics_sender.clone();
 
-        let messaging_handle = thread::spawn(move || {
+        thread::spawn(move || {
             let duration = Duration::from_secs(1);
             loop {
                 thread::sleep(duration);
@@ -58,12 +54,12 @@ impl Metrics {
         let client = match Client::new(&endpoint, "openbank.lake") {
             Ok(client) => client,
             Err(_) => {
-                eprintln!("unable to initialise statsd client");
-                exit(1); // TODO really exit?
+                let _ = low_level::raise(SIGQUIT);
+                return Err("unable to initialise statsd client".to_owned());
             }
         };
 
-        let messaging_handle = thread::spawn(move || {
+        thread::spawn(move || {
             let mut ingress: u32 = 0;
             let mut egress: u32 = 0;
 
@@ -84,20 +80,19 @@ impl Metrics {
                     Ok(cmd) if cmd == TERM => {
                         send_metrics(&client, &system, &ingress, &egress);
                         log::info!("TERMINATING metrics loop");
+                        let _ = low_level::raise(SIGQUIT);
                         break;
                     }
-                    Ok(_) => {
-                        log::info!("OK_")
-                    }
+                    Ok(_) => {}
                     Err(_) => {
-                        log::warn!("Err receiving");
+                        let _ = low_level::raise(SIGQUIT);
                         break;
                     }
                 }
             }
         });
 
-        Metrics { sender: s2 }
+        Ok(Metrics { sender: s2 })
     }
 }
 

@@ -1,15 +1,9 @@
 use libc::{c_int, c_void, size_t};
-use std::error::Error;
 use std::ffi;
-use std::fmt;
 use std::mem;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-use std::thread;
 use zmq_sys;
 
 use crate::error;
-use crate::message::{msg_ptr, Message};
 
 pub struct Context {
     pub underlying: *mut c_void,
@@ -65,7 +59,7 @@ impl Socket {
 impl Drop for Socket {
     fn drop(&mut self) {
         if unsafe { zmq_sys::zmq_close(self.sock) } == -1 {
-            panic!("!");
+            panic!("socket leaked!");
         }
     }
 }

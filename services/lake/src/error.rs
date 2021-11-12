@@ -1,7 +1,7 @@
 use std::ffi;
 use std::fmt;
-use std::{mem, ptr, str};
-use zmq_sys::{errno, RawFd};
+use std::{mem, str};
+use zmq_sys::errno;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Error {
@@ -29,7 +29,6 @@ pub enum Error {
     ENOBUFS,
     ENETDOWN,
     EADDRNOTAVAIL,
-
     // native zmq error codes
     EFSM,
     ENOCOMPATPROTO,
@@ -148,6 +147,12 @@ impl Error {
             let v: &'static [u8] = mem::transmute(ffi::CStr::from_ptr(s).to_bytes());
             str::from_utf8(v).unwrap()
         }
+    }
+}
+
+impl From<Error> for String {
+    fn from(error: Error) -> String {
+        error.to_string().to_owned()
     }
 }
 
