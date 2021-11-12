@@ -13,10 +13,13 @@ use crate::config::Configuration;
 use crate::metrics::MetricCmdType::{EGRESS, INGRESS};
 use crate::metrics::Metrics;
 use crate::program::Program;
+use crate::pull::PullRoutine;
 
+mod codec;
 mod config;
 mod metrics;
 mod program;
+mod pull;
 
 // #[tokio::main(flavor = "multi_thread")]
 #[tokio::main(flavor = "current_thread")]
@@ -27,11 +30,13 @@ async fn main() -> Result<(), Error> {
 
     ready();
 
-    let mut socket_pull = zeromq::PullSocket::new();
-    socket_pull
-        .bind(&format!("tcp://127.0.0.1:{}", config.pull_port))
-        .await
-        .expect("Failed to bind PULL socket");
+    //    let mut socket_pull = zeromq::PullSocket::new();
+    //    socket_pull
+    //        .bind(&format!("tcp://127.0.0.1:{}", config.pull_port))
+    //        .await
+    //        .expect("Failed to bind PULL socket");
+
+    let mut pull_routine = PullRoutine::new(config.pull_port as u16);
 
     let mut socket_pub = zeromq::PubSocket::new();
     socket_pub
@@ -68,10 +73,10 @@ async fn main() -> Result<(), Error> {
     });
 
     loop {
-        match socket_pull.recv().await {
-            Ok(m) => {
+        match pull_routine.recv().await {
+            Some(m) => {
                 let _ = metrics_sender_2.send(INGRESS);
-                match sub_results_sender.send(m).await {
+                match sub_results_sender.send(m.into()).await {
                     Ok(_) => {}
                     Err(e) => {
                         eprintln!("Error sending to queue");
@@ -80,7 +85,7 @@ async fn main() -> Result<(), Error> {
                     }
                 }
             }
-            Err(_) => {
+            None => {
                 eprintln!("ZMQ error");
                 stopping();
                 exit(0)
