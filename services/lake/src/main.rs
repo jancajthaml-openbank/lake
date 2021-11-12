@@ -48,10 +48,16 @@ async fn main() -> Result<(), Error> {
     tokio::spawn(async move {
         loop {
             match sub_results.recv().await {
-                Some(m) => {
-                    let _ = socket_pub.send(m).await;
-                    let _ = metrics_sender_1.send(EGRESS);
-                }
+                Some(m) => match socket_pub.send(m).await {
+                    Ok(_) => {
+                        let _ = metrics_sender_1.send(EGRESS);
+                    }
+                    Err(e) => {
+                        eprintln!("ZMQ error");
+                        stopping();
+                        exit(1);
+                    }
+                },
                 None => {
                     eprintln!("Error processing queue");
                     stopping();
