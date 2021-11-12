@@ -88,10 +88,8 @@ func (instance *StatsdMetrics) Work() {
 	}
 
 	egress := instance.messageEgress
-	instance.messageEgress = 0
-
 	ingress := instance.messageIngress	
-	instance.messageIngress = 0
+	
 
 	var stats = new(runtime.MemStats)
 	runtime.ReadMemStats(stats)
@@ -99,4 +97,7 @@ func (instance *StatsdMetrics) Work() {
 	instance.client.Count("openbank.lake.message.ingress", ingress, nil, 1)
 	instance.client.Count("openbank.lake.message.egress", egress, nil, 1)
 	instance.client.Gauge("openbank.lake.memory.bytes", float64(stats.Sys), nil, 1)
+
+	instance.messageEgress -= egress
+	instance.messageIngress -= ingress
 }
