@@ -64,12 +64,7 @@ fn main() -> Result<(), String> {
                     break;
                 };
                 let _ = metrics_sender_1.send(INGRESS);
-                if unsafe {
-                    let data = zmq_sys::zmq_msg_data(ptr);
-                    let len = zmq_sys::zmq_msg_size(ptr) as usize;
-                    zmq_sys::zmq_send(publisher.sock, data, len, 0 as i32)
-                } == -1
-                {
+                if unsafe { zmq_sys::zmq_msg_send(ptr, publisher.sock, 0 as i32) } == -1 {
                     log::error!(
                         "{}",
                         error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
