@@ -5,3 +5,5 @@ coverage
 *.changes
 **/*/target
 **/*/vendor
+.idea
+out
