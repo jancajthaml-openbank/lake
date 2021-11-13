@@ -24,7 +24,7 @@ impl Message {
         let mut msg = zmq_sys::zmq_msg_t::default();
         let rc = f(&mut msg);
         if rc == -1 {
-            panic!(error::Error::from_raw(zmq_sys::zmq_errno()))
+            std::panic::panic_any(error::Error::from_raw(zmq_sys::zmq_errno()))
         }
         Message { msg }
     }

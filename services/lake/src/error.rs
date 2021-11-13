@@ -97,9 +97,6 @@ impl Error {
             errno::ENETDOWN => Error::ENETDOWN,
             errno::EADDRNOTAVAIL => Error::EADDRNOTAVAIL,
             errno::EINTR => Error::EINTR,
-
-            // These may turn up on platforms that don't support these
-            // errno codes natively (Windows)
             errno::ENOTSUP_ALT => Error::ENOTSUP,
             errno::EPROTONOSUPPORT_ALT => Error::EPROTONOSUPPORT,
             errno::ENOBUFS_ALT => Error::ENOBUFS,
@@ -110,18 +107,8 @@ impl Error {
             errno::EINPROGRESS_ALT => Error::EINPROGRESS,
             errno::ENOTSOCK_ALT => Error::ENOTSOCK,
             errno::EMSGSIZE_ALT => Error::EMSGSIZE,
-
-            // TODO: these are present in `zmq-sys`, but not handled, as that
-            // would break backwards-compatibility for the `Error` enum.
-
-            // errno::EAFNOSUPPORT_ALT => Error::EAFNOSUPPORT,
-            // errno::ENETUNREACH_ALT => Error::ENETUNREACH,
-            // errno::ECONNABORTED_ALT => Error::ECONNABORTED,
-            // errno::ECONNRESET_ALT => Error::ECONNRESET,
-            // errno::ENOTCONN_ALT => Error::ENOTCONN,
-            // errno::ETIMEDOUT_ALT => Error::ETIMEDOUT,
-            // errno::EHOSTUNREACH_ALT => Error::EHOSTUNREACH,
-            // errno::ENETRESET_ALT => Error::ENETRESET,
+            errno::ENOTCONN_ALT => Error::ENOTCONN,
+            errno::EHOSTUNREACH_ALT => Error::EHOSTUNREACH,
 
             // 0MQ native error codes
             errno::EFSM => Error::EFSM,
@@ -170,7 +157,6 @@ impl std::fmt::Display for Error {
 
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // FIXME: An unquoted string is not a good `Debug` output.
         write!(f, "{}", self.message())
     }
 }

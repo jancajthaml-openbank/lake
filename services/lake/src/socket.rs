@@ -1,4 +1,5 @@
-use libc::{c_int, c_void, size_t};
+use libc::{c_void, size_t};
+use log;
 use std::ffi;
 use std::mem;
 use zmq_sys;
@@ -34,7 +35,7 @@ pub struct Socket {
 }
 
 impl Socket {
-    pub fn new(ctx: *mut c_void, t: c_int) -> Result<Socket, error::Error> {
+    pub fn new(ctx: *mut c_void, t: i32) -> Result<Socket, error::Error> {
         let sock = unsafe { zmq_sys::zmq_socket(ctx, t) };
         if sock.is_null() {
             return Err(error::Error::from_raw(unsafe { zmq_sys::zmq_errno() }));
@@ -50,7 +51,7 @@ impl Socket {
         Ok(())
     }
 
-    pub fn set_option(&self, opt: c_int, val: i32) -> Result<(), error::Error> {
+    pub fn set_option(&self, opt: i32, val: i32) -> Result<(), error::Error> {
         if unsafe {
             zmq_sys::zmq_setsockopt(
                 self.sock,
@@ -69,7 +70,7 @@ impl Socket {
 impl Drop for Socket {
     fn drop(&mut self) {
         if unsafe { zmq_sys::zmq_close(self.sock) } == -1 {
-            panic!("socket leaked!");
+            log::error!("socket leaked");
         }
     }
 }

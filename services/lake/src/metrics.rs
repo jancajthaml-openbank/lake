@@ -99,7 +99,7 @@ impl Metrics {
 fn send_metrics(client: &Client, ingress: &u32, egress: &u32) {
     let mut pipe = client.pipeline();
 
-	  pipe.gauge("memory.bytes", mem_bytes());
+    pipe.gauge("memory.bytes", mem_bytes());
     pipe.count("message.ingress", *ingress as _);
     pipe.count("message.egress", *egress as _);
 
@@ -107,16 +107,16 @@ fn send_metrics(client: &Client, ingress: &u32, egress: &u32) {
 }
 
 #[cfg(target_os = "linux")]
-fn mem_bytes() -> f64{
-	if let Ok(me) = procfs::process::Process::myself()  {
-		me.stat.vsize as f64
-	} else {
-		info!("Can't memory size");
-		0 as f64
-	}
+fn mem_bytes() -> f64 {
+    if let Ok(me) = procfs::process::Process::myself() {
+        if let Ok(page_size) = procfs::page_size() {
+            return (me.stat.rss * page_size) as f64;
+        };
+    };
+    0 as f64
 }
 
-#[cfg(target_os="macos")]
+#[cfg(target_os = "macos")]
 fn mem_bytes() -> f64 {
-	0 as f64
+    0 as f64
 }

@@ -11,6 +11,7 @@ impl Program {
     pub fn new(config: &Configuration) -> Program {
         let prog = Program {};
         let _ = prog.setup_logging(config);
+        log::info!("Program starting");
         if let Err(e) = notify("READY=1") {
             log::warn!("unable to notify host os about READY with {}", e);
         };
@@ -45,6 +46,7 @@ impl Program {
 
 impl Drop for Program {
     fn drop(&mut self) {
+        log::info!("Program stopping");
         if let Err(e) = notify("STOPPING=1") {
             log::warn!("unable to notify host os about STOPPING with {}", e)
         }
