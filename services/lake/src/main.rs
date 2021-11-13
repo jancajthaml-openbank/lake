@@ -1,9 +1,7 @@
-use std::thread;
-
 use signal_hook::consts::{SIGQUIT, TERM_SIGNALS};
 use signal_hook::iterator::Signals;
 use signal_hook::low_level;
-use simple_logger::init;
+use std::thread;
 use zmq_sys;
 
 use crate::config::Configuration;
@@ -34,7 +32,7 @@ fn main() -> Result<(), String> {
         let metrics_sender_1 = metrics.sender.clone();
 
         let ctx = Context::new();
-        let _ = ctx.set_io_threads(2);
+        let _ = ctx.set_io_threads(num_cpus::get());
 
         let puller = match setup_pull_socket(&ctx, &config) {
             Ok(sock) => Some(sock),

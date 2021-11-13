@@ -24,12 +24,12 @@ pub struct Metrics {
     pub sender: Sender<MetricCmdType>,
 }
 
-// impl Drop for Metrics {
-//     fn drop(&mut self) {
-//         let _ = self.sender.send(TERM);
-//         drop(&self.sender);
-//     }
-// }
+impl Drop for Metrics {
+    fn drop(&mut self) {
+        let _ = self.sender.send(TERM);
+        drop(&self.sender);
+    }
+}
 
 impl Metrics {
     /// creates new metrics fascade
