@@ -53,7 +53,7 @@ impl Drop for Program {
     }
 }
 
-/// sends msg to `NOTIFY_SOCKET` via udp
+#[cfg(target_family = "unix")]
 fn notify(msg: &str) -> io::Result<()> {
     let socket_path = match env::var_os("NOTIFY_SOCKET") {
         Some(path) => path,
