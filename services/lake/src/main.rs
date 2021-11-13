@@ -54,6 +54,9 @@ fn main() -> Result<(), String> {
 
         match (puller, publisher) {
             (Some(puller), Some(publisher)) => loop {
+                // INFO
+                // without metrics messages  17 s 711 ms    / 2 m 33 s
+                // with metrics messages     26 s 148 ms    / 4 m 17 s
                 let mut msg = Message::new();
                 let ptr = msg_ptr(&mut msg);
                 if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as i32) } == -1 {
