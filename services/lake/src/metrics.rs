@@ -4,7 +4,6 @@ use std::time::Duration;
 
 use log::info;
 use statsd::Client;
-//use systemstat::{saturating_sub_bytes, Platform, System};
 
 use signal_hook::consts::SIGQUIT;
 use signal_hook::low_level;
@@ -99,12 +98,25 @@ impl Metrics {
 #[allow(clippy::cast_precision_loss)]
 fn send_metrics(client: &Client, ingress: &u32, egress: &u32) {
     let mut pipe = client.pipeline();
-    if let Ok(me) = procfs::process::Process::myself() {
-        pipe.gauge("memory.bytes", me.stat.vsize as f64)
-    }
 
+	  pipe.gauge("memory.bytes", mem_bytes());
     pipe.count("message.ingress", *ingress as _);
     pipe.count("message.egress", *egress as _);
 
     pipe.send(client);
+}
+
+#[cfg(target_os = "linux")]
+fn mem_bytes() -> f64{
+	if let Ok(me) = procfs::process::Process::myself()  {
+		me.stat.vsize as f64
+	} else {
+		info!("Can't memory size");
+		0 as f64
+	}
+}
+
+#[cfg(target_os="macos")]
+fn mem_bytes() -> f64 {
+	0 as f64
 }
