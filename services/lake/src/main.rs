@@ -1,102 +1,111 @@
-use std::os::unix::net::UnixDatagram;
-use std::{env, io};
-
-use zmq_sys;
-
-use libc::c_int;
-
 use crate::config::Configuration;
 use crate::message::{msg_ptr, Message};
-use crate::socket::{Context, Socket};
-
 use crate::metrics::MetricCmdType::{EGRESS, INGRESS};
 use crate::metrics::Metrics;
-
-//use signal_hook::consts::{SIGQUIT, TERM_SIGNALS};
-//use signal_hook::iterator::Signals;
+use crate::program::Program;
+use crate::socket::{Context, Socket};
+use signal_hook::consts::{SIGQUIT, TERM_SIGNALS};
+use signal_hook::iterator::Signals;
+use signal_hook::low_level;
+use std::thread;
+use zmq_sys;
 
 mod config;
 mod error;
-mod logging;
 mod message;
 mod metrics;
+mod program;
 mod socket;
 
 fn main() -> Result<(), String> {
     let config = Configuration::load();
 
-    let _ = logging::setup_logging(&config);
-
-    ready();
-
-    let ctx = Context::new();
-
-    let puller = match setup_pull_socket(&ctx, &config) {
-        Ok(sock) => sock,
-        Err(_) => return Err("unable to initialize PULL socket".to_owned()),
-    };
-
-    let publisher = match setup_pub_socket(&ctx, &config) {
-        Ok(sock) => sock,
-        Err(_) => return Err("unable to initialize PUB socket".to_owned()),
-    };
-
     let metrics = match Metrics::new(&config) {
         Ok(instance) => instance,
         Err(_) => return Err("unable to instantiate metrics".to_owned()),
     };
-    let metrics_sender_1 = metrics.sender.clone();
 
-    // info create program here
-    ready();
+    let prog = Program::new(&config);
 
-    // FIXME need somehow kill the loop below
-    //let mut sigs = Signals::new(TERM_SIGNALS).unwrap();
-    //let _ = sigs.wait();
+    thread::spawn(move || {
+        let metrics_sender_1 = metrics.sender.clone();
 
-    println!("entering loop");
+        let ctx = Context::new();
+        let _ = ctx.set_io_threads(2);
 
-    loop {
-        let mut msg = Message::new();
-        let ptr = msg_ptr(&mut msg);
-        if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as c_int) } == -1 {
-            // FIXME stopping as a drop of program
-            stopping();
-            return Err(error::Error::from_raw(unsafe { zmq_sys::zmq_errno() }).to_string());
+        let puller = match setup_pull_socket(&ctx, &config) {
+            Ok(sock) => sock,
+            Err(err) => {
+                log::error!("unable to initialize PULL socket {}", err);
+                let _ = low_level::raise(SIGQUIT);
+                return;
+            }
         };
-        let _ = metrics_sender_1.send(INGRESS);
-        if unsafe {
-            let data = zmq_sys::zmq_msg_data(ptr);
-            let len = zmq_sys::zmq_msg_size(ptr) as usize;
-            zmq_sys::zmq_send(publisher.sock, data, len, 0 as c_int)
-        } == -1
-        {
-            // FIXME stopping as a drop of program
-            stopping();
-            return Err(error::Error::from_raw(unsafe { zmq_sys::zmq_errno() }).to_string());
+
+        let publisher = match setup_pub_socket(&ctx, &config) {
+            Ok(sock) => sock,
+            Err(err) => {
+                log::error!("unable to initialize PUB socket {}", err);
+                let _ = low_level::raise(SIGQUIT);
+                return;
+            }
         };
-        let _ = metrics_sender_1.send(EGRESS);
-    }
+
+        loop {
+            let mut msg = Message::new();
+            let ptr = msg_ptr(&mut msg);
+            if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as i32) } == -1 {
+                log::error!(
+                    "{}",
+                    error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
+                );
+                break;
+            };
+            let _ = metrics_sender_1.send(INGRESS);
+            if unsafe {
+                let data = zmq_sys::zmq_msg_data(ptr);
+                let len = zmq_sys::zmq_msg_size(ptr) as usize;
+                zmq_sys::zmq_send(publisher.sock, data, len, 0 as i32)
+            } == -1
+            {
+                log::error!(
+                    "{}",
+                    error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
+                );
+                break;
+            };
+            let _ = metrics_sender_1.send(EGRESS);
+        }
+
+        let _ = low_level::raise(SIGQUIT);
+    });
+
+    let mut sigs = Signals::new(TERM_SIGNALS).unwrap();
+    let _ = sigs.wait();
+
+    drop(prog);
+
+    Ok(())
 }
 
 fn setup_pull_socket(ctx: &Context, config: &Configuration) -> Result<Socket, String> {
-    let puller = match Socket::new(ctx.underlying, zmq_sys::ZMQ_PULL as c_int) {
+    let puller = match Socket::new(ctx.underlying, zmq_sys::ZMQ_PULL as i32) {
         Ok(sock) => sock,
         Err(_) => return Err("unable to initialize PULL socket".to_owned()),
     };
-    match puller.set_option(zmq_sys::ZMQ_CONFLATE as c_int, 0) {
+    match puller.set_option(zmq_sys::ZMQ_CONFLATE as i32, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PULL socket ZMQ_CONFLATE option to 0".to_owned()),
     };
-    match puller.set_option(zmq_sys::ZMQ_IMMEDIATE as c_int, 1) {
+    match puller.set_option(zmq_sys::ZMQ_IMMEDIATE as i32, 1) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PULL socket ZMQ_IMMEDIATE option to 1".to_owned()),
     };
-    match puller.set_option(zmq_sys::ZMQ_LINGER as c_int, 0) {
+    match puller.set_option(zmq_sys::ZMQ_LINGER as i32, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PULL socket ZMQ_IMMEDIATE option to 0".to_owned()),
     };
-    match puller.set_option(zmq_sys::ZMQ_RCVHWM as c_int, 0) {
+    match puller.set_option(zmq_sys::ZMQ_RCVHWM as i32, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PULL socket ZMQ_RCVHWM option to 0".to_owned()),
     };
@@ -107,57 +116,28 @@ fn setup_pull_socket(ctx: &Context, config: &Configuration) -> Result<Socket, St
 }
 
 fn setup_pub_socket(ctx: &Context, config: &Configuration) -> Result<Socket, String> {
-    let publisher = match Socket::new(ctx.underlying, zmq_sys::ZMQ_PUB as c_int) {
+    let publisher = match Socket::new(ctx.underlying, zmq_sys::ZMQ_PUB as i32) {
         Ok(sock) => sock,
         Err(_) => return Err("unable to initialize PUB socket".to_owned()),
     };
-    match publisher.set_option(zmq_sys::ZMQ_CONFLATE as c_int, 0) {
+    match publisher.set_option(zmq_sys::ZMQ_CONFLATE as i32, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PUB socket ZMQ_CONFLATE option to 0".to_owned()),
     };
-    match publisher.set_option(zmq_sys::ZMQ_IMMEDIATE as c_int, 1) {
+    match publisher.set_option(zmq_sys::ZMQ_IMMEDIATE as i32, 1) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PUB socket ZMQ_IMMEDIATE option to 1".to_owned()),
     };
-    match publisher.set_option(zmq_sys::ZMQ_LINGER as c_int, 0) {
+    match publisher.set_option(zmq_sys::ZMQ_LINGER as i32, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PUB socket ZMQ_IMMEDIATE option to 0".to_owned()),
     };
-    match publisher.set_option(zmq_sys::ZMQ_SNDHWM as c_int, 0) {
+    match publisher.set_option(zmq_sys::ZMQ_SNDHWM as i32, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PUB socket ZMQ_SNDHWM option to 0".to_owned()),
     };
     match publisher.bind(&format!("tcp://127.0.0.1:{}", config.pub_port)) {
         Ok(_) => Ok(publisher),
         Err(_) => return Err("unable to bind PUB socket".to_owned()),
-    }
-}
-
-/// tries to notify host os that service is ready
-fn ready() {
-    if let Err(e) = notify("READY=1") {
-        println!("unable to notify host os about READY with {}", e);
-    }
-}
-
-/// tries to notify host os that service is stopping
-fn stopping() {
-    if let Err(e) = notify("STOPPING=1") {
-        println!("unable to notify host os about STOPPING with {}", e)
-    }
-}
-
-/// sends msg to `NOTIFY_SOCKET` via udp
-fn notify(msg: &str) -> io::Result<()> {
-    let socket_path = match env::var_os("NOTIFY_SOCKET") {
-        Some(path) => path,
-        None => return Ok(()),
-    };
-    let sock = UnixDatagram::unbound()?;
-    let len = sock.send_to(msg.as_bytes(), socket_path)?;
-    if len == msg.len() {
-        Ok(())
-    } else {
-        Err(io::Error::new(io::ErrorKind::WriteZero, "incomplete write"))
     }
 }

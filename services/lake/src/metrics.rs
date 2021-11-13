@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use log::info;
 use statsd::Client;
-use systemstat::{saturating_sub_bytes, Platform, System};
+//use systemstat::{saturating_sub_bytes, Platform, System};
 
 use signal_hook::consts::SIGQUIT;
 use signal_hook::low_level;
@@ -63,11 +63,10 @@ impl Metrics {
             let mut ingress: u32 = 0;
             let mut egress: u32 = 0;
 
-            let system = System::new();
             loop {
                 match metrics_receiver.recv() {
                     Ok(cmd) if cmd == DUMP => {
-                        send_metrics(&client, &system, &ingress, &egress);
+                        send_metrics(&client, &ingress, &egress);
                         ingress = 0;
                         egress = 0;
                     }
@@ -78,18 +77,18 @@ impl Metrics {
                         egress += 1;
                     }
                     Ok(cmd) if cmd == TERM => {
-                        send_metrics(&client, &system, &ingress, &egress);
+                        send_metrics(&client, &ingress, &egress);
                         log::info!("TERMINATING metrics loop");
-                        let _ = low_level::raise(SIGQUIT);
                         break;
                     }
                     Ok(_) => {}
                     Err(_) => {
-                        let _ = low_level::raise(SIGQUIT);
                         break;
                     }
                 }
             }
+
+            let _ = low_level::raise(SIGQUIT);
         });
 
         Ok(Metrics { sender: s2 })
@@ -98,14 +97,10 @@ impl Metrics {
 
 // send metrics to statsd client
 #[allow(clippy::cast_precision_loss)]
-fn send_metrics(client: &Client, system: &System, ingress: &u32, egress: &u32) {
+fn send_metrics(client: &Client, ingress: &u32, egress: &u32) {
     let mut pipe = client.pipeline();
-
-    if let Ok(mem) = system.memory() {
-        pipe.gauge(
-            "memory.bytes",
-            saturating_sub_bytes(mem.total, mem.free).as_u64() as f64,
-        )
+    if let Ok(me) = procfs::process::Process::myself() {
+        pipe.gauge("memory.bytes", me.stat.vsize as f64)
     }
 
     pipe.count("message.ingress", *ingress as _);

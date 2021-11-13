@@ -17,6 +17,16 @@ impl Context {
             underlying: unsafe { zmq_sys::zmq_ctx_new() },
         }
     }
+
+    pub fn set_io_threads(&self, value: i32) -> Result<(), error::Error> {
+        if unsafe {
+            zmq_sys::zmq_ctx_set(self.underlying, zmq_sys::ZMQ_IO_THREADS as _, value as i32)
+        } == -1
+        {
+            return Err(error::Error::from_raw(unsafe { zmq_sys::zmq_errno() }));
+        }
+        Ok(())
+    }
 }
 
 pub struct Socket {

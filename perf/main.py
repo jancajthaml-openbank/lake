@@ -54,6 +54,9 @@ def main():
 
   messages_to_push = int(os.environ.get('MESSAGES_PUSHED', '100000'))
 
+  #i = 100_000_000
+  #messages_to_push = i
+
   i = 1_000
 
   while i <= messages_to_push:

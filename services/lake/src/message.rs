@@ -1,6 +1,6 @@
-use zmq_sys;
-
 use crate::error;
+
+use zmq_sys;
 
 /// Holds a ZMQ message.
 pub struct Message {
@@ -32,13 +32,6 @@ impl Message {
     pub fn new() -> Message {
         unsafe { Self::alloc(|msg| zmq_sys::zmq_msg_init(msg)) }
     }
-
-    /*
-    pub fn isempty(&self) -> bool {
-        let x = unsafe { zmq_sys::zmq_msg_size(&self.msg) };
-        x == 0
-    }
-    */
 }
 
 /// Get the low-level C pointer.
