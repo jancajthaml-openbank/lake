@@ -1,14 +1,17 @@
+use std::thread;
+
+use signal_hook::consts::{SIGQUIT, TERM_SIGNALS};
+use signal_hook::iterator::Signals;
+use signal_hook::low_level;
+use simple_logger::init;
+use zmq_sys;
+
 use crate::config::Configuration;
 use crate::message::{msg_ptr, Message};
 use crate::metrics::MetricCmdType::{EGRESS, INGRESS};
 use crate::metrics::Metrics;
 use crate::program::Program;
 use crate::socket::{Context, Socket};
-use signal_hook::consts::{SIGQUIT, TERM_SIGNALS};
-use signal_hook::iterator::Signals;
-use signal_hook::low_level;
-use std::thread;
-use zmq_sys;
 
 mod config;
 mod error;
@@ -34,47 +37,50 @@ fn main() -> Result<(), String> {
         let _ = ctx.set_io_threads(2);
 
         let puller = match setup_pull_socket(&ctx, &config) {
-            Ok(sock) => sock,
+            Ok(sock) => Some(sock),
             Err(err) => {
                 log::error!("unable to initialize PULL socket {}", err);
                 let _ = low_level::raise(SIGQUIT);
-                return;
+                None
             }
         };
 
         let publisher = match setup_pub_socket(&ctx, &config) {
-            Ok(sock) => sock,
+            Ok(sock) => Some(sock),
             Err(err) => {
                 log::error!("unable to initialize PUB socket {}", err);
                 let _ = low_level::raise(SIGQUIT);
-                return;
+                None
             }
         };
 
-        loop {
-            let mut msg = Message::new();
-            let ptr = msg_ptr(&mut msg);
-            if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as i32) } == -1 {
-                log::error!(
-                    "{}",
-                    error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
-                );
-                break;
-            };
-            let _ = metrics_sender_1.send(INGRESS);
-            if unsafe {
-                let data = zmq_sys::zmq_msg_data(ptr);
-                let len = zmq_sys::zmq_msg_size(ptr) as usize;
-                zmq_sys::zmq_send(publisher.sock, data, len, 0 as i32)
-            } == -1
-            {
-                log::error!(
-                    "{}",
-                    error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
-                );
-                break;
-            };
-            let _ = metrics_sender_1.send(EGRESS);
+        match (puller, publisher) {
+            (Some(puller), Some(publisher)) => loop {
+                let mut msg = Message::new();
+                let ptr = msg_ptr(&mut msg);
+                if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as i32) } == -1 {
+                    log::error!(
+                        "{}",
+                        error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
+                    );
+                    break;
+                };
+                let _ = metrics_sender_1.send(INGRESS);
+                if unsafe {
+                    let data = zmq_sys::zmq_msg_data(ptr);
+                    let len = zmq_sys::zmq_msg_size(ptr) as usize;
+                    zmq_sys::zmq_send(publisher.sock, data, len, 0 as i32)
+                } == -1
+                {
+                    log::error!(
+                        "{}",
+                        error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
+                    );
+                    break;
+                };
+                let _ = metrics_sender_1.send(EGRESS);
+            },
+            _ => {}
         }
 
         let _ = low_level::raise(SIGQUIT);
