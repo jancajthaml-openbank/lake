@@ -6,7 +6,6 @@ use zmq_sys;
 
 use crate::config::Configuration;
 use crate::message::{msg_ptr, Message};
-use crate::metrics::MetricCmdType::{EGRESS, INGRESS};
 use crate::metrics::Metrics;
 use crate::program::Program;
 use crate::socket::{Context, Socket};
@@ -29,8 +28,6 @@ fn main() -> Result<(), String> {
     let prog = Program::new(&config);
 
     thread::spawn(move || {
-        let metrics_sender_1 = metrics.sender.clone();
-
         let ctx = Context::new();
         let _ = ctx.set_io_threads(num_cpus::get());
 
@@ -55,8 +52,9 @@ fn main() -> Result<(), String> {
         match (puller, publisher) {
             (Some(puller), Some(publisher)) => loop {
                 // INFO
-                // without metrics messages  17 s 711 ms    / 2 m 33 s
-                // with metrics messages     26 s 148 ms    / 4 m 17 s
+                // without metrics           17 s 711 ms    / 2 m 33 s
+                // with metrics channels     26 s 148 ms    / 4 m 17 s
+                // with metrics atomics      19 s 922 ms    / 2 m 39 s
                 let mut msg = Message::new();
                 let ptr = msg_ptr(&mut msg);
                 if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as i32) } == -1 {
@@ -66,7 +64,7 @@ fn main() -> Result<(), String> {
                     );
                     break;
                 };
-                let _ = metrics_sender_1.send(INGRESS);
+                metrics.message_ingress();
                 if unsafe { zmq_sys::zmq_msg_send(ptr, publisher.sock, 0 as i32) } == -1 {
                     log::error!(
                         "{}",
@@ -74,7 +72,7 @@ fn main() -> Result<(), String> {
                     );
                     break;
                 };
-                let _ = metrics_sender_1.send(EGRESS);
+                metrics.message_egress();
             },
             _ => {}
         }
