@@ -36,14 +36,17 @@ OUTPUT_FILE=${OUTPUT}/$(basename ${SOURCE})-${PLATFORM}-${ARCH}
 ################################################################################
 
 lifecycle::rust::clean() {
-  local output_file="$1"
-  if [ -z ${output_file} -o ! -f ${output_file} ] ; then
+  local source="$1"
+  if [ -z ${source} -o ! -d ${source} ] ; then
+    return
+  fi
+  local output="$2"
+  if [ -z ${output} -o ! -d ${output} ] ; then
     return
   fi
 
-  rm ${output_file}
-
-  echo "[info] ${output_file} cleaned"
+  find "${output}" -name "$(basename ${source})*${ARCH}*" -exec rm -f {} \;
+  echo "[info] ${output} cleaned"
 }
 
 lifecycle::rust::build() {
@@ -164,7 +167,8 @@ lifecycle::rust::strip() {
 ################################################################################
 
 lifecycle::rust::clean \
-  ${OUTPUT_FILE}
+  ${SOURCE} \
+  ${OUTPUT}
 
 lifecycle::rust::build \
   ${SOURCE} \

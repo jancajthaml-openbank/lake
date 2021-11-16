@@ -1,4 +1,3 @@
-use log::info;
 use signal_hook::consts::SIGQUIT;
 use signal_hook::low_level;
 use statsd::Client;

@@ -42,7 +42,7 @@ def interrupt_stdout() -> None:
 
 def info(msg) -> None:
   this.__progress_running = False
-  sys.stdout.write('\033[32m  ├─ {0}\033[0m  \n'.format(msg))
+  sys.stdout.write('\033[32m  ╠─ {0}\033[0m  \n'.format(msg))
   sys.stdout.flush()
 
 def print_daemon(msg) -> None:
@@ -52,12 +52,12 @@ def print_daemon(msg) -> None:
 
 def error(msg) -> None:
   this.__progress_running = False
-  sys.stdout.write('\033[31m  ├─ {0}\033[0m  \n'.format(msg))
+  sys.stdout.write('\033[31m  ╠─ {0}\033[0m  \n'.format(msg))
   sys.stdout.flush()
 
 def warn(msg) -> None:
   this.__progress_running = False
-  sys.stdout.write('\033[33m  ├─ {0}\033[0m  \n'.format(msg))
+  sys.stdout.write('\033[33m  ╠─ {0}\033[0m  \n'.format(msg))
   sys.stdout.flush()
 
 class timeit():
