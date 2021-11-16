@@ -28,7 +28,7 @@ lifecycle::rus::sec() {
   if [ -z ${dir} -o ! -d ${dir} ] ; then
     return
   fi
-  cd ${dir} && cargo audit
+  cd ${dir} && cargo audit || :
 }
 
 ################################################################################

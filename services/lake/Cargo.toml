@@ -5,11 +5,9 @@ edition = "2021"
 
 [dependencies]
 statsd = { version = "0.13.1" }
-systemstat = { version = "0.1.7" }
-log = "0.4.14"
-simple_logger = { version = "1.11.0" }
+log = { version = "0.4.14" }
+simple_logger = { version = "1.13.0", default-features = false, features = ["timestamps"] }
 signal-hook = { version = "0.3.4" }
-
 zmq-sys = { version = "0.11.0" }
 libc = { version = "0.2.15" }
 

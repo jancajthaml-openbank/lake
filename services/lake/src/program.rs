@@ -19,12 +19,10 @@ impl Program {
     }
 
     fn setup_logging(&self, config: &Configuration) -> Result<(), String> {
-        match SimpleLogger::new().init() {
+        match SimpleLogger::new().with_level(LevelFilter::Info).init() {
             Ok(_) => {}
             Err(_) => return Err("unable to initialize logger".to_owned()),
         };
-
-        log::set_max_level(LevelFilter::Info);
 
         let level = match &*config.log_level {
             "DEBUG" => LevelFilter::Debug,
