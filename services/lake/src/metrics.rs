@@ -17,12 +17,14 @@ pub struct Metrics {
     ingress: AtomicUsize,
     /// egress counter
     egress: AtomicUsize,
+    // FIXME needs child thread handle
 }
 
 impl Drop for Metrics {
     fn drop(&mut self) {
         println!("Metrics stopping");
         log::info!("Metrics stopping");
+        // FIXME need to join child thread here and wait
         self.send_metrics();
     }
 }
@@ -55,9 +57,12 @@ impl Metrics {
         // https://github.com/rust-lang/rust/blob/8c069ceba81a0fffc1ce95aaf7e8339e11bf2796/src/libstd/sys/unix/thread.rs#L195
 
         // https://users.rust-lang.org/t/pthread-cancel-undefined-behavior/38477/4
+
         thread::spawn(move || {
-            let duration = Duration::from_secs(1);
+            let duration = Duration::from_secs(1); // FIXME shorter sleeps
             loop {
+                // FIXME check if program is dead
+
                 // https://docs.rs/shuteye/0.3.3/shuteye/fn.sleep.html
                 thread::sleep(duration);
                 arc_instance_clone.send_metrics();

@@ -35,7 +35,9 @@ fn run() -> Result<(), String> {
         Err(_) => return Err("unable to instantiate metrics".to_owned()),
     };
 
-    let metrics_1 = metrics.clone();
+    // TODO relay structure / fascade that is droppable
+
+    //let metrics_1 = metrics.clone();
 
     thread::spawn(move || {
         let ctx = Context::new();
@@ -69,7 +71,7 @@ fn run() -> Result<(), String> {
                     );
                     break;
                 };
-                metrics_1.message_ingress();
+                metrics.message_ingress();
                 if unsafe { zmq_sys::zmq_msg_send(ptr, publisher.sock, 0 as i32) } == -1 {
                     log::error!(
                         "{}",
@@ -77,7 +79,7 @@ fn run() -> Result<(), String> {
                     );
                     break;
                 };
-                metrics_1.message_egress();
+                metrics.message_egress();
             },
             _ => {}
         }
@@ -88,8 +90,10 @@ fn run() -> Result<(), String> {
     let mut sigs = Signals::new(TERM_SIGNALS).unwrap();
     let _ = sigs.wait();
 
+    // TODO drop relay
+    // TODO drop metrics
+
     drop(prog);
-    drop(metrics);
 
     Ok(())
 }
