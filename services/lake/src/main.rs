@@ -9,6 +9,7 @@ use crate::relay::Relay;
 
 mod config;
 mod error;
+mod logger;
 mod message;
 mod metrics;
 mod program;

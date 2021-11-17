@@ -23,7 +23,6 @@ impl Drop for Metrics {
         log::info!("Metrics stopping");
         log::debug!("Metrics waiting for child thread to terminate");
         let _ = self.child_thread.take().unwrap().join();
-        log::debug!("Metrics child thread exited");
         log::info!("Metrics stopped");
     }
 }

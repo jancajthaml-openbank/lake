@@ -1,11 +1,12 @@
-use log::LevelFilter;
-use simple_logger::SimpleLogger;
+//use log::LevelFilter;
+//use simple_logger::SimpleLogger;
 use std::os::unix::net::UnixDatagram;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{env, io};
 
 use crate::config::Configuration;
+use crate::logger::Logger;
 
 pub struct Program {
     pub running: Arc<AtomicBool>,
@@ -16,36 +17,13 @@ impl Program {
         let prog = Program {
             running: Arc::new(AtomicBool::new(false)),
         };
-        let _ = prog.setup_logging(config);
+        let _ = Logger::new().init(&*config.log_level);
         log::info!("Program starting");
         if let Err(e) = notify("READY=1") {
             log::warn!("unable to notify host os about READY with {}", e);
         };
         prog.running.store(true, Ordering::Relaxed);
         prog
-    }
-
-    fn setup_logging(&self, config: &Configuration) -> Result<(), String> {
-        match SimpleLogger::new().with_level(LevelFilter::Info).init() {
-            Ok(_) => {}
-            Err(_) => return Err("unable to initialize logger".to_owned()),
-        };
-
-        let level = match &*config.log_level {
-            "DEBUG" => LevelFilter::Debug,
-            "INFO" => LevelFilter::Info,
-            "WARN" => LevelFilter::Warn,
-            "ERROR" => LevelFilter::Error,
-            _ => {
-                log::warn!("Invalid log level {}, using level INFO", config.log_level);
-                LevelFilter::Info
-            }
-        };
-
-        log::info!("Log level set to {}", level.as_str());
-        log::set_max_level(level);
-
-        Ok(())
     }
 }
 
@@ -73,4 +51,9 @@ fn notify(msg: &str) -> io::Result<()> {
     } else {
         Err(io::Error::new(io::ErrorKind::WriteZero, "incomplete write"))
     }
+}
+
+#[cfg(not(target_family = "unix"))]
+fn notify(msg: &msg) -> io::Result<()> {
+    Ok(())
 }

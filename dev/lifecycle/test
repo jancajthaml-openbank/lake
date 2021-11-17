@@ -47,42 +47,6 @@ lifecycle::rust::test() {
   \
   cargo test \
     --manifest-path=${dir}/Cargo.toml
-
-  #https://github.com/mozilla/grcov
-
-  #  # run unit tests and collect coverage
-  #  cd ${dir} && \
-  #  \
-  #  GOMAXPROCS=1 \
-  #  go test \
-  #    -v ./... \
-  #    -coverprofile=${coverage_out} \
-  #    -covermode=count \
-  #    -coverpkg=./... \
-  #    -timeout=20s \
-  #  | grc tee ${test_out}
-  #
-  #  go2xunit \
-  #    -fail \
-  #    -input ${test_out} \
-  #    -output ${output}/${target}-results.xml
-  #
-  #  mkdir -p ${output}/${target}-coverage
-  #
-  #  go tool cover \
-  #    --html=${coverage_out} \
-  #    -o ${output}/${target}-coverage/index.html
-  #
-  #  # run only benchmarks
-  #  cd ${dir} && \
-  #  \
-  #  GOMAXPROCS=1 \
-  #    grc go test \
-  #    -v ./... \
-  #    -run=^$ \
-  #    -bench=. \
-  #    -benchmem \
-  #    -benchtime=10000x
 }
 
 ################################################################################

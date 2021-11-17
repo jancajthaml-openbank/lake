@@ -39,7 +39,6 @@ impl Drop for Relay {
         };
         log::debug!("Relay waiting for child thread to terminate");
         let _ = self.child_thread.take().unwrap().join();
-        log::debug!("Relay child thread exited");
         log::info!("Relay stopped");
     }
 }
@@ -88,9 +87,15 @@ impl Relay {
                                 "{}",
                                 error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
                             );
+                            drop(puller);
+                            drop(publisher);
+                            drop(ctx);
                             break;
                         };
                         if !prog_running.load(Ordering::Relaxed) {
+                            drop(puller);
+                            drop(publisher);
+                            drop(ctx);
                             break;
                         }
                         metrics.message_ingress();
@@ -99,6 +104,9 @@ impl Relay {
                                 "{}",
                                 error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
                             );
+                            drop(puller);
+                            drop(publisher);
+                            drop(ctx);
                             break;
                         };
                         metrics.message_egress();

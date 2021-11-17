@@ -30,13 +30,25 @@ impl Context {
     }
 }
 
+impl Drop for Context {
+    fn drop(&mut self) {
+        log::debug!("Stopping ZMQ context");
+        while unsafe { zmq_sys::zmq_ctx_term(self.underlying) } == -1 {
+            if error::Error::from_raw(unsafe { zmq_sys::zmq_errno() }) != error::Error::EINTR {
+                break;
+            };
+        }
+        log::debug!("Stopped ZMQ context");
+    }
+}
+
 pub struct Socket {
     pub sock: *mut c_void,
 }
 
 impl Socket {
-    pub fn new(ctx: *mut c_void, t: i32) -> Result<Socket, error::Error> {
-        let sock = unsafe { zmq_sys::zmq_socket(ctx, t) };
+    pub fn new(ctx: *mut c_void, socket_type: i32) -> Result<Socket, error::Error> {
+        let sock = unsafe { zmq_sys::zmq_socket(ctx, socket_type) };
         if sock.is_null() {
             return Err(error::Error::from_raw(unsafe { zmq_sys::zmq_errno() }));
         }
@@ -77,8 +89,10 @@ impl Socket {
 
 impl Drop for Socket {
     fn drop(&mut self) {
+        log::debug!("Stopping ZMQ socket");
         if unsafe { zmq_sys::zmq_close(self.sock) } == -1 {
             log::error!("socket leaked");
         }
+        log::debug!("Stopped ZMQ socket");
     }
 }
