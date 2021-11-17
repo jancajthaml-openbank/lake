@@ -1,3 +1,4 @@
+use log;
 use signal_hook::consts::{SIGQUIT, TERM_SIGNALS};
 use signal_hook::iterator::Signals;
 use signal_hook::low_level;
@@ -18,14 +19,23 @@ mod program;
 mod socket;
 
 fn main() -> Result<(), String> {
+    println!("main before");
+    let x = run();
+    println!("run after");
+    x
+}
+
+fn run() -> Result<(), String> {
     let config = Configuration::load();
+
+    let prog = Program::new(&config); // FIXME program should hold atomic representing app running / dead
 
     let metrics = match Metrics::new(&config) {
         Ok(instance) => instance,
         Err(_) => return Err("unable to instantiate metrics".to_owned()),
     };
 
-    let prog = Program::new(&config);
+    let metrics_1 = metrics.clone();
 
     thread::spawn(move || {
         let ctx = Context::new();
@@ -35,7 +45,6 @@ fn main() -> Result<(), String> {
             Ok(sock) => Some(sock),
             Err(err) => {
                 log::error!("unable to initialize PULL socket {}", err);
-                let _ = low_level::raise(SIGQUIT);
                 None
             }
         };
@@ -44,13 +53,13 @@ fn main() -> Result<(), String> {
             Ok(sock) => Some(sock),
             Err(err) => {
                 log::error!("unable to initialize PUB socket {}", err);
-                let _ = low_level::raise(SIGQUIT);
                 None
             }
         };
 
         match (puller, publisher) {
             (Some(puller), Some(publisher)) => loop {
+                // FIXME check if application is dead
                 let mut msg = Message::new();
                 let ptr = msg_ptr(&mut msg);
                 if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as i32) } == -1 {
@@ -60,7 +69,7 @@ fn main() -> Result<(), String> {
                     );
                     break;
                 };
-                metrics.message_ingress();
+                metrics_1.message_ingress();
                 if unsafe { zmq_sys::zmq_msg_send(ptr, publisher.sock, 0 as i32) } == -1 {
                     log::error!(
                         "{}",
@@ -68,7 +77,7 @@ fn main() -> Result<(), String> {
                     );
                     break;
                 };
-                metrics.message_egress();
+                metrics_1.message_egress();
             },
             _ => {}
         }
@@ -80,6 +89,7 @@ fn main() -> Result<(), String> {
     let _ = sigs.wait();
 
     drop(prog);
+    drop(metrics);
 
     Ok(())
 }

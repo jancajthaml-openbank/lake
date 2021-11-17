@@ -21,6 +21,8 @@ pub struct Metrics {
 
 impl Drop for Metrics {
     fn drop(&mut self) {
+        println!("Metrics stopping");
+        log::info!("Metrics stopping");
         self.send_metrics();
     }
 }
@@ -47,9 +49,16 @@ impl Metrics {
         let arc_instance = Arc::new(instance);
         let arc_instance_clone = Arc::clone(&arc_instance);
 
+        log::info!("Metrics starting");
+
+        // https://newbedev.com/what-happens-to-a-detached-thread-when-main-exits
+        // https://github.com/rust-lang/rust/blob/8c069ceba81a0fffc1ce95aaf7e8339e11bf2796/src/libstd/sys/unix/thread.rs#L195
+
+        // https://users.rust-lang.org/t/pthread-cancel-undefined-behavior/38477/4
         thread::spawn(move || {
             let duration = Duration::from_secs(1);
             loop {
+                // https://docs.rs/shuteye/0.3.3/shuteye/fn.sleep.html
                 thread::sleep(duration);
                 arc_instance_clone.send_metrics();
             }
