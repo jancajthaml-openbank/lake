@@ -51,6 +51,14 @@ impl Socket {
         Ok(())
     }
 
+    pub fn connect(&self, endpoint: &str) -> Result<(), error::Error> {
+        let cstr = ffi::CString::new(endpoint.as_bytes()).unwrap();
+        if unsafe { zmq_sys::zmq_connect(self.sock, cstr.as_ptr()) } == -1 {
+            return Err(error::Error::from_raw(unsafe { zmq_sys::zmq_errno() }));
+        }
+        Ok(())
+    }
+
     pub fn set_option(&self, opt: i32, val: i32) -> Result<(), error::Error> {
         if unsafe {
             zmq_sys::zmq_setsockopt(

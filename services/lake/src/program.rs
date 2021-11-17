@@ -1,20 +1,27 @@
 use log::LevelFilter;
 use simple_logger::SimpleLogger;
 use std::os::unix::net::UnixDatagram;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::{env, io};
 
 use crate::config::Configuration;
 
-pub struct Program {}
+pub struct Program {
+    pub running: Arc<AtomicBool>,
+}
 
 impl Program {
     pub fn new(config: &Configuration) -> Program {
-        let prog = Program {};
+        let prog = Program {
+            running: Arc::new(AtomicBool::new(false)),
+        };
         let _ = prog.setup_logging(config);
         log::info!("Program starting");
         if let Err(e) = notify("READY=1") {
             log::warn!("unable to notify host os about READY with {}", e);
         };
+        prog.running.store(true, Ordering::Relaxed);
         prog
     }
 
