@@ -7,11 +7,11 @@ services:
   # -------------------------------------------------------------------------- #
 
   rust: &rust
-    image: jancajthaml/rust
+    image: jancajthaml/rust:${ARCH}
     tty: true
     volumes:
       - .:/project:delegated
-      - ./services/lake:/go/src/github.com/jancajthaml-openbank/lake:delegated
+      - ./services/lake:/rust/src/github.com/jancajthaml-openbank/lake:delegated
     working_dir: /project
     environment:
       - COMPOSE_PROJECT_NAME

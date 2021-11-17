@@ -1,5 +1,3 @@
-//use log::LevelFilter;
-//use simple_logger::SimpleLogger;
 use std::os::unix::net::UnixDatagram;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;

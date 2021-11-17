@@ -56,7 +56,7 @@ bootstrap:
 
 .PHONY: lint
 lint:
-	@docker-compose \
+	@ARCH=$(ARCH) docker-compose \
 		run \
 		--rm lint \
 		--source /rust/src/github.com/jancajthaml-openbank/lake \
@@ -72,7 +72,7 @@ sec:
 
 .PHONY: doc
 doc:
-	@docker-compose \
+	@ARCH=$(ARCH) docker-compose \
 		run \
 		--rm doc \
 		--source /rust/src/github.com/jancajthaml-openbank/lake \

@@ -60,8 +60,6 @@ lifecycle::rust::build() {
     return
   fi
 
-  rustc --version
-
   case ${ARCH} in
 
     armhf)

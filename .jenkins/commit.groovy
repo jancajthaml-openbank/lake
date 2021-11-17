@@ -94,7 +94,7 @@ pipeline {
         stage('Fetch Dependencies') {
             agent {
                 docker {
-                    image 'jancajthaml/rust:latest'
+                    image "jancajthaml/rust:${env.ARCH}"
                     args "--entrypoint=''"
                     reuseNode true
                 }
@@ -112,7 +112,7 @@ pipeline {
         stage('Static Analysis') {
             agent {
                 docker {
-                    image 'jancajthaml/rust:latest'
+                    image "jancajthaml/rust:${env.ARCH}"
                     args "--entrypoint=''"
                     reuseNode true
                 }
@@ -134,7 +134,7 @@ pipeline {
         stage('Unit Test') {
             agent {
                 docker {
-                    image 'jancajthaml/rust:latest'
+                    image "jancajthaml/rust:${env.ARCH}"
                     args "--entrypoint=''"
                     reuseNode true
                 }
@@ -153,7 +153,7 @@ pipeline {
         stage('Compile') {
             agent {
                 docker {
-                    image 'jancajthaml/rust:latest'
+                    image "jancajthaml/rust:${env.ARCH}"
                     args "--entrypoint=''"
                     reuseNode true
                 }
@@ -235,7 +235,7 @@ pipeline {
         stage('Documentation') {
             agent {
                 docker {
-                    image 'jancajthaml/rust:latest'
+                    image "jancajthaml/rust:${env.ARCH}"
                     args "--entrypoint=''"
                     reuseNode true
                 }
