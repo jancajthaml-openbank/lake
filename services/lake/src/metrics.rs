@@ -8,11 +8,9 @@ use crate::config::Configuration;
 
 /// statsd metrics subroutine
 pub struct Metrics {
-    /// ingress counter
-    ingress: Arc<AtomicUsize>,
-    /// egress counter
-    egress: Arc<AtomicUsize>,
-    // FIXME needs child thread handle
+    /// messages counter
+    messages: Arc<AtomicUsize>,
+    // child thread join handle
     child_thread: Option<thread::JoinHandle<()>>,
 }
 
@@ -31,11 +29,8 @@ impl Metrics {
     pub fn new(config: &Configuration, prog_running: Arc<AtomicBool>) -> Arc<Metrics> {
         let endpoint: String = config.statsd_endpoint.clone();
 
-        let arc_ingress = Arc::new(AtomicUsize::new(0));
-        let arc_ingress_clone = arc_ingress.clone();
-
-        let arc_egress = Arc::new(AtomicUsize::new(0));
-        let arc_egress_clone = arc_egress.clone();
+        let arc_messages = Arc::new(AtomicUsize::new(0));
+        let arc_messages_clone = arc_messages.clone();
 
         log::info!("Metrics starting");
 
@@ -57,14 +52,7 @@ impl Metrics {
                     let mut pipe = statsd_client.pipeline();
 
                     pipe.gauge("memory.bytes", mem_bytes());
-                    pipe.count(
-                        "message.ingress",
-                        arc_ingress_clone.swap(0, Ordering::Relaxed) as f64,
-                    );
-                    pipe.count(
-                        "message.egress",
-                        arc_egress_clone.swap(0, Ordering::Relaxed) as f64,
-                    );
+                    pipe.count("message.relayed", arc_messages_clone.swap(0, Ordering::AcqRel) as f64);
 
                     pipe.send(&statsd_client);
                 }
@@ -73,20 +61,14 @@ impl Metrics {
         });
 
         Arc::new(Metrics {
-            ingress: arc_ingress,
-            egress: arc_egress,
+            messages: arc_messages,
             child_thread: Some(child_thread),
         })
     }
 
-    /// increments egress counter
-    pub fn message_egress(&self) {
-        self.egress.fetch_add(1, Ordering::Relaxed);
-    }
-
-    /// increments ingress counter
-    pub fn message_ingress(&self) {
-        self.ingress.fetch_add(1, Ordering::Relaxed);
+    /// increments ingress and egress counter
+    pub fn relayed(&self) {
+        self.messages.fetch_add(1, Ordering::AcqRel);
     }
 }
 

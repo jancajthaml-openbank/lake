@@ -1,4 +1,3 @@
-//use signal_hook::consts::SIGQUIT;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
@@ -52,7 +51,7 @@ impl Relay {
 
         let child_thread = thread::spawn(move || {
             let ctx = Context::new();
-            let _ = ctx.set_io_threads(num_cpus::get());
+            let _ = ctx.set_io_threads(2);
 
             let puller = match setup_pull_socket(&ctx, pull_port) {
                 Ok(sock) => Some(sock),
@@ -72,41 +71,27 @@ impl Relay {
 
             if let (Some(puller), Some(publisher)) = (puller, publisher) {
                 log::info!("Relay started");
-                loop {
+                while prog_running.load(Ordering::Relaxed) {
                     let mut msg = Message::new();
                     let ptr = msg_ptr(&mut msg);
-                    if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0_i32) } == -1 {
+                    if unsafe {
+                        zmq_sys::zmq_msg_recv(ptr, puller.sock, 0_i32) == -1 || zmq_sys::zmq_msg_send(ptr, publisher.sock, 0_i32) == -1
+                    } {
                         log::error!(
                             "{}",
                             error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
                         );
-                        drop(puller);
-                        drop(publisher);
-                        drop(ctx);
                         break;
                     };
-                    if !prog_running.load(Ordering::Relaxed) {
-                        drop(puller);
-                        drop(publisher);
-                        drop(ctx);
-                        break;
-                    }
-                    metrics.message_ingress();
-                    if unsafe { zmq_sys::zmq_msg_send(ptr, publisher.sock, 0_i32) } == -1 {
-                        log::error!(
-                            "{}",
-                            error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
-                        );
-                        drop(puller);
-                        drop(publisher);
-                        drop(ctx);
-                        break;
-                    };
-                    metrics.message_egress();
-                }
+                    metrics.relayed();
+                };
+                drop(puller);
+                drop(publisher);
             }
 
+            drop(ctx);
             unsafe { libc::raise(libc::SIGTERM) };
+            ()
         });
 
         Arc::new(Relay {
