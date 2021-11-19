@@ -1,10 +1,7 @@
-use log;
-use signal_hook::consts::SIGQUIT;
-use signal_hook::low_level;
+//use signal_hook::consts::SIGQUIT;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
-use zmq_sys;
 
 use crate::config::Configuration;
 use crate::error;
@@ -22,20 +19,17 @@ impl Drop for Relay {
     fn drop(&mut self) {
         log::info!("Relay stopping");
         let ctx = Context::new();
-        match Socket::new(ctx.underlying, zmq_sys::ZMQ_PUSH as i32) {
-            Ok(pusher) => {
-                log::debug!("Relay unblocking child thread");
-                match pusher.connect(&format!("tcp://127.0.0.1:{}", self.kill_port)) {
-                    Ok(_) => {
-                        let mut msg = Message::new();
-                        let ptr = msg_ptr(&mut msg);
-                        unsafe { zmq_sys::zmq_msg_send(ptr, pusher.sock, 0 as i32) };
-                    }
-                    Err(_) => {}
-                };
+        if let Ok(pusher) = Socket::new(ctx.underlying, zmq_sys::ZMQ_PUSH) {
+            log::debug!("Relay unblocking child thread");
+            if pusher
+                .connect(&format!("tcp://127.0.0.1:{}", self.kill_port))
+                .is_ok()
+            {
+                let mut msg = Message::new();
+                let ptr = msg_ptr(&mut msg);
+                unsafe { zmq_sys::zmq_msg_send(ptr, pusher.sock, 0_i32) };
                 drop(pusher);
-            }
-            Err(_) => {}
+            };
         };
         log::debug!("Relay waiting for child thread to terminate");
         let _ = self.child_thread.take().unwrap().join();
@@ -76,46 +70,43 @@ impl Relay {
                 }
             };
 
-            match (puller, publisher) {
-                (Some(puller), Some(publisher)) => {
-                    log::info!("Relay started");
-                    loop {
-                        let mut msg = Message::new();
-                        let ptr = msg_ptr(&mut msg);
-                        if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0 as i32) } == -1 {
-                            log::error!(
-                                "{}",
-                                error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
-                            );
-                            drop(puller);
-                            drop(publisher);
-                            drop(ctx);
-                            break;
-                        };
-                        if !prog_running.load(Ordering::Relaxed) {
-                            drop(puller);
-                            drop(publisher);
-                            drop(ctx);
-                            break;
-                        }
-                        metrics.message_ingress();
-                        if unsafe { zmq_sys::zmq_msg_send(ptr, publisher.sock, 0 as i32) } == -1 {
-                            log::error!(
-                                "{}",
-                                error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
-                            );
-                            drop(puller);
-                            drop(publisher);
-                            drop(ctx);
-                            break;
-                        };
-                        metrics.message_egress();
+            if let (Some(puller), Some(publisher)) = (puller, publisher) {
+                log::info!("Relay started");
+                loop {
+                    let mut msg = Message::new();
+                    let ptr = msg_ptr(&mut msg);
+                    if unsafe { zmq_sys::zmq_msg_recv(ptr, puller.sock, 0_i32) } == -1 {
+                        log::error!(
+                            "{}",
+                            error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
+                        );
+                        drop(puller);
+                        drop(publisher);
+                        drop(ctx);
+                        break;
+                    };
+                    if !prog_running.load(Ordering::Relaxed) {
+                        drop(puller);
+                        drop(publisher);
+                        drop(ctx);
+                        break;
                     }
+                    metrics.message_ingress();
+                    if unsafe { zmq_sys::zmq_msg_send(ptr, publisher.sock, 0_i32) } == -1 {
+                        log::error!(
+                            "{}",
+                            error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
+                        );
+                        drop(puller);
+                        drop(publisher);
+                        drop(ctx);
+                        break;
+                    };
+                    metrics.message_egress();
                 }
-                _ => {}
             }
 
-            let _ = low_level::raise(SIGQUIT);
+            unsafe { libc::raise(libc::SIGTERM) };
         });
 
         Arc::new(Relay {
@@ -126,55 +117,55 @@ impl Relay {
 }
 
 fn setup_pull_socket(ctx: &Context, port: i32) -> Result<Socket, String> {
-    let puller = match Socket::new(ctx.underlying, zmq_sys::ZMQ_PULL as i32) {
+    let puller = match Socket::new(ctx.underlying, zmq_sys::ZMQ_PULL) {
         Ok(sock) => sock,
         Err(_) => return Err("unable to initialize PULL socket".to_owned()),
     };
-    match puller.set_option(zmq_sys::ZMQ_CONFLATE as i32, 0) {
+    match puller.set_option(zmq_sys::ZMQ_CONFLATE, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PULL socket ZMQ_CONFLATE option to 0".to_owned()),
     };
-    match puller.set_option(zmq_sys::ZMQ_IMMEDIATE as i32, 1) {
+    match puller.set_option(zmq_sys::ZMQ_IMMEDIATE, 1) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PULL socket ZMQ_IMMEDIATE option to 1".to_owned()),
     };
-    match puller.set_option(zmq_sys::ZMQ_LINGER as i32, 0) {
+    match puller.set_option(zmq_sys::ZMQ_LINGER, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PULL socket ZMQ_IMMEDIATE option to 0".to_owned()),
     };
-    match puller.set_option(zmq_sys::ZMQ_RCVHWM as i32, 0) {
+    match puller.set_option(zmq_sys::ZMQ_RCVHWM, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PULL socket ZMQ_RCVHWM option to 0".to_owned()),
     };
     match puller.bind(&format!("tcp://127.0.0.1:{}", port)) {
         Ok(_) => Ok(puller),
-        Err(_) => return Err("unable to bind PULL socket".to_owned()),
+        Err(_) => Err("unable to bind PULL socket".to_owned()),
     }
 }
 
 fn setup_pub_socket(ctx: &Context, port: i32) -> Result<Socket, String> {
-    let publisher = match Socket::new(ctx.underlying, zmq_sys::ZMQ_PUB as i32) {
+    let publisher = match Socket::new(ctx.underlying, zmq_sys::ZMQ_PUB) {
         Ok(sock) => sock,
         Err(_) => return Err("unable to initialize PUB socket".to_owned()),
     };
-    match publisher.set_option(zmq_sys::ZMQ_CONFLATE as i32, 0) {
+    match publisher.set_option(zmq_sys::ZMQ_CONFLATE, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PUB socket ZMQ_CONFLATE option to 0".to_owned()),
     };
-    match publisher.set_option(zmq_sys::ZMQ_IMMEDIATE as i32, 1) {
+    match publisher.set_option(zmq_sys::ZMQ_IMMEDIATE, 1) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PUB socket ZMQ_IMMEDIATE option to 1".to_owned()),
     };
-    match publisher.set_option(zmq_sys::ZMQ_LINGER as i32, 0) {
+    match publisher.set_option(zmq_sys::ZMQ_LINGER, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PUB socket ZMQ_IMMEDIATE option to 0".to_owned()),
     };
-    match publisher.set_option(zmq_sys::ZMQ_SNDHWM as i32, 0) {
+    match publisher.set_option(zmq_sys::ZMQ_SNDHWM, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PUB socket ZMQ_SNDHWM option to 0".to_owned()),
     };
     match publisher.bind(&format!("tcp://127.0.0.1:{}", port)) {
         Ok(_) => Ok(publisher),
-        Err(_) => return Err("unable to bind PUB socket".to_owned()),
+        Err(_) => Err("unable to bind PUB socket".to_owned()),
     }
 }

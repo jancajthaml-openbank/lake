@@ -74,41 +74,29 @@ impl Error {
     pub fn from_raw(raw: i32) -> Error {
         match raw {
             errno::EACCES => Error::EACCES,
-            errno::EADDRINUSE => Error::EADDRINUSE,
+            errno::EADDRINUSE | errno::EADDRINUSE_ALT => Error::EADDRINUSE,
             errno::EAGAIN => Error::EAGAIN,
             errno::EBUSY => Error::EBUSY,
-            errno::ECONNREFUSED => Error::ECONNREFUSED,
+            errno::ECONNREFUSED | errno::ECONNREFUSED_ALT => Error::ECONNREFUSED,
             errno::EFAULT => Error::EFAULT,
-            errno::EHOSTUNREACH => Error::EHOSTUNREACH,
-            errno::EINPROGRESS => Error::EINPROGRESS,
+            errno::EHOSTUNREACH | errno::EHOSTUNREACH_ALT => Error::EHOSTUNREACH,
+            errno::EINPROGRESS | errno::EINPROGRESS_ALT => Error::EINPROGRESS,
             errno::EINVAL => Error::EINVAL,
             errno::EMFILE => Error::EMFILE,
-            errno::EMSGSIZE => Error::EMSGSIZE,
+            errno::EMSGSIZE | errno::EMSGSIZE_ALT => Error::EMSGSIZE,
             errno::ENAMETOOLONG => Error::ENAMETOOLONG,
             errno::ENODEV => Error::ENODEV,
             errno::ENOENT => Error::ENOENT,
             errno::ENOMEM => Error::ENOMEM,
-            errno::ENOTCONN => Error::ENOTCONN,
-            errno::ENOTSOCK => Error::ENOTSOCK,
+            errno::ENOTCONN | errno::ENOTCONN_ALT => Error::ENOTCONN,
+            errno::ENOTSOCK | errno::ENOTSOCK_ALT => Error::ENOTSOCK,
             errno::EPROTO => Error::EPROTO,
-            errno::EPROTONOSUPPORT => Error::EPROTONOSUPPORT,
-            errno::ENOTSUP => Error::ENOTSUP,
-            errno::ENOBUFS => Error::ENOBUFS,
-            errno::ENETDOWN => Error::ENETDOWN,
-            errno::EADDRNOTAVAIL => Error::EADDRNOTAVAIL,
+            errno::EPROTONOSUPPORT | errno::EPROTONOSUPPORT_ALT => Error::EPROTONOSUPPORT,
+            errno::ENOTSUP | errno::ENOTSUP_ALT => Error::ENOTSUP,
+            errno::ENOBUFS | errno::ENOBUFS_ALT => Error::ENOBUFS,
+            errno::ENETDOWN | errno::ENETDOWN_ALT => Error::ENETDOWN,
+            errno::EADDRNOTAVAIL | errno::EADDRNOTAVAIL_ALT => Error::EADDRNOTAVAIL,
             errno::EINTR => Error::EINTR,
-            errno::ENOTSUP_ALT => Error::ENOTSUP,
-            errno::EPROTONOSUPPORT_ALT => Error::EPROTONOSUPPORT,
-            errno::ENOBUFS_ALT => Error::ENOBUFS,
-            errno::ENETDOWN_ALT => Error::ENETDOWN,
-            errno::EADDRINUSE_ALT => Error::EADDRINUSE,
-            errno::EADDRNOTAVAIL_ALT => Error::EADDRNOTAVAIL,
-            errno::ECONNREFUSED_ALT => Error::ECONNREFUSED,
-            errno::EINPROGRESS_ALT => Error::EINPROGRESS,
-            errno::ENOTSOCK_ALT => Error::ENOTSOCK,
-            errno::EMSGSIZE_ALT => Error::EMSGSIZE,
-            errno::ENOTCONN_ALT => Error::ENOTCONN,
-            errno::EHOSTUNREACH_ALT => Error::EHOSTUNREACH,
 
             // 0MQ native error codes
             errno::EFSM => Error::EFSM,
@@ -139,7 +127,7 @@ impl Error {
 
 impl From<Error> for String {
     fn from(error: Error) -> String {
-        error.to_string().to_owned()
+        error.to_string()
     }
 }
 

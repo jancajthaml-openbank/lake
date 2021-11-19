@@ -29,7 +29,7 @@ impl Drop for Program {
     fn drop(&mut self) {
         log::info!("Program stopping");
         if let Err(e) = notify("STOPPING=1") {
-            log::warn!("unable to notify host os about STOPPING with {}", e)
+            log::warn!("unable to notify host os about STOPPING with {}", e);
         }
     }
 }

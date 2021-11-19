@@ -1,5 +1,3 @@
-use signal_hook::consts::SIGQUIT;
-use signal_hook::low_level;
 use statsd::Client;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -42,46 +40,41 @@ impl Metrics {
         log::info!("Metrics starting");
 
         let child_thread = thread::spawn(move || {
-            let statsd_client = match Client::new(&endpoint, "openbank.lake") {
-                Ok(client) => Some(client),
-                Err(_) => {
-                    log::error!("unable to initialise statsd client");
-                    None
-                }
+            let statsd_client = if let Ok(client) = Client::new(&endpoint, "openbank.lake") {
+                Some(client)
+            } else {
+                log::error!("unable to initialise statsd client");
+                None
             };
 
             let duration = Duration::from_secs(1);
 
-            match statsd_client {
-                Some(statsd_client) => {
-                    log::info!("Metrics started");
-                    while prog_running.load(Ordering::Relaxed) {
-                        thread::sleep(duration);
+            if let Some(statsd_client) = statsd_client {
+                log::info!("Metrics started");
+                while prog_running.load(Ordering::Relaxed) {
+                    thread::sleep(duration);
 
-                        let mut pipe = statsd_client.pipeline();
+                    let mut pipe = statsd_client.pipeline();
 
-                        pipe.gauge("memory.bytes", mem_bytes());
-                        pipe.count(
-                            "message.ingress",
-                            arc_ingress_clone.swap(0, Ordering::Relaxed) as _,
-                        );
-                        pipe.count(
-                            "message.egress",
-                            arc_egress_clone.swap(0, Ordering::Relaxed) as _,
-                        );
+                    pipe.gauge("memory.bytes", mem_bytes());
+                    pipe.count(
+                        "message.ingress",
+                        arc_ingress_clone.swap(0, Ordering::Relaxed) as f64,
+                    );
+                    pipe.count(
+                        "message.egress",
+                        arc_egress_clone.swap(0, Ordering::Relaxed) as f64,
+                    );
 
-                        pipe.send(&statsd_client);
-                    }
+                    pipe.send(&statsd_client);
                 }
-                _ => {}
             }
-
-            let _ = low_level::raise(SIGQUIT);
+            unsafe { libc::raise(libc::SIGTERM) };
         });
 
         Arc::new(Metrics {
-            ingress: arc_ingress.clone(),
-            egress: arc_egress.clone(),
+            ingress: arc_ingress,
+            egress: arc_egress,
             child_thread: Some(child_thread),
         })
     }
@@ -104,10 +97,10 @@ fn mem_bytes() -> f64 {
             return (me.stat.rss * page_size) as f64;
         };
     };
-    0 as f64
+    0_f64
 }
 
 #[cfg(target_os = "macos")]
 fn mem_bytes() -> f64 {
-    0 as f64
+    0_f64
 }

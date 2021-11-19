@@ -1,4 +1,4 @@
-use colored::*;
+use colored::Colorize;
 use log::{Level, LevelFilter, Log, Metadata, Record, SetLoggerError};
 use std::time::SystemTime;
 
@@ -32,7 +32,7 @@ impl Logger {
 
 impl Log for Logger {
     fn enabled(&self, metadata: &Metadata) -> bool {
-        &metadata.level().to_level_filter() <= &log::max_level()
+        metadata.level().to_level_filter() <= log::max_level()
     }
 
     fn log(&self, record: &Record) {
@@ -42,13 +42,13 @@ impl Log for Logger {
                 Level::Warn => "WRN".red().to_string(),
                 Level::Info => "INF".green().to_string(),
                 Level::Debug => "DBG".yellow().to_string(),
-                _ => "".to_owned(),
+                Level::Trace => "".to_owned(),
             };
 
-            let target = if !record.target().is_empty() {
-                record.target()
-            } else {
+            let target = if record.target().is_empty() {
                 record.module_path().unwrap_or_default()
+            } else {
+                record.target()
             };
 
             let now = SystemTime::now()
@@ -77,12 +77,12 @@ impl Log for Logger {
             }
             year = year as i32;
 
-            let mut mon = 0;
-            while dayno >= MONTHS[if leapyear(year) { 1 } else { 0 }][mon] {
-                dayno -= MONTHS[if leapyear(year) { 1 } else { 0 }][mon];
-                mon += 1;
+            let mut monno = 0;
+            while dayno >= MONTHS[if leapyear(year) { 1 } else { 0 }][monno] {
+                dayno -= MONTHS[if leapyear(year) { 1 } else { 0 }][monno];
+                monno += 1;
             }
-            let month = mon as i32 + 1;
+            let month = monno as i32 + 1;
             let day = dayno as i32 + 1;
 
             println!(

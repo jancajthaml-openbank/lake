@@ -1,7 +1,5 @@
 use crate::error;
 
-use zmq_sys;
-
 /// Holds a ZMQ message.
 pub struct Message {
     msg: zmq_sys::zmq_msg_t,
