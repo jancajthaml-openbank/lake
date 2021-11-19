@@ -109,6 +109,7 @@ pipeline {
             }
         }
 
+        /*
         stage('Static Analysis') {
             agent {
                 docker {
@@ -129,7 +130,7 @@ pipeline {
                     """
                 }
             }
-        }
+        }*/
 
         stage('Unit Test') {
             agent {
