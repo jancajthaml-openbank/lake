@@ -34,7 +34,7 @@ class MetricsAggregator(threading.Thread):
     last_not_nil = None
     in_deletion_stage = False
     for key, value in self.__store.items():
-      if value['i'] != 0 and value['e'] != 0:
+      if value['i'] != 0:
         last_not_nil = key
     for key in self.__store.keys():
       if key == last_not_nil:
@@ -63,14 +63,12 @@ class MetricsAggregator(threading.Thread):
 
       if not ts in self.__store:
         self.__store[ts] = {
-          'e': 0,
           'i': 0,
           'm': 0,
         }
-      if key == 'openbank.lake.message.ingress':
-        self.__store[ts]['i'] += int(value)
-      elif key == 'openbank.lake.message.egress':
-        self.__store[ts]['e'] += int(value)
+      if key == 'openbank.lake.message.relayed':
+        if int(value) != 1:
+          self.__store[ts]['i'] += int(value)
       elif key == 'openbank.lake.memory.bytes':
         self.__store[ts]['m'] = max(self.__store[ts]['m'], int(value))
 

@@ -187,7 +187,6 @@ pull:
 	if err != nil {
 		goto fail
 	}
-	relay.metrics.MessageIngress()
 pub:
 	_, err = relay.publisher.SendBytes(chunk, 0)
 	if err != nil {
@@ -196,7 +195,7 @@ pub:
 		}
 		goto fail
 	}
-	relay.metrics.MessageEgress()
+	relay.metrics.Message()
 	goto pull
 
 fail:

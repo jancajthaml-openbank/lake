@@ -59,18 +59,14 @@ class Graph(object):
     x1 = list(range(0, duration, 1))
     y1 = [item['i'] for item in metrics.dataset.values()]
     fps_i = [item['i'] for item in metrics.dataset.values()]
-    fps_e = [item['e'] for item in metrics.dataset.values()]
 
     if duration == 1:
         duration += 1
         x1 = [0] + [x + 1 for x in x1]
         y1 = [0] + y1
         fps_i = [fps_i[0]] + fps_i
-        fps_e = [fps_e[0]] + fps_e
 
-    fps_i_median = numpy.median(fps_i)
-    fps_e_median = numpy.median(fps_e)
-    fps_median = min(fps_i_median, fps_e_median)
+    fps_median = numpy.mean(fps_i)
 
     x_interval = list(reversed(range(duration-1, -1, min(-1, -int(duration/4)))))
     x_interval[0] = 0
@@ -86,11 +82,10 @@ class Graph(object):
     ax2 = ax1.twinx()
 
     ax2.plot(x1, [fps_median if len(fps_i) else 0]*len(x1), linewidth=0.5, linestyle='--', antialiased=False, color='black')
-    ax2.plot(x1, fps_i, linewidth=3, color='green', antialiased=True)
-    ax2.plot(x1, fps_e, linewidth=1, color='crimson', antialiased=True)
+    ax2.plot(x1, fps_i, linewidth=1, color='crimson', antialiased=True) #dodgerblue
 
     ax2.set_xlim(xmin=0, xmax=max(x1))
-    ax2.set_ylim(ymin=0, ymax=max(y1) * 2)
+    ax2.set_ylim(ymin=0, ymax=max(max(y1), 2*fps_median))
 
     ax2.set_yticks([0, fps_median])
     ax2.set_yticklabels(['{} / s'.format(human_readable_count(x)) for x in ax2.get_yticks()])

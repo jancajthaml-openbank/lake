@@ -3,6 +3,7 @@
 
 import time
 import zmq
+#import zmq.green as zmq
 import math
 import itertools
 from multiprocessing import Process
@@ -24,6 +25,7 @@ def PusherWorker(number_of_messages, port):
   push_url = 'tcp://127.0.0.1:{}'.format(port)
 
   ctx = zmq.Context.instance()
+  ctx.set(zmq.IO_THREADS, 1)
 
   region = 'PERF'
   msg = "YXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXZ"
@@ -34,21 +36,8 @@ def PusherWorker(number_of_messages, port):
 
   number_of_messages = int(number_of_messages)
 
-  def do_it():
-    while True:
-      try:
-        push.send(msg)
-        return
-      except zmq.ZMQError as e:
-        if e.errno == zmq.EAGAIN:
-          continue
-        else:
-          raise e
-      except Exception as e:
-        raise e
-
   for _ in itertools.repeat(None, number_of_messages):
-    do_it()
+    push.send(msg)
 
   push.disconnect(push_url)
 
@@ -78,10 +67,7 @@ def SubscriberWorker(number_of_messages, port):
     try:
       sub.recv()
     except:
-      if fails > 2:
-        break
-      else:
-        fails += 1
+      break
 
   sub.disconnect(sub_url)
 

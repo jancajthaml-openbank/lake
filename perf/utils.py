@@ -47,7 +47,7 @@ def info(msg) -> None:
 
 def print_daemon(msg) -> None:
   this.__progress_running = False
-  sys.stdout.write('\033[0m  │  {0}\033[0m  \n'.format(msg))
+  sys.stdout.write('\033[0m  │  {0}  \n'.format(msg))
   sys.stdout.flush()
 
 def error(msg) -> None:
@@ -81,7 +81,7 @@ class timeit():
       return
 
     te = time.time()
-    sys.stdout.write('\033[90m  │  {0} took {1}\033[0m\n'.format(self.__label, human_readable_duration((te - self.ts)*1e3)))
+    sys.stdout.write('\033[0m  │\033[90m  {0} took {1}\033[0m\n'.format(self.__label, human_readable_duration((te - self.ts)*1e3)))
     sys.stdout.flush()
 
 def human_readable_count(num):

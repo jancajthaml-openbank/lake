@@ -22,15 +22,13 @@ import (
 
 // Metrics provides helper function for metrics
 type Metrics interface {
-	MessageEgress()
-	MessageIngress()
+	Message()
 }
 
 // StatsdMetrics provides metrics helper with statsd client
 type StatsdMetrics struct {
 	client         *statsd.Client
-	messageEgress  int64
-	messageIngress int64
+	messageRelayed  int64
 }
 
 // NewMetrics returns blank metrics holder
@@ -42,25 +40,16 @@ func NewMetrics(endpoint string) *StatsdMetrics {
 	}
 	return &StatsdMetrics{
 		client:         client,
-		messageEgress:  int64(0),
-		messageIngress: int64(0),
+		messageRelayed:  int64(0),
 	}
 }
 
-// MessageEgress increment number of outcomming messages
-func (instance *StatsdMetrics) MessageEgress() {
+// MessageEgress increment number of relayed messages
+func (instance *StatsdMetrics) Message() {
 	if instance == nil {
 		return
 	}
-	instance.messageEgress +=1
-}
-
-// MessageIngress increment number of incomming messages
-func (instance *StatsdMetrics) MessageIngress() {
-	if instance == nil {
-		return
-	}
-	instance.messageIngress +=1
+	instance.messageRelayed +=1
 }
 
 // Setup does nothing
@@ -87,17 +76,13 @@ func (instance *StatsdMetrics) Work() {
 		return
 	}
 
-	egress := instance.messageEgress
-	ingress := instance.messageIngress	
-	
+	relayed := instance.messageRelayed	
 
 	var stats = new(runtime.MemStats)
 	runtime.ReadMemStats(stats)
 
-	instance.client.Count("openbank.lake.message.ingress", ingress, nil, 1)
-	instance.client.Count("openbank.lake.message.egress", egress, nil, 1)
+	instance.client.Count("openbank.lake.message.relayed", relayed, nil, 1)
 	instance.client.Gauge("openbank.lake.memory.bytes", float64(stats.Sys), nil, 1)
 
-	instance.messageEgress -= egress
-	instance.messageIngress -= ingress
+	instance.messageRelayed -= relayed
 }
