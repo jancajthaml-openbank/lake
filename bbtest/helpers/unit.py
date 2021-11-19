@@ -68,18 +68,11 @@ class UnitHelper(object):
 
     cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
 
-    print('cwd is {}'.format(cwd))
-
     self.binary = '{}/packaging/bin/lake_{}_{}.deb'.format(cwd, self.debian_version, self.arch)
 
-    print('binary is {}'.format(self.binary))
-
     if os.path.exists(self.binary):
-      print('binary exits')
       self.install(self.binary)
       return
-
-    print('binary does not exist')
 
     os.makedirs(os.path.dirname(self.binary), exist_ok=True)
 
