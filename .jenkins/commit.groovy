@@ -211,6 +211,7 @@ pipeline {
                     options = """
                         |-e IMAGE_VERSION=${env.VERSION}
                         |-e UNIT_VERSION=${env.VERSION}
+                        |-e CI=true
                         |--volumes-from=${cid}
                         |-v /var/run/docker.sock:/var/run/docker.sock:rw
                         |-v /var/lib/docker/containers:/var/lib/docker/containers:rw
