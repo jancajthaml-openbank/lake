@@ -85,12 +85,12 @@ lifecycle::rust::build() {
     ;;
 
     amd64)
-      #RUSTFLAGS="-Clink-arg=-fuse-ld=lld" \
-      CC=gcc \
+      CC=clang-13 \
+      RUSTFLAGS="-Clinker-plugin-lto -Clinker=clang-13 -Clink-arg=-fuse-ld=lld-13" \
       LIBZMQ_INCLUDE_DIR=/usr/include \
       LIBZMQ_LIB_DIR=/usr/lib/x86_64-linux-gnu \
       PKG_CONFIG_ALLOW_CROSS=0 \
-      CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=gcc \
+      CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=clang-13 \
       CARGO_HOME=${source}/target \
       \
       cargo build \
