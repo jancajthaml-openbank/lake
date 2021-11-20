@@ -149,22 +149,27 @@ executors:
     docker:
       - image: docker.io/alpine/git
 
-  rust-amd64:
-    docker:
-      - image: docker.io/jancajthaml/rust:amd64
-
   rust-arm64:
-    docker:
-      - image: docker.io/jancajthaml/rust:arm64
+    machine:
+      image: docker.io/jancajthaml/rust:arm64
+      docker_layer_caching: false
+      resource_class: arm.medium
+
+  rust-amd64:
+    machine:
+      image: docker.io/jancajthaml/rust:amd64
+      docker_layer_caching: false
+      resource_class: medium
 
   debian:
     docker:
       - image: docker.io/jancajthaml/debian-packager:latest
 
-  machine:
+  testbed:
     machine:
-      image: circleci/classic:201808-01
+      image: ubuntu-2004:202101-01
       docker_layer_caching: false
+      resource_class: medium
 
 # ---------------------------------------------------------------------------- #
 
@@ -412,7 +417,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   blackbox-test-amd64:
-    executor: machine
+    executor: testbed
     working_directory: /home/circleci/project
     steps:
       - checkout
