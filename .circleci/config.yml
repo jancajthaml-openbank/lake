@@ -149,9 +149,13 @@ executors:
     docker:
       - image: docker.io/alpine/git
 
-  rust:
+  rust-amd64:
     docker:
-      - image: docker.io/jancajthaml/rust:latest
+      - image: docker.io/jancajthaml/rust:amd64
+
+  rust-arm64:
+    docker:
+      - image: docker.io/jancajthaml/rust:arm64
 
   debian:
     docker:
@@ -215,7 +219,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   deps:
-    executor: rust
+    executor: rust-amd64
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -233,7 +237,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   unit-test:
-    executor: rust
+    executor: rust-amd64
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -253,7 +257,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   compile-amd64:
-    executor: rust
+    executor: rust-amd64
     working_directory: /mnt/ramdisk
     steps:
       - restore_cache:
@@ -276,7 +280,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   compile-arm64:
-    executor: rust
+    executor: rust-arm64
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
