@@ -149,15 +149,15 @@ executors:
     docker:
       - image: docker.io/alpine/git
 
-  rust-arm64:
+  arm64-testbed:
     machine:
-      image: docker.io/jancajthaml/rust:arm64
+      image: ubuntu-2004:202101-01
       docker_layer_caching: false
       resource_class: arm.medium
 
-  rust-amd64:
+  amd64-testbed:
     machine:
-      image: docker.io/jancajthaml/rust:amd64
+      image: ubuntu-2004:202101-01
       docker_layer_caching: false
       resource_class: medium
 
@@ -242,50 +242,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   unit-test:
-    executor: rust-amd64
-    working_directory: /mnt/ramdisk
-    steps:
-      - restore_cache:
-          key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - restore_cache:
-          key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Unit test lake
-          command: |
-            /mnt/ramdisk/dev/lifecycle/test \
-              --source /mnt/ramdisk/services/lake \
-              --output /mnt/ramdisk/reports
-          no_output_timeout: 5m
-      - store_test_results:
-          path: /mnt/ramdisk/reports/unit-tests
-
-  # -------------------------------------------------------------------------- #
-
-  compile-amd64:
-    executor: rust-amd64
-    working_directory: /mnt/ramdisk
-    steps:
-      - restore_cache:
-          key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - restore_cache:
-          key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Compile lake binary
-          command: |
-            /mnt/ramdisk/dev/lifecycle/package \
-              --arch linux/amd64 \
-              --source /mnt/ramdisk/services/lake \
-              --output /mnt/ramdisk/packaging/bin
-          no_output_timeout: 5m
-      - save_cache:
-          key: binaries-amd64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - /mnt/ramdisk/packaging/bin
-
-  # -------------------------------------------------------------------------- #
-
-  compile-arm64:
-    executor: rust-arm64
+    executor: amd64-testbed
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
@@ -293,17 +250,51 @@ jobs:
       - restore_cache:
           key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
+          name: Unit test lake
+          command: make test
+          no_output_timeout: 5m
+      - store_test_results:
+          path: /home/circleci/project/reports/unit-tests
+
+  # -------------------------------------------------------------------------- #
+
+  compile-amd64:
+    executor: amd64-testbed
+    working_directory: /home/circleci/project
+    steps:
+      - restore_cache:
+          key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - run: docker pull docker.io/jancajthaml/rust:amd64
+      - run:
           name: Compile lake binary
-          command: |
-            /mnt/ramdisk/dev/lifecycle/package \
-              --arch linux/arm64 \
-              --source /mnt/ramdisk/services/lake \
-              --output /mnt/ramdisk/packaging/bin
+          command: make bundle-binaries-amd64
+          no_output_timeout: 5m
+      - save_cache:
+          key: binaries-amd64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - /home/circleci/project/packaging/bin
+
+  # -------------------------------------------------------------------------- #
+
+  compile-arm64:
+    executor: arm64-testbed
+    working_directory: /home/circleci/project
+    steps:
+      - restore_cache:
+          key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - run: docker pull docker.io/jancajthaml/rust:arm64
+      - run:
+          name: Compile lake binary
+          command: make bundle-binaries-arm64
           no_output_timeout: 5m
       - save_cache:
           key: binaries-arm64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
-            - /mnt/ramdisk/packaging/bin
+            - /home/circleci/project/packaging/bin
 
   # -------------------------------------------------------------------------- #
 
@@ -417,7 +408,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   blackbox-test-amd64:
-    executor: testbed
+    executor: amd64-testbed
     working_directory: /home/circleci/project
     steps:
       - checkout
