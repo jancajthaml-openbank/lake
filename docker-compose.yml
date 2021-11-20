@@ -110,7 +110,7 @@ services:
     environment:
       IMAGE_VERSION: ${VERSION:-latest}-${META:-main}
       UNIT_VERSION: ${VERSION:-latest}
-      MESSAGES_PUSHED: 10000000
+      MESSAGES_PUSHED: 100000000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - /var/lib/docker/containers:/var/lib/docker/containers:rw
