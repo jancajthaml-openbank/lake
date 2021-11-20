@@ -48,10 +48,10 @@ impl Relay {
 
         let pull_port = config.pull_port;
         let pub_port = config.pub_port;
+        let ctx = Context::new();
 
         let child_thread = thread::spawn(move || {
-            let ctx = Context::new();
-            let _ = ctx.set_io_threads(2);
+            let _ = ctx.set_io_threads(1);
 
             let puller = match setup_pull_socket(&ctx, pull_port) {
                 Ok(sock) => Some(sock),
@@ -148,6 +148,10 @@ fn setup_pub_socket(ctx: &Context, port: i32) -> Result<Socket, String> {
     match publisher.set_option(zmq_sys::ZMQ_SNDHWM, 0) {
         Ok(_) => {}
         Err(_) => return Err("unable to set PUB socket ZMQ_SNDHWM option to 0".to_owned()),
+    };
+    match publisher.set_option(zmq_sys::ZMQ_XPUB_NODROP, 1) {
+        Ok(_) => {}
+        Err(_) => return Err("unable to set PUB socket ZMQ_XPUB_NODROP option to 1".to_owned()),
     };
     match publisher.bind(&format!("tcp://127.0.0.1:{}", port)) {
         Ok(_) => Ok(publisher),

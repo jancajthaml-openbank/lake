@@ -12,3 +12,9 @@ colored = { version = "1.6.1" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 procfs = { version = "0.11.0" }
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
