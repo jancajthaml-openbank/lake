@@ -190,6 +190,8 @@ jobs:
             - /home/circleci/project/services
             - /home/circleci/project/packaging
             - /home/circleci/project/Dockerfile
+            - /home/circleci/project/docker-compose.yml
+            - /home/circleci/project/Makefile
 
   # -------------------------------------------------------------------------- #
 
