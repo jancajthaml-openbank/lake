@@ -18,7 +18,7 @@ impl Drop for Metrics {
     fn drop(&mut self) {
         log::info!("Metrics stopping");
         log::debug!("Metrics waiting for child thread to terminate");
-        let _ = self.child_thread.take().unwrap().join();
+        let _res = self.child_thread.take().unwrap().join();
         log::info!("Metrics stopped");
     }
 }
@@ -26,6 +26,7 @@ impl Drop for Metrics {
 impl Metrics {
     /// creates new metrics fascade
     #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn new(config: &Configuration, prog_running: Arc<AtomicBool>) -> Arc<Metrics> {
         let endpoint: String = config.statsd_endpoint.clone();
 
@@ -76,6 +77,7 @@ impl Metrics {
 }
 
 #[cfg(target_os = "linux")]
+#[allow(clippy::cast_precision_loss)]
 #[inline]
 fn mem_bytes() -> f64 {
     if let Ok(me) = procfs::process::Process::myself() {

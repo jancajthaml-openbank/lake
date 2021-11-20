@@ -67,8 +67,7 @@ class MetricsAggregator(threading.Thread):
           'm': 0,
         }
       if key == 'openbank.lake.message.relayed':
-        if int(value) != 1:
-          self.__store[ts]['i'] += int(value)
+        self.__store[ts]['i'] += int(value)
       elif key == 'openbank.lake.memory.bytes':
         self.__store[ts]['m'] = max(self.__store[ts]['m'], int(value))
 

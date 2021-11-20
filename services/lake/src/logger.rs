@@ -61,7 +61,7 @@ impl Log for Logger {
             let mut year = 1970;
 
             let dayclock = ts % 86400;
-            let mut dayno = ts / 86400;
+            let mut dayno = (ts / 86400) as i32;
 
             let sec = (dayclock % 60) as i32;
             let min = ((dayclock % 3600) / 60) as i32;
@@ -76,15 +76,15 @@ impl Log for Logger {
                     break;
                 }
             }
-            year = year as i32;
+            //year = year as i32;
 
             let mut monno = 0;
             while dayno >= MONTHS[if leapyear(year) { 1 } else { 0 }][monno] {
                 dayno -= MONTHS[if leapyear(year) { 1 } else { 0 }][monno];
                 monno += 1;
             }
-            let month = monno as i32 + 1;
-            let day = dayno as i32 + 1;
+            let month = monno + 1;
+            let day = dayno + 1;
 
             println!(
                 "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z {} [{}] {}",
@@ -108,7 +108,7 @@ fn leapyear(year: i32) -> bool {
     year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
 }
 
-static MONTHS: [[u64; 12]; 2] = [
+static MONTHS: [[i32; 12]; 2] = [
     [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
     [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
 ];

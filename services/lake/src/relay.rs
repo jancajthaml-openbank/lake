@@ -31,7 +31,7 @@ impl Drop for Relay {
             };
         };
         log::debug!("Relay waiting for child thread to terminate");
-        let _ = self.child_thread.take().unwrap().join();
+        let _res = self.child_thread.take().unwrap().join();
         log::info!("Relay stopped");
     }
 }
@@ -71,7 +71,7 @@ impl Relay {
 
             if let (Some(puller), Some(publisher)) = (puller, publisher) {
                 log::info!("Relay started");
-                while prog_running.load(Ordering::Relaxed) {
+                loop {
                     let mut msg = Message::new();
                     let ptr = msg_ptr(&mut msg);
                     if unsafe {
@@ -84,6 +84,9 @@ impl Relay {
                         );
                         break;
                     };
+                    if !prog_running.load(Ordering::Relaxed) {
+                        break
+                    }
                     metrics.relayed();
                 }
                 drop(puller);

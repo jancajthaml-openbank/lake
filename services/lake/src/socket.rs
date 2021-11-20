@@ -17,14 +17,10 @@ impl Context {
         }
     }
 
-    pub fn set_io_threads(&self, value: usize) -> Result<(), error::Error> {
-        if unsafe {
-            zmq_sys::zmq_ctx_set(
-                self.underlying,
-                zmq_sys::ZMQ_IO_THREADS as i32,
-                value as i32,
-            )
-        } == -1
+    #[allow(clippy::cast_possible_wrap)]
+    pub fn set_io_threads(&self, value: i32) -> Result<(), error::Error> {
+        if unsafe { zmq_sys::zmq_ctx_set(self.underlying, zmq_sys::ZMQ_IO_THREADS as i32, value) }
+            == -1
         {
             return Err(error::Error::from_raw(unsafe { zmq_sys::zmq_errno() }));
         }
@@ -54,6 +50,7 @@ pub struct Socket {
 }
 
 impl Socket {
+    #[allow(clippy::cast_possible_wrap)]
     pub fn new(ctx: *mut c_void, socket_type: u32) -> Result<Socket, error::Error> {
         let sock = unsafe { zmq_sys::zmq_socket(ctx, socket_type as i32) };
         if sock.is_null() {
@@ -78,6 +75,7 @@ impl Socket {
         Ok(())
     }
 
+    #[allow(clippy::cast_possible_wrap)]
     pub fn set_option(&self, opt: u32, val: i32) -> Result<(), error::Error> {
         if unsafe {
             zmq_sys::zmq_setsockopt(
