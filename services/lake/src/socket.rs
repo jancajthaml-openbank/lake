@@ -36,7 +36,10 @@ impl Drop for Context {
     fn drop(&mut self) {
         log::debug!("Stopping ZMQ context");
         while unsafe { zmq_sys::zmq_ctx_term(self.underlying) } == -1 {
-            log::warn!("error while stopping {}", error::Error::from_raw(unsafe { zmq_sys::zmq_errno() }) );
+            log::warn!(
+                "error while stopping {}",
+                error::Error::from_raw(unsafe { zmq_sys::zmq_errno() })
+            );
 
             if error::Error::from_raw(unsafe { zmq_sys::zmq_errno() }) != error::Error::EINTR {
                 break;

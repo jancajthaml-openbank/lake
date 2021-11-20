@@ -75,7 +75,8 @@ impl Relay {
                     let mut msg = Message::new();
                     let ptr = msg_ptr(&mut msg);
                     if unsafe {
-                        zmq_sys::zmq_msg_recv(ptr, puller.sock, 0_i32) == -1 || zmq_sys::zmq_msg_send(ptr, publisher.sock, 0_i32) == -1
+                        zmq_sys::zmq_msg_recv(ptr, puller.sock, 0_i32) == -1
+                            || zmq_sys::zmq_msg_send(ptr, publisher.sock, 0_i32) == -1
                     } {
                         log::error!(
                             "{}",
@@ -84,14 +85,13 @@ impl Relay {
                         break;
                     };
                     metrics.relayed();
-                };
+                }
                 drop(puller);
                 drop(publisher);
             }
 
             drop(ctx);
             unsafe { libc::raise(libc::SIGTERM) };
-            ()
         });
 
         Arc::new(Relay {

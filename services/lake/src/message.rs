@@ -1,5 +1,3 @@
-use crate::error;
-
 /// Holds a ZMQ message.
 pub struct Message {
     msg: zmq_sys::zmq_msg_t,
@@ -20,10 +18,7 @@ impl Message {
         F: FnOnce(&mut zmq_sys::zmq_msg_t) -> i32,
     {
         let mut msg = zmq_sys::zmq_msg_t::default();
-        let rc = f(&mut msg);
-        if rc == -1 {
-            panic!("{}", error::Error::from_raw(zmq_sys::zmq_errno()))
-        }
+        let _ = f(&mut msg);
         Message { msg }
     }
 

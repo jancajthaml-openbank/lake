@@ -35,6 +35,7 @@ impl Log for Logger {
         metadata.level().to_level_filter() <= log::max_level()
     }
 
+    #[allow(clippy::cast_possible_truncation)]
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
             let level_string = match record.level() {

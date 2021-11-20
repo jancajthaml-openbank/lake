@@ -33,7 +33,8 @@ fn main() {
 
 fn wait_for_eintr() {
     unsafe {
-        let blocking = handler as extern fn(libc::c_int) as *mut libc::c_void as libc::sighandler_t;
+        let blocking =
+            handler as extern "C" fn(libc::c_int) as *mut libc::c_void as libc::sighandler_t;
         libc::signal(libc::SIGTERM, blocking);
     }
 
@@ -54,4 +55,4 @@ fn wait_for_eintr() {
     };
 }
 
-extern fn handler(_: libc::c_int) {}
+extern "C" fn handler(_: libc::c_int) {}

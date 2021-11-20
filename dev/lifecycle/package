@@ -63,13 +63,12 @@ lifecycle::rust::build() {
   case ${ARCH} in
 
     arm64)
-      #CC=aarch64-linux-gnu-gcc \
-      CC=clang-9 \
+      CC=clang-13 \
       RUSTFLAGS="-Clinker-plugin-lto -Clinker=clang-13 -Clink-arg=-fuse-ld=lld-13" \
       LIBZMQ_INCLUDE_DIR=/usr/include \
       LIBZMQ_LIB_DIR=/usr/lib/aarch64-linux-gnu \
       PKG_CONFIG_ALLOW_CROSS=0 \
-      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc \
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=clang-13 \
       CARGO_HOME=${source}/target \
       \
       cargo build \

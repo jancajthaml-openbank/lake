@@ -52,7 +52,10 @@ impl Metrics {
                     let mut pipe = statsd_client.pipeline();
 
                     pipe.gauge("memory.bytes", mem_bytes());
-                    pipe.count("message.relayed", arc_messages_clone.swap(0, Ordering::Relaxed) as f64);
+                    pipe.count(
+                        "message.relayed",
+                        arc_messages_clone.swap(0, Ordering::Relaxed) as f64,
+                    );
 
                     pipe.send(&statsd_client);
                 }
@@ -67,14 +70,13 @@ impl Metrics {
     }
 
     /// increments ingress and egress counter
-    #[inline(always)]
     pub fn relayed(&self) {
         self.messages.fetch_add(1, Ordering::Relaxed);
     }
 }
 
 #[cfg(target_os = "linux")]
-#[inline(always)]
+#[inline]
 fn mem_bytes() -> f64 {
     if let Ok(me) = procfs::process::Process::myself() {
         if let Ok(page_size) = procfs::page_size() {
@@ -85,7 +87,7 @@ fn mem_bytes() -> f64 {
 }
 
 #[cfg(target_os = "macos")]
-#[inline(always)]
+#[inline]
 fn mem_bytes() -> f64 {
     0_f64
 }

@@ -3,6 +3,7 @@ use std::fmt;
 use std::{mem, str};
 use zmq_sys::errno;
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Error {
     EACCES,
