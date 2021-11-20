@@ -45,7 +45,7 @@ lifecycle::rust::test() {
 
   CARGO_HOME=${dir}/target \
   CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=clang-13 \
-  CARGO_X86_64_UNKNOWN_LINUX_GNU_LINKER=clang-13 \
+  CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=clang-13 \
   \
   cargo test \
     --manifest-path=${dir}/Cargo.toml
