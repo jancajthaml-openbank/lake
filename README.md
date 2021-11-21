@@ -13,9 +13,9 @@ Communicates over TCP using NULL mechanism of [ZMTP 3.0](https://rfc.zeromq.org/
 
 ## Performance
 
-throughput average 500,000 messages / sec
+throughput average 750,000 messages / sec
 
-(2GB RAM 1 CPU)
+(amd64 2GB RAM 1 CPU)
 
 ![graph_metrics_count]
 
