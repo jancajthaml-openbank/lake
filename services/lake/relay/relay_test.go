@@ -14,8 +14,7 @@ import (
 
 type mockMetrics struct{}
 
-func (mockMetrics) MessageEgress()  {}
-func (mockMetrics) MessageIngress() {}
+func (mockMetrics) Message()  {}
 
 func subRoutine(ctx context.Context, cancel context.CancelFunc, sub chan string, port int) {
 	runtime.LockOSThread()

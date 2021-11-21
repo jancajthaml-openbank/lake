@@ -10,8 +10,8 @@ services:
     image: jancajthaml/go
     tty: true
     volumes:
-      - .:/project
-      - ./services/lake:/go/src/github.com/jancajthaml-openbank/lake
+      - .:/project:delegated
+      - ./services/lake:/go/src/github.com/jancajthaml-openbank/lake:delegated
     working_dir: /project
     environment:
       - GOOS
@@ -25,7 +25,7 @@ services:
     image: jancajthaml/debian-packager
     tty: true
     volumes:
-      - .:/project
+      - .:/project:delegated
     working_dir: /project
 
   # -------------------------------------------------------------------------- #
@@ -87,11 +87,10 @@ services:
   # -------------------------------------------------------------------------- #
 
   bbtest:
-    image: jancajthaml/bbtest:amd64
+    image: jancajthaml/bbtest:${ARCH}
     environment:
       IMAGE_VERSION: ${VERSION:-latest}-${META:-main}
       UNIT_VERSION: ${VERSION:-latest}
-      UNIT_ARCH: amd64
       CI: ${CI:-false}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
@@ -103,12 +102,11 @@ services:
   # -------------------------------------------------------------------------- #
 
   perf:
-    image: jancajthaml/bbtest:amd64
+    image: jancajthaml/bbtest:${ARCH}
     environment:
       IMAGE_VERSION: ${VERSION:-latest}-${META:-main}
       UNIT_VERSION: ${VERSION:-latest}
-      UNIT_ARCH: amd64
-      MESSAGES_PUSHED: 10000000
+      MESSAGES_PUSHED: 100000000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - /var/lib/docker/containers:/var/lib/docker/containers:rw

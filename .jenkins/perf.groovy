@@ -77,7 +77,6 @@ pipeline {
                     options = """
                         |-e IMAGE_VERSION=${params.VERSION}
                         |-e UNIT_VERSION=${params.VERSION}
-                        |-e UNIT_ARCH=amd64
                         |-e MESSAGES_PUSHED=${params.MESSAGES_RELAYED}
                         |--volumes-from=${cid}
                         |--cpus=1
