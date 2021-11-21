@@ -78,6 +78,7 @@ pipeline {
                         |-e IMAGE_VERSION=${params.VERSION}
                         |-e UNIT_VERSION=${params.VERSION}
                         |-e MESSAGES_PUSHED=${params.MESSAGES_RELAYED}
+                        |-e CI=true
                         |--volumes-from=${cid}
                         |--cpus=1
                         |--memory=2g

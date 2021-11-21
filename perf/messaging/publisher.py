@@ -11,6 +11,7 @@ from multiprocessing import Process
 
 def Publisher(number_of_messages):
   running_tasks = []
+
   running_tasks.append(Process(target=PusherWorker, args=(number_of_messages,5562,)))
   running_tasks.append(Process(target=SubscriberWorker, args=(number_of_messages,5561,)))
 

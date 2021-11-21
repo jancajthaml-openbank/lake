@@ -31,7 +31,6 @@ if __name__ == "__main__":
   args.append('@{}/order.txt'.format(cwd))
 
   for path in [
-    #'{}/../reports/blackbox-tests/metrics'.format(cwd),
     '{}/../reports/blackbox-tests/logs'.format(cwd),
     '{}/../reports/blackbox-tests/meta'.format(cwd),
     '{}/../reports/blackbox-tests/data'.format(cwd),

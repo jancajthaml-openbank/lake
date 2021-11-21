@@ -4,7 +4,6 @@ Feature: Metrics test
 
   	When restart unit "lake.service"
     And lake recieves "A B"
-
     Then lake responds with "A B"
     And metrics reports:
       | key                            | type  | value |

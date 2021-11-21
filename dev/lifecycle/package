@@ -35,7 +35,7 @@ OUTPUT_FILE=${OUTPUT}/$(basename ${SOURCE})-${PLATFORM}-${ARCH}
 
 ################################################################################
 
-lifecycle::go::clean() {
+lifecycle::rust::clean() {
   local source="$1"
   if [ -z ${source} -o ! -d ${source} ] ; then
     return
@@ -47,12 +47,9 @@ lifecycle::go::clean() {
 
   find "${output}" -name "$(basename ${source})*${ARCH}*" -exec rm -f {} \;
   echo "[info] ${output} cleaned"
-
-  cd ${source} && go clean
-  echo "[info] ${source} cleaned"
 }
 
-lifecycle::go::build() {
+lifecycle::rust::build() {
   local source="$1"
   if [ -z ${source} -o ! -d ${source} ] ; then
     return
@@ -63,38 +60,50 @@ lifecycle::go::build() {
     return
   fi
 
-
-
   case ${ARCH} in
 
     arm64)
-      cd ${source} && \
+      CC=clang-13 \
+      RUSTFLAGS="-Clinker-plugin-lto -Clinker=clang-13 -Clink-arg=-fuse-ld=lld-13" \
+      LIBZMQ_INCLUDE_DIR=/usr/include \
+      LIBZMQ_LIB_DIR=/usr/lib/aarch64-linux-gnu \
+      PKG_CONFIG_ALLOW_CROSS=0 \
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=clang-13 \
+      CARGO_HOME=${source}/target \
       \
-      GOOS=${PLATFORM} \
-      GOARCH=arm64 \
-      CGO_ENABLED=1 \
-      GOFLAGS=-buildmode=pie \
-      CC=aarch64-linux-gnu-gcc \
-      \
-      go build -a -o ${output} || {
+      cargo build \
+        --release \
+        --target=aarch64-unknown-linux-gnu \
+        --manifest-path=${source}/Cargo.toml \
+        --target-dir=${source}/target || {
         (>&2 echo "[error] ${output} unable to build")
         exit 1
       }
+
+      mkdir -p $(dirname "${output}")
+      cp "${source}/target/aarch64-unknown-linux-gnu/release/main" "${output}"
     ;;
 
     amd64)
-      cd ${source} && \
+      CC=clang-13 \
+      RUSTFLAGS="-Clinker-plugin-lto -Clinker=clang-13 -Clink-arg=-fuse-ld=lld-13" \
+      LIBZMQ_INCLUDE_DIR=/usr/include \
+      LIBZMQ_LIB_DIR=/usr/lib/x86_64-linux-gnu \
+      PKG_CONFIG_ALLOW_CROSS=0 \
+      CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=clang-13 \
+      CARGO_HOME=${source}/target \
       \
-      GOOS=${PLATFORM} \
-      GOARCH=amd64 \
-      CGO_ENABLED=1 \
-      GOFLAGS=-buildmode=pie \
-      CC=gcc \
-      \
-      go build -a -o ${output} || {
+      cargo build \
+        --release \
+        --target=x86_64-unknown-linux-gnu \
+        --manifest-path=${source}/Cargo.toml \
+        --target-dir=${source}/target || {
         (>&2 echo "[error] ${output} unable to build")
         exit 1
       }
+
+      mkdir -p $(dirname "${output}")
+      cp "${source}/target/x86_64-unknown-linux-gnu/release/main" "${output}"
     ;;
 
     *)
@@ -109,7 +118,7 @@ lifecycle::go::build() {
   echo "[info] ${output} compiled"
 }
 
-lifecycle::go::strip() {
+lifecycle::rust::strip() {
   local output="$1"
   if [ -z ${output} -o ! -f ${output} ] ; then
     return
@@ -135,15 +144,15 @@ lifecycle::go::strip() {
 
 ################################################################################
 
-lifecycle::go::clean \
+lifecycle::rust::clean \
   ${SOURCE} \
   ${OUTPUT}
 
-lifecycle::go::build \
+lifecycle::rust::build \
   ${SOURCE} \
   ${OUTPUT_FILE}
 
-lifecycle::go::strip \
+lifecycle::rust::strip \
   ${OUTPUT_FILE}
 
 du -hs ${OUTPUT_FILE}

@@ -6,17 +6,14 @@ services:
 
   # -------------------------------------------------------------------------- #
 
-  go: &go
-    image: jancajthaml/go
+  rust: &rust
+    image: jancajthaml/rust:${ARCH}
     tty: true
     volumes:
       - .:/project:delegated
-      - ./services/lake:/go/src/github.com/jancajthaml-openbank/lake:delegated
+      - ./services/lake:/rust/src/github.com/jancajthaml-openbank/lake:delegated
     working_dir: /project
     environment:
-      - GOOS
-      - GOARCH
-      - GOPATH=/go
       - COMPOSE_PROJECT_NAME
 
   # -------------------------------------------------------------------------- #
@@ -31,35 +28,42 @@ services:
   # -------------------------------------------------------------------------- #
 
   sync:
-    <<: *go
+    <<: *rust
     entrypoint:
       - /project/dev/lifecycle/sync
 
   # -------------------------------------------------------------------------- #
 
   update:
-    <<: *go
+    <<: *rust
     entrypoint:
       - /project/dev/lifecycle/update
 
   # -------------------------------------------------------------------------- #
 
   lint:
-    <<: *go
+    <<: *rust
     entrypoint:
       - /project/dev/lifecycle/lint
 
   # -------------------------------------------------------------------------- #
 
   sec:
-    <<: *go
+    <<: *rust
     entrypoint:
       - /project/dev/lifecycle/sec
 
   # -------------------------------------------------------------------------- #
 
+  doc:
+    <<: *rust
+    entrypoint:
+      - /project/dev/lifecycle/documentation
+
+  # -------------------------------------------------------------------------- #
+
   package:
-    <<: *go
+    <<: *rust
     entrypoint:
       - /project/dev/lifecycle/package
 
@@ -80,7 +84,7 @@ services:
   # -------------------------------------------------------------------------- #
 
   test:
-    <<: *go
+    <<: *rust
     entrypoint:
       - /project/dev/lifecycle/test
 
@@ -106,7 +110,7 @@ services:
     environment:
       IMAGE_VERSION: ${VERSION:-latest}-${META:-main}
       UNIT_VERSION: ${VERSION:-latest}
-      MESSAGES_PUSHED: 100000000
+      MESSAGES_PUSHED: 1000000000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - /var/lib/docker/containers:/var/lib/docker/containers:rw

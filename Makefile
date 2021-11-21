@@ -1,7 +1,7 @@
 
 META := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null | sed 's:.*/::')
 VERSION := $(shell git fetch --tags --force 2> /dev/null; tags=($$(git tag --sort=-v:refname)) && ([ $${\#tags[@]} -eq 0 ] && echo v0.0.0 || echo $${tags[0]}))
-ARCH := $(shell uname -m | sed 's/x86_64/amd64/')
+ARCH := $(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')
 
 export COMPOSE_DOCKER_CLI_BUILD = 1
 export DOCKER_BUILDKIT = 1
@@ -30,7 +30,7 @@ bundle-binaries-%: %
 		run \
 		--rm package \
 		--arch linux/$^ \
-		--source /go/src/github.com/jancajthaml-openbank/lake \
+		--source /rust/src/github.com/jancajthaml-openbank/lake \
 		--output /project/packaging/bin
 
 .PHONY: bundle-debian-%
@@ -52,14 +52,14 @@ bundle-docker:
 
 .PHONY: bootstrap
 bootstrap:
-	@ARCH=$(ARCH) docker-compose build --force-rm go
+	@ARCH=$(ARCH) docker-compose build --force-rm rust
 
 .PHONY: lint
 lint:
-	@docker-compose \
+	@ARCH=$(ARCH) docker-compose \
 		run \
 		--rm lint \
-		--source /go/src/github.com/jancajthaml-openbank/lake \
+		--source /rust/src/github.com/jancajthaml-openbank/lake \
 	|| :
 
 .PHONY: sec
@@ -67,7 +67,16 @@ sec:
 	@ARCH=$(ARCH) docker-compose \
 		run \
 		--rm sec \
-		--source /go/src/github.com/jancajthaml-openbank/lake \
+		--source /rust/src/github.com/jancajthaml-openbank/lake \
+	|| :
+
+.PHONY: doc
+doc:
+	@ARCH=$(ARCH) docker-compose \
+		run \
+		--rm doc \
+		--source /rust/src/github.com/jancajthaml-openbank/lake \
+		--output /project/reports/docs \
 	|| :
 
 .PHONY: sync
@@ -75,7 +84,7 @@ sync:
 	@ARCH=$(ARCH) docker-compose \
 		run \
 		--rm sync \
-		--source /go/src/github.com/jancajthaml-openbank/lake
+		--source /rust/src/github.com/jancajthaml-openbank/lake
 
 .PHONY: scan
 scan:
@@ -89,7 +98,7 @@ test:
 	@ARCH=$(ARCH) docker-compose \
 		run \
 		--rm test \
-		--source /go/src/github.com/jancajthaml-openbank/lake \
+		--source /rust/src/github.com/jancajthaml-openbank/lake \
 		--output /project/reports/unit-tests
 
 .PHONY: release
