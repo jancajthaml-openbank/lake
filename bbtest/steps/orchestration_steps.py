@@ -5,7 +5,7 @@ from behave import *
 from helpers.shell import execute
 import os
 from helpers.eventually import eventually
-import time
+
 
 @given('package {package} is {operation}')
 def step_impl(context, package, operation):

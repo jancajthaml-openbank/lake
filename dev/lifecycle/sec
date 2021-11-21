@@ -23,7 +23,7 @@ fi
 
 ################################################################################
 
-lifecycle::rus::sec() {
+lifecycle::rust::sec() {
   local dir="$1"
   if [ -z ${dir} -o ! -d ${dir} ] ; then
     return
@@ -33,5 +33,5 @@ lifecycle::rus::sec() {
 
 ################################################################################
 
-lifecycle::rus::sec \
+lifecycle::rust::sec \
   ${SOURCE}
