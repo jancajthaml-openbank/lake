@@ -7,7 +7,7 @@ Remoting message relay
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjancajthaml-openbank%2Flake.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjancajthaml-openbank%2Flake?ref=badge_shield)
 
-[![Rust Report Card](https://rust-reportcard.xuri.me/badge/github.com/jancajthaml-openbank/lake)](https://rust-reportcard.xuri.me/report/github.com/jancajthaml-openbank/lake)(https://codebeat.co/projects/github-com-jancajthaml-openbank-lake-main)
+[![Rust Report Card](https://rust-reportcard.xuri.me/badge/github.com/jancajthaml-openbank/lake)](https://rust-reportcard.xuri.me/report/github.com/jancajthaml-openbank/lake) [![codebeat badge](https://codebeat.co/badges/2a0d56a6-dcb9-4e19-8aa5-bc17927defdc)](https://codebeat.co/projects/github-com-jancajthaml-openbank-lake-main)
 
 Communicates over TCP using NULL mechanism of [ZMTP 3.0](https://rfc.zeromq.org/spec/23/) allowing services to cross-talk without need to bind.
 
