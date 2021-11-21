@@ -84,7 +84,7 @@ pipeline {
                     env.LICENSE = "Apache-2.0"
                     env.PROJECT_NAME = "openbank lake"
                     env.PROJECT_DESCRIPTION = "OpenBanking lake service"
-                    env.PROJECT_AUTHOR = "${env.CHANGE_AUTHOR_DISPLAY_NAME} <${env.CHANGE_AUTHOR_EMAIL}>"
+                    env.PROJECT_AUTHOR = "Jan Cajthaml <jan.cajthaml@gmail.com>"
 
                     currentBuild.displayName = "#${currentBuild.number} - ${env.GIT_BRANCH} (${env.VERSION})"
                 }
