@@ -140,6 +140,7 @@ workflows:
                 - main
     jobs:
       - blackbox-test-amd64
+      - blackbox-test-arm64
 
 # ---------------------------------------------------------------------------- #
 
