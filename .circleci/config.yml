@@ -451,7 +451,7 @@ jobs:
       - run:
           name: Run blackbox tests << parameters.arch >>
           command: |
-            export VERSION=v$(cat /home/circleci/project/VERSION)
+            export VERSION=$(cat /home/circleci/project/VERSION)
             export META=$(cat /home/circleci/project/META)
             export ARCH=<< parameters.arch >>
 
