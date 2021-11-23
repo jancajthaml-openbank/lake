@@ -410,7 +410,8 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  parameters:
+  blackbox-test:
+    parameters:
       arch:
         type: string
     executor: machine-<< parameters.arch >>
