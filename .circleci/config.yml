@@ -80,9 +80,12 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - blackbox-test-amd64:
+      - blackbox-test:
           requires:
             - package-docker
+          matrix:
+            parameters:
+              arch: [amd64, arm64]
           filters:
             branches:
               ignore: /.*/
@@ -90,7 +93,7 @@ workflows:
               only: /^v[0-9]+(\.[0-9]+)*$/
       - release:
           requires:
-            - blackbox-test-amd64
+            - blackbox-test
           filters:
             branches:
               ignore: /.*/
@@ -126,9 +129,12 @@ workflows:
             - unit-test
             - package-debian-amd64
             - package-debian-arm64
-      - blackbox-test-amd64:
+      - blackbox-test:
           requires:
             - package-docker
+          matrix:
+            parameters:
+              arch: [amd64, arm64]
 
   rolling_contract:
     triggers:
@@ -139,7 +145,10 @@ workflows:
               only:
                 - main
     jobs:
-      - blackbox-test-amd64
+      - blackbox-test:
+          matrix:
+            parameters:
+              arch: [amd64, arm64]
 
 # ---------------------------------------------------------------------------- #
 
@@ -149,13 +158,13 @@ executors:
     docker:
       - image: docker.io/alpine/git
 
-  arm64-testbed:
+  machine-arm64:
     machine:
       image: ubuntu-2004:202101-01
       docker_layer_caching: false
       resource_class: arm.medium
 
-  amd64-testbed:
+  machine-amd64:
     machine:
       image: ubuntu-2004:202101-01
       docker_layer_caching: false
@@ -164,12 +173,6 @@ executors:
   debian:
     docker:
       - image: docker.io/jancajthaml/debian-packager:latest
-
-  testbed:
-    machine:
-      image: ubuntu-2004:202101-01
-      docker_layer_caching: false
-      resource_class: medium
 
 # ---------------------------------------------------------------------------- #
 
@@ -226,7 +229,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   deps:
-    executor: amd64-testbed
+    executor: machine-amd64
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
@@ -242,7 +245,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   unit-test:
-    executor: amd64-testbed
+    executor: machine-amd64
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
@@ -259,7 +262,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   compile-amd64:
-    executor: amd64-testbed
+    executor: machine-amd64
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
@@ -279,7 +282,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   compile-arm64:
-    executor: arm64-testbed
+    executor: machine-arm64
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
@@ -407,12 +410,15 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  blackbox-test-amd64:
-    executor: amd64-testbed
+  blackbox-test:
+    parameters:
+      arch:
+        type: string
+    executor: machine-<< parameters.arch >>
     working_directory: /home/circleci/project
     steps:
       - checkout
-      - run: docker pull docker.io/jancajthaml/bbtest:amd64
+      - run: docker pull docker.io/jancajthaml/bbtest:<< parameters.arch >>
       - run:
           name: Update VERSION + META
           command: |
@@ -435,7 +441,7 @@ jobs:
           command: |
             export VERSION=v$(cat /home/circleci/project/VERSION)
             export META=$(cat /home/circleci/project/META)
-            export ARCH=amd64
+            export ARCH=<< parameters.arch >>
 
             docker-compose up -d bbtest
             docker exec -t $(docker-compose ps -q bbtest) python3 /opt/app/bbtest/main.py
