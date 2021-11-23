@@ -128,6 +128,9 @@ workflows:
             - compile-arm64
             - versions
       - package-docker:
+          matrix:
+            parameters:
+              arch: [amd64, arm64]
           requires:
             - unit-test
             - package-debian-amd64
