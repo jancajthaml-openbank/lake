@@ -52,7 +52,7 @@ def step_impl(context):
 @given('unit "{unit}" is running')
 @then('unit "{unit}" is running')
 def unit_running(context, unit):
-  @eventually(120)
+  @eventually(10)
   def wait_for_unit_state_change():
     (code, result, error) = execute(["systemctl", "show", "-p", "SubState", unit])
     assert code == 'OK', str(result) + ' ' + str(error)
@@ -64,7 +64,7 @@ def unit_running(context, unit):
 @given('unit "{unit}" is not running')
 @then('unit "{unit}" is not running')
 def unit_not_running(context, unit):
-  @eventually(120)
+  @eventually(10)
   def wait_for_unit_state_change():
     (code, result, error) = execute(["systemctl", "show", "-p", "SubState", unit])
     assert code == 'OK', str(result) + ' ' + str(error)
