@@ -23,7 +23,7 @@ class ZMQHelper(threading.Thread):
     self.__sub = ctx.socket(zmq.SUB)
     self.__sub.connect(self.__sub_url)
     self.__sub.setsockopt(zmq.SUBSCRIBE, ''.encode())
-    self.__sub.set_hwm(0)
+    self.__sub.set_hwm(100)
 
     self.__push = ctx.socket(zmq.PUSH)
     self.__push.connect(self.__push_url)

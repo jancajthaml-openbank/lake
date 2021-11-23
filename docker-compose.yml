@@ -100,7 +100,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - /var/lib/docker/containers:/var/lib/docker/containers:rw
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - .:/opt/app
+      - .:/opt/app:delegated
     working_dir: /opt/app
 
   # -------------------------------------------------------------------------- #

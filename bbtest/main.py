@@ -9,7 +9,6 @@ from helpers.shell import execute
 
 
 if __name__ == "__main__":
-
   cwd = os.path.dirname(os.path.abspath(__file__))
 
   args = [
@@ -18,13 +17,13 @@ if __name__ == "__main__":
     '--no-junit',
     '-f json',
     '-o {}/../reports/blackbox-tests/behave/results.json'.format(cwd),
-  ]
+  ] + sys.argv[1:]
 
   if str(os.environ.get('CI', 'false')) == 'false':
     args.append('-f pretty')
     args.append('--tags=~@wip')
   else:
-    args.append('-f progress3')
+    args.append('-f behave_plain_color_formatter:PlainColorFormatter')
     args.append('--tags=~@wip')
     args.append('--quiet')
 

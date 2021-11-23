@@ -15,9 +15,11 @@ LimitNPROC=infinity
 LimitCORE=infinity
 Restart=always
 RestartSec=0
-TimeoutStartSec=0
-SuccessExitStatus=2
-KillMode=process
+TimeoutStartSec=1
+TimeoutStopSec=3
+KillMode=control-group
+SuccessExitStatus=0 SIGTERM
+RestartKillSignal=SIGTERM
 KillSignal=SIGTERM
 
 [Install]
