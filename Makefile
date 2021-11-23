@@ -16,13 +16,9 @@ all: bootstrap sync test package bbtest perf
 
 .PHONY: package
 package:
-	@$(MAKE) package-$(ARCH)
-	@$(MAKE) bundle-docker
-
-.PHONY: package-%
-package-%: %
-	@$(MAKE) bundle-binaries-$^
-	@$(MAKE) bundle-debian-$^
+	@$(MAKE) bundle-binaries-$(ARCH)
+	@$(MAKE) bundle-debian-$(ARCH)
+	@$(MAKE) bundle-docker-$(ARCH)
 
 .PHONY: bundle-binaries-%
 bundle-binaries-%: %
@@ -43,11 +39,11 @@ bundle-debian-%: %
 		--pkg lake \
 		--source /project/packaging
 
-.PHONY: bundle-docker
-bundle-docker:
+.PHONY: bundle-docker-%
+bundle-docker-%: %
 	@docker build \
-		-t openbank/lake:$(VERSION)-$(META) \
-		-f packaging/docker/Dockerfile \
+		-t openbank/lake:$(VERSION)-$^.$(META) \
+		-f packaging/docker/$^/Dockerfile \
 		.
 
 .PHONY: bootstrap
