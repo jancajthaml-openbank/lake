@@ -93,7 +93,7 @@ services:
   bbtest:
     image: jancajthaml/bbtest:${ARCH}
     environment:
-      IMAGE_VERSION: ${VERSION:-latest}-${META:-main}
+      IMAGE_VERSION: ${VERSION:-latest}-${ARCH}.${META:-main}
       UNIT_VERSION: ${VERSION:-latest}
       CI: ${CI:-false}
     volumes:
@@ -108,7 +108,7 @@ services:
   perf:
     image: jancajthaml/bbtest:${ARCH}
     environment:
-      IMAGE_VERSION: ${VERSION:-latest}-${META:-main}
+      IMAGE_VERSION: ${VERSION:-latest}-${ARCH}.${META:-main}
       UNIT_VERSION: ${VERSION:-latest}
       MESSAGES_PUSHED: 1000000000
     volumes:
