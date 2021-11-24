@@ -22,7 +22,7 @@ package:
 
 .PHONY: bundle-binaries-%
 bundle-binaries-%: %
-	@ARCH=$(ARCH) docker-compose \
+	@ARCH=$(ARCH) META=$(META) VERSION=$(VERSION) docker-compose \
 		run \
 		--rm package \
 		--arch linux/$^ \
@@ -31,7 +31,7 @@ bundle-binaries-%: %
 
 .PHONY: bundle-debian-%
 bundle-debian-%: %
-	@ARCH=$(ARCH) docker-compose \
+	@ARCH=$(ARCH) META=$(META) VERSION=$(VERSION) docker-compose \
 		run \
 		--rm debian-package \
 		--version $(VERSION) \
@@ -42,17 +42,17 @@ bundle-debian-%: %
 .PHONY: bundle-docker-%
 bundle-docker-%: %
 	@docker build \
-		-t openbank/lake:$(VERSION)-$^.$(META) \
+		-t openbank/lake:$^-$(VERSION).$(META) \
 		-f packaging/docker/$^/Dockerfile \
 		.
 
 .PHONY: bootstrap
 bootstrap:
-	@ARCH=$(ARCH) docker-compose build --force-rm rust
+	@ARCH=$(ARCH) META=$(META) VERSION=$(VERSION) docker-compose build --force-rm rust
 
 .PHONY: lint
 lint:
-	@ARCH=$(ARCH) docker-compose \
+	@ARCH=$(ARCH) META=$(META) VERSION=$(VERSION) docker-compose \
 		run \
 		--rm lint \
 		--source /rust/src/github.com/jancajthaml-openbank/lake \
@@ -60,7 +60,7 @@ lint:
 
 .PHONY: sec
 sec:
-	@ARCH=$(ARCH) docker-compose \
+	@ARCH=$(ARCH) META=$(META) VERSION=$(VERSION) docker-compose \
 		run \
 		--rm sec \
 		--source /rust/src/github.com/jancajthaml-openbank/lake \
@@ -68,7 +68,7 @@ sec:
 
 .PHONY: doc
 doc:
-	@ARCH=$(ARCH) docker-compose \
+	@ARCH=$(ARCH) META=$(META) VERSION=$(VERSION) docker-compose \
 		run \
 		--rm doc \
 		--source /rust/src/github.com/jancajthaml-openbank/lake \
@@ -77,21 +77,22 @@ doc:
 
 .PHONY: sync
 sync:
-	@ARCH=$(ARCH) docker-compose \
+	@ARCH=$(ARCH) META=$(META) VERSION=$(VERSION) docker-compose \
 		run \
 		--rm sync \
 		--source /rust/src/github.com/jancajthaml-openbank/lake
 
-.PHONY: scan
-scan:
+.PHONY: scan-%
+scan-%: %
 	docker scan \
-	  openbank/lake:$(VERSION)-$(META) \
-	  --file ./packaging/docker/Dockerfile \
+	  openbank/vault:$^-$(VERSION).$(META) \
+	  --file ./packaging/docker/$^/Dockerfile \
 	  --exclude-base
+
 
 .PHONY: test
 test:
-	@ARCH=$(ARCH) docker-compose \
+	@ARCH=$(ARCH) META=$(META) VERSION=$(VERSION) docker-compose \
 		run \
 		--rm test \
 		--source /rust/src/github.com/jancajthaml-openbank/lake \
@@ -99,7 +100,7 @@ test:
 
 .PHONY: release
 release:
-	@ARCH=$(ARCH) docker-compose \
+	@ARCH=$(ARCH) META=$(META) VERSION=$(VERSION) docker-compose \
 		run \
 		--rm release \
 		--version $(VERSION) \
