@@ -9,7 +9,7 @@ def dockerOptions() {
     options += "--label 'org.opencontainers.image.authors=${env.PROJECT_AUTHOR}' "
     options += "--label 'org.opencontainers.image.title=${env.PROJECT_NAME}' "
     options += "--label 'org.opencontainers.image.description=${env.PROJECT_DESCRIPTION}' "
-    options += "-f packaging/docker/Dockerfile "
+    options += "-f packaging/docker/amd64/Dockerfile "
     options += "."
     return options
 }
@@ -227,7 +227,7 @@ pipeline {
         stage('Package Docker') {
             steps {
                 script {
-                    DOCKER_IMAGE = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:${env.VERSION}", dockerOptions())
+                    DOCKER_IMAGE = docker.build("${env.ARTIFACTORY_DOCKER_REGISTRY}/docker-local/openbank/lake:amd64-${env.VERSION}", dockerOptions())
                 }
             }
         }
