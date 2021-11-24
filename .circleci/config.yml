@@ -381,7 +381,7 @@ jobs:
       - restore_cache:
           key: versions-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
-          name: Package for docker << parameters.arch >>
+          name: Publish << parameters.arch >> to docker.io
           command: |
             export VERSION=$(cat /home/circleci/project/VERSION)
             export META=$(cat /home/circleci/project/META)
@@ -390,33 +390,25 @@ jobs:
             docker build \
               -t docker.io/openbank/lake:${ARCH}-${VERSION}.${META} \
               -f ./packaging/docker/${ARCH}/Dockerfile .
-            
-            docker build \
-              -t docker.pkg.github.com/jancajthaml-openbank/lake/lake:${ARCH}-${VERSION} \
-              -f ./packaging/docker/${ARCH}/Dockerfile .
-      - run:
-          name: Publish to docker.io
-          command: |
-            export VERSION=$(cat /home/circleci/project/VERSION)
-            export META=$(cat /home/circleci/project/META)
-            export ARCH=<< parameters.arch >>
 
             echo ${DOCKER_PASSWORD} | docker login docker.io -u ${DOCKER_USER} --password-stdin
 
-            docker push \
-              docker.io/openbank/lake:${ARCH}-${VERSION}.${META}
+            docker push docker.io/openbank/lake:${ARCH}-${VERSION}.${META}
 
             rm -f /home/circleci/.docker/config.json
       - run:
-          name: Publish to docker.pkg.github.com
+          name: Publish << parameters.arch >> to docker.pkg.github.com
           command: |
             export VERSION=$(cat /home/circleci/project/VERSION)
             export ARCH=<< parameters.arch >>
 
+            docker build \
+              -t docker.pkg.github.com/jancajthaml-openbank/lake/lake:${ARCH}-${VERSION} \
+              -f ./packaging/docker/${ARCH}/Dockerfile .
+
             echo ${GITHUB_RELEASE_TOKEN} | docker login docker.pkg.github.com -u ${DOCKER_USER} --password-stdin
 
-            docker push \
-              docker.pkg.github.com/jancajthaml-openbank/lake/lake:${ARCH}-${VERSION}
+            docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake:${ARCH}-${VERSION}
 
             rm -f /home/circleci/.docker/config.json
 
