@@ -26,6 +26,8 @@ def after_scenario(context, scenario):
 
 def before_all(context):
   context.log = logger()
+  context.log.info('')
+  context.log.info('  (START)')
   context.unit = UnitHelper(context)
   context.zmq = ZMQHelper()
   context.statsd = StatsdHelper()
@@ -36,6 +38,9 @@ def before_all(context):
 
 
 def after_all(context):
+  context.log.info('')
+  context.log.info('  (END)')
+  context.log.info('')
   context.unit.teardown()
   context.zmq.stop()
   context.statsd.stop()
