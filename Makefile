@@ -107,7 +107,6 @@ scan-%: %
 		--file ./packaging/docker/$^/Dockerfile \
 		--exclude-base
 
-
 .PHONY: test
 test:
 	@\
