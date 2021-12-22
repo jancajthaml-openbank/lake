@@ -245,7 +245,8 @@ jobs:
       - run:
           name: Sync lake dependencies
           command: |
-            docker-compose run --rm sync --source /rust/src/github.com/jancajthaml-openbank/lake
+            docker-compose run --rm sync \
+              --source /rust/src/github.com/jancajthaml-openbank/lake
       - save_cache:
           key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
@@ -256,6 +257,8 @@ jobs:
   unit-test:
     executor: machine-amd64
     working_directory: /home/circleci/project
+    environment:
+      ARCH: amd64
     steps:
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -263,7 +266,10 @@ jobs:
           key: dependencies-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Unit test lake
-          command: make test
+          command: |
+            docker-compose run --rm test \
+              --source /rust/src/github.com/jancajthaml-openbank/lake \
+              --output /project/reports/unit-tests
           no_output_timeout: 5m
       - store_test_results:
           path: /home/circleci/project/reports/unit-tests
@@ -273,6 +279,8 @@ jobs:
   compile-amd64:
     executor: machine-amd64
     working_directory: /home/circleci/project
+    environment:
+      ARCH: amd64
     steps:
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -281,7 +289,11 @@ jobs:
       - run: docker pull docker.io/jancajthaml/rust:amd64
       - run:
           name: Compile lake binary
-          command: make bundle-binaries-amd64
+          command: |
+            docker-compose run --rm package \
+              --arch linux/amd64 \
+              --source /rust/src/github.com/jancajthaml-openbank/lake \
+              --output /project/packaging/bin
           no_output_timeout: 5m
       - save_cache:
           key: binaries-amd64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -293,6 +305,8 @@ jobs:
   compile-arm64:
     executor: machine-arm64
     working_directory: /home/circleci/project
+    environment:
+      ARCH: arm64
     steps:
       - restore_cache:
           key: code-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
@@ -301,7 +315,11 @@ jobs:
       - run: docker pull docker.io/jancajthaml/rust:arm64
       - run:
           name: Compile lake binary
-          command: make bundle-binaries-arm64
+          command: |
+            docker-compose run --rm package \
+              --arch linux/arm64 \
+              --source /rust/src/github.com/jancajthaml-openbank/lake \
+              --output /project/packaging/bin
           no_output_timeout: 5m
       - save_cache:
           key: binaries-arm64-{{ .Environment.CIRCLE_TAG }}-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
