@@ -125,7 +125,7 @@ fn setup_pull_socket(ctx: &Context, port: i32) -> Result<Socket, String> {
         Ok(_) => {}
         Err(_) => return Err("unable to set PULL socket ZMQ_RCVHWM option to 0".to_owned()),
     };
-    match puller.bind(&format!("tcp://127.0.0.1:{}", port)) {
+    match puller.bind(&format!("tcp://0.0.0.0:{}", port)) {
         Ok(_) => Ok(puller),
         Err(_) => Err("unable to bind PULL socket".to_owned()),
     }
@@ -156,7 +156,7 @@ fn setup_pub_socket(ctx: &Context, port: i32) -> Result<Socket, String> {
         Ok(_) => {}
         Err(_) => return Err("unable to set PUB socket ZMQ_XPUB_NODROP option to 1".to_owned()),
     };
-    match publisher.bind(&format!("tcp://127.0.0.1:{}", port)) {
+    match publisher.bind(&format!("tcp://0.0.0.0:{}", port)) {
         Ok(_) => Ok(publisher),
         Err(_) => Err("unable to bind PUB socket".to_owned()),
     }
