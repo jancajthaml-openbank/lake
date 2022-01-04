@@ -209,7 +209,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     options = """
-                        |-e IMAGE_VERSION=${env.VERSION}
+                        |-e IMAGE_VERSION=amd64-${env.VERSION}
                         |-e UNIT_VERSION=${env.VERSION}
                         |--volumes-from=${cid}
                         |-v /var/run/docker.sock:/var/run/docker.sock:rw

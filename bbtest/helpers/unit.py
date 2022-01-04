@@ -71,8 +71,11 @@ class UnitHelper(object):
     self.binary = '{}/packaging/bin/lake_{}_{}.deb'.format(cwd, self.debian_version, self.arch)
 
     if os.path.exists(self.binary):
+      print('artifact exists using exising')
       self.install(self.binary)
       return
+
+    print('artifact does not exists, downloading image')
 
     os.makedirs(os.path.dirname(self.binary), exist_ok=True)
 
