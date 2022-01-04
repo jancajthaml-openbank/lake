@@ -27,7 +27,7 @@ this.__progress_running = False
 
 termios.tcsetattr(fd, termios.TCSANOW, new)
 
-__TTY = sys.stdout.isatty() and str(os.environ.get('CI', 'false')) == 'true'
+__TTY = str(os.environ.get('CI', 'false')) == 'true'
 
 if not __TTY:
   print()
