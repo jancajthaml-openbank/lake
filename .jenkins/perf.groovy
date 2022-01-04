@@ -75,7 +75,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     options = """
-                        |-e IMAGE_VERSION=${params.VERSION}
+                        |-e IMAGE_VERSION=amd64-${params.VERSION}
                         |-e UNIT_VERSION=${params.VERSION}
                         |-e MESSAGES_PUSHED=${params.MESSAGES_RELAYED}
                         |-e CI=true
