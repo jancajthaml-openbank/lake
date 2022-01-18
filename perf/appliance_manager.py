@@ -13,7 +13,6 @@ import os
 class ApplianceManager(object):
 
   def __init__(self):
-    self.store = {}
     self.units = {}
     self.services = []
 
