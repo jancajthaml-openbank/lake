@@ -36,6 +36,7 @@ class UnitHelper(object):
     assert meta, 'META not provided'
 
     package = Package('lake')
+
     cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
 
     assert package.download(version, meta, '{}/packaging/bin'.format(cwd)), 'unable to download package lake'
