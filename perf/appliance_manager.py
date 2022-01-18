@@ -2,7 +2,7 @@
 
 import docker
 from utils import info, print_daemon
-from helpers.shell import execute
+from openbank_testkit import Shell
 from unit.lake import Lake
 import platform
 import tarfile
@@ -33,14 +33,14 @@ class ApplianceManager(object):
     self.__download()
 
   def __install(self, filename):
-    (code, result, error) = execute([
+    (code, result, error) = Shell.run([
       "apt-get", "install", "-f", "-qq", "-o=Dpkg::Use-Pty=0", "-o=Dpkg::Options::=--force-confdef", "-o=Dpkg::Options::=--force-confnew", filename
     ])
 
     if code != 0:
       raise RuntimeError('code: {}, stdout: [{}], stderr: [{}]'.format(code, result, error))
 
-    (code, result, error) = execute([
+    (code, result, error) = Shell.run([
       "systemctl", "-t", "service", "--all", "--no-legend"
     ])
 
