@@ -75,8 +75,8 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     options = """
-                        |-e IMAGE_VERSION=amd64-${params.VERSION}
-                        |-e UNIT_VERSION=${params.VERSION}
+                        |-e VERSION=${params.VERSION}
+                        |-e META=jenkins
                         |-e MESSAGES_PUSHED=${params.MESSAGES_RELAYED}
                         |-e CI=true
                         |--volumes-from=${cid}

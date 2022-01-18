@@ -94,8 +94,8 @@ services:
     image: jancajthaml/bbtest:${ARCH}
     tty: true
     environment:
-      IMAGE_VERSION: ${ARCH}-${VERSION}.${META}
-      UNIT_VERSION: ${VERSION}
+      VERSION: ${VERSION}
+      META: ${META}
       CI: ${CI:-false}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw
@@ -110,8 +110,8 @@ services:
     image: jancajthaml/bbtest:${ARCH}
     tty: true
     environment:
-      IMAGE_VERSION: ${ARCH}-${VERSION}.${META}
-      UNIT_VERSION: ${VERSION}
+      VERSION: ${VERSION}
+      META: ${META}
       MESSAGES_PUSHED: 1000000000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw

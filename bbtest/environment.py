@@ -5,7 +5,7 @@ import os
 from helpers.unit import UnitHelper
 from helpers.logger import logger
 from helpers.zmq import ZMQHelper
-from helpers.statsd import StatsdHelper
+from openbank_testkit import StatsdMock
 
 
 def before_feature(context, feature):
@@ -30,7 +30,7 @@ def before_all(context):
   context.log.info('  (START)')
   context.unit = UnitHelper(context)
   context.zmq = ZMQHelper()
-  context.statsd = StatsdHelper()
+  context.statsd = StatsdMock()
   context.statsd.start()
   context.zmq.start()
   context.unit.configure()
