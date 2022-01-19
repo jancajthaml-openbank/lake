@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import tarfile
-import tempfile
-import errno
 import os
-import subprocess
 from openbank_testkit import Shell, Package, Platform
 
 
