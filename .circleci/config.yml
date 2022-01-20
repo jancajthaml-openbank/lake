@@ -101,7 +101,10 @@ workflows:
       - unit-test:
           requires:
             - deps
-      - compile-amd64:
+      - compile:
+          matrix:
+            parameters:
+              arch: [amd64, arm64]
           requires:
             - deps
       - compile:
