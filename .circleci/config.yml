@@ -52,18 +52,12 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - package-debian-amd64:
+      - package-debian:
+          matrix:
+            parameters:
+              arch: [amd64, arm64]
           requires:
-            - compile-amd64
-            - versions
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-      - package-debian-arm64:
-          requires:
-            - compile-arm64
+            - compile-<< matrix.arch >>
             - versions
           filters:
             branches:
@@ -75,8 +69,7 @@ workflows:
             parameters:
               arch: [amd64, arm64]
           requires:
-            - package-debian-amd64
-            - package-debian-arm64
+            - package-debian-<< matrix.arch >>
           filters:
             branches:
               ignore: /.*/
@@ -119,21 +112,19 @@ workflows:
       - compile-arm64:
           requires:
             - deps
-      - package-debian-amd64:
+      - package-debian:
+          matrix:
+            parameters:
+              arch: [amd64, arm64]
           requires:
-            - compile-amd64
-            - versions
-      - package-debian-arm64:
-          requires:
-            - compile-arm64
+            - compile-<< matrix.arch >>
             - versions
       - blackbox-test:
           matrix:
             parameters:
               arch: [amd64, arm64]
           requires:
-            - package-debian-amd64
-            - package-debian-arm64
+            - package-debian-<< matrix.arch >>
       - publish:
           matrix:
             parameters:
@@ -327,13 +318,16 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   package-debian-amd64:
+    parameters:
+      arch:
+        type: string
     executor: debian
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
           key: code-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
-          key: binaries-amd64-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: binaries-<< parameters.arch >>-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           key: versions-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
@@ -341,40 +335,13 @@ jobs:
           command: |
             VERSION=$(cat /home/circleci/project/VERSION)
             /home/circleci/project/dev/lifecycle/debian \
-              --arch amd64 \
+              --arch << parameters.arch >> \
               --pkg lake \
               --version ${VERSION} \
               --source /home/circleci/project/packaging
           no_output_timeout: 5m
       - save_cache:
-          key: debian-amd64-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - /home/circleci/project/packaging/bin
-
-  # -------------------------------------------------------------------------- #
-
-  package-debian-arm64:
-    executor: debian
-    working_directory: /home/circleci/project
-    steps:
-      - restore_cache:
-          key: code-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - restore_cache:
-          key: binaries-arm64-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - restore_cache:
-          key: versions-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Package for debian
-          command: |
-            VERSION=$(cat /home/circleci/project/VERSION)
-            /home/circleci/project/dev/lifecycle/debian \
-              --arch arm64 \
-              --pkg lake \
-              --version ${VERSION} \
-              --source /home/circleci/project/packaging
-          no_output_timeout: 5m
-      - save_cache:
-          key: debian-arm64-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: debian-<< parameters.arch >>-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - /home/circleci/project/packaging/bin
 
