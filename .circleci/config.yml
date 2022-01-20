@@ -400,7 +400,8 @@ jobs:
 
             echo ${DOCKER_PASSWORD} | docker login docker.io -u ${DOCKER_USER} --password-stdin
 
-            docker push docker.io/openbank/lake:${ARCH}-${VERSION}.${META}
+            docker push docker.io/openbank/lake:amd64-${VERSION}.${META}
+            docker push docker.io/openbank/lake:arm64-${VERSION}.${META}
 
             rm -f /home/circleci/.docker/config.json
       - run:
@@ -413,7 +414,8 @@ jobs:
 
             echo ${GITHUB_RELEASE_TOKEN} | docker login docker.pkg.github.com -u ${DOCKER_USER} --password-stdin
 
-            docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake:${ARCH}-${VERSION}
+            docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake:amd64-${VERSION}
+            docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake:arm64-${VERSION}
 
             rm -f /home/circleci/.docker/config.json
 
