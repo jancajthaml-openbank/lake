@@ -317,7 +317,7 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  package-debian-amd64:
+  package-debian:
     parameters:
       arch:
         type: string
