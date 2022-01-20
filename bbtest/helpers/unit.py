@@ -3,7 +3,7 @@
 
 import os
 from openbank_testkit import Shell, Package, Platform
-
+from systemd import journal
 
 class UnitHelper(object):
 
@@ -49,22 +49,27 @@ class UnitHelper(object):
     with open('/etc/lake/conf.d/init.conf', 'w') as fd:
       fd.write(str(os.linesep).join("LAKE_{!s}={!s}".format(k, v) for (k, v) in options.items()))
 
+  def __fetch_logs(self, unit=None):
+    reader = journal.Reader()
+    reader.this_boot()
+    reader.log_level(journal.LOG_DEBUG)
+    if unit:
+      reader.add_match(_SYSTEMD_UNIT=unit)
+    for entry in reader:
+      yield entry['MESSAGE']
+
   def collect_logs(self):
     cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
-
     os.makedirs('{}/reports/blackbox-tests/logs'.format(cwd), exist_ok=True)
-
-    (code, result, error) = Shell.run(['journalctl', '-o', 'cat', '--no-pager'])
-    if code == 'OK':
-      with open('{}/reports/blackbox-tests/logs/journal.log'.format(cwd), 'w') as fd:
-        fd.write(result)
-
-    for unit in set(self.__get_systemd_units() + self.units):
-      (code, result, error) = Shell.run(['journalctl', '-o', 'cat', '-u', unit, '--no-pager'])
-      if code != 'OK' or not result:
-        continue
+    with open('{}/reports/blackbox-tests/logs/journal.log'.format(cwd), 'w') as fd:
+      for line in self.__fetch_logs():
+        fd.write(line)
+        fd.write(os.linesep)
+    for unit in set(self.__get_systemd_units() + self.units):      
       with open('{}/reports/blackbox-tests/logs/{}.log'.format(cwd, unit), 'w') as fd:
-        fd.write(result)
+        for line in self.__fetch_logs(unit):
+          fd.write(line)
+          fd.write(os.linesep)
 
   def teardown(self):
     self.collect_logs()
