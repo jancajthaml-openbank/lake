@@ -60,13 +60,15 @@ class UnitHelper(object):
 
   def collect_logs(self):
     cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
-    os.makedirs('{}/reports/blackbox-tests/logs'.format(cwd), exist_ok=True)
-    with open('{}/reports/blackbox-tests/logs/journal.log'.format(cwd), 'w') as fd:
+
+    logs_dir = '{}/reports/blackbox-tests/logs'.format(cwd)
+    os.makedirs(logs_dir, exist_ok=True)
+    with open('{}/journal.log'.format(logs_dir), 'w') as fd:
       for line in self.__fetch_logs():
         fd.write(line)
         fd.write(os.linesep)
     for unit in set(self.__get_systemd_units() + self.units):      
-      with open('{}/reports/blackbox-tests/logs/{}.log'.format(cwd, unit), 'w') as fd:
+      with open('{}/{}.log'.format(logs_dir, unit), 'w') as fd:
         for line in self.__fetch_logs(unit):
           fd.write(line)
           fd.write(os.linesep)
