@@ -36,15 +36,10 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - compile-amd64:
-          requires:
-            - deps
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-      - compile-arm64:
+      - compile:
+          matrix:
+            parameters:
+              arch: [amd64, arm64]
           requires:
             - deps
           filters:
@@ -109,7 +104,10 @@ workflows:
       - compile-amd64:
           requires:
             - deps
-      - compile-arm64:
+      - compile:
+          matrix:
+            parameters:
+              arch: [amd64, arm64]
           requires:
             - deps
       - package-debian:
@@ -291,27 +289,30 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  compile-arm64:
-    executor: machine-arm64
+  compile:
+    parameters:
+      arch:
+        type: string
+    executor: machine-<< parameters.arch >>
     working_directory: /home/circleci/project
     environment:
-      ARCH: arm64
+      ARCH: << parameters.arch >>
     steps:
       - restore_cache:
           key: code-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           key: dependencies-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run: docker pull docker.io/jancajthaml/rust:arm64
+      - run: docker pull docker.io/jancajthaml/rust:<< parameters.arch >>
       - run:
           name: Compile lake binary
           command: |
             docker-compose run --rm package \
-              --arch linux/arm64 \
+              --arch linux/<< parameters.arch >> \
               --source /rust/src/github.com/jancajthaml-openbank/lake \
               --output /project/packaging/bin
           no_output_timeout: 5m
       - save_cache:
-          key: binaries-arm64-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: binaries-<< parameters.arch >>-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - /home/circleci/project/packaging/bin
 
