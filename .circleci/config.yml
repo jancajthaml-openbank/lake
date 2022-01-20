@@ -165,6 +165,10 @@ executors:
     docker:
       - image: docker.io/alpine/git
 
+  docker:
+    docker:
+      - image: docker.io/library/docker
+
   machine-arm64:
     machine:
       image: ubuntu-2004:202111-01
@@ -369,7 +373,7 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   publish:
-    executor: git
+    executor: docker
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
