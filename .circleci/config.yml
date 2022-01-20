@@ -167,7 +167,7 @@ executors:
 
   docker:
     docker:
-      - image: docker.io/library/docker
+      - image: docker.io/amd64/docker
 
   machine-arm64:
     machine:
@@ -382,6 +382,8 @@ jobs:
           key: docker-arm64-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           key: docker-amd64-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+      - setup_remote_docker:
+          version: 19.03.13
       - run:
           name: Restore docker image
           command: |
