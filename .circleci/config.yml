@@ -70,12 +70,11 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - package-docker:
+      - blackbox-test:
           matrix:
             parameters:
               arch: [amd64, arm64]
           requires:
-            - unit-test
             - package-debian-amd64
             - package-debian-arm64
           filters:
@@ -83,12 +82,13 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - blackbox-test:
+      - publish:
           matrix:
             parameters:
               arch: [amd64, arm64]
           requires:
-            - package-docker
+            - unit-test
+            - blackbox-test
           filters:
             branches:
               ignore: /.*/
@@ -96,7 +96,7 @@ workflows:
               only: /^v[0-9]+(\.[0-9]+)*$/
       - release:
           requires:
-            - blackbox-test
+            - publish
           filters:
             branches:
               ignore: /.*/
@@ -127,20 +127,20 @@ workflows:
           requires:
             - compile-arm64
             - versions
-      - package-docker:
-          matrix:
-            parameters:
-              arch: [amd64, arm64]
-          requires:
-            - unit-test
-            - package-debian-amd64
-            - package-debian-arm64
       - blackbox-test:
           matrix:
             parameters:
               arch: [amd64, arm64]
           requires:
-            - package-docker
+            - package-debian-amd64
+            - package-debian-arm64
+      - publish:
+          matrix:
+            parameters:
+              arch: [amd64, arm64]
+          requires:
+            - unit-test
+            - blackbox-test
 
   rolling_contract:
     triggers:
@@ -380,7 +380,7 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  package-docker:
+  publish:
     parameters:
       arch:
         type: string
@@ -437,6 +437,8 @@ jobs:
     working_directory: /home/circleci/project
     steps:
       - checkout
+      - restore_cache:
+          key: debian-<< parameters.arch >>-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
       - run: docker pull docker.io/jancajthaml/bbtest:<< parameters.arch >>
       - run:
           name: Update VERSION + META
