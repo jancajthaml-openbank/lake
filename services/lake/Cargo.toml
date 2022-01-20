@@ -4,7 +4,7 @@ version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-statsd = { version = "0.14.1" }
+statsd = { version = "0.15.0" }
 log = { version = "0.4.14", features = ["std"] }
 zmq-sys = { version = "0.11.0" }
 libc = { version = "0.2.112" }
