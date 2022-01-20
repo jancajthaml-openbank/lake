@@ -359,7 +359,7 @@ jobs:
               -f ./packaging/docker/<< parameters.arch >>/Dockerfile .
 
             docker save \
-              lake:<< pipeline.git.revision >> \
+              lake:<< parameters.arch >>-<< pipeline.git.revision >> \
               > tmp/docker-lake-<< parameters.arch >>-<< pipeline.git.revision >>.tar
       - save_cache:
           key: docker-<< parameters.arch >>-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
