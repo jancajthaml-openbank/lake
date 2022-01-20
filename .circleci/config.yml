@@ -88,7 +88,7 @@ workflows:
               arch: [amd64, arm64]
           requires:
             - unit-test
-            - blackbox-test
+            - blackbox-test-<< matrix.arch >>
           filters:
             branches:
               ignore: /.*/
@@ -140,7 +140,7 @@ workflows:
               arch: [amd64, arm64]
           requires:
             - unit-test
-            - blackbox-test
+            - blackbox-test-<< matrix.arch >>
 
   rolling_contract:
     triggers:
