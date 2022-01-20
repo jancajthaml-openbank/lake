@@ -107,12 +107,6 @@ workflows:
               arch: [amd64, arm64]
           requires:
             - deps
-      - compile:
-          matrix:
-            parameters:
-              arch: [amd64, arm64]
-          requires:
-            - deps
       - package-debian:
           matrix:
             parameters:
