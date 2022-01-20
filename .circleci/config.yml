@@ -355,12 +355,12 @@ jobs:
             mkdir -p tmp
 
             docker build \
-              -t docker.io/openbank/lake:<< pipeline.git.revision >> \
+              -t docker.io/openbank/lake:<< parameters.arch >>-<< pipeline.git.revision >> \
               -f ./packaging/docker/<< parameters.arch >>/Dockerfile .
 
             docker save \
-              docker.io/openbank/lake:<< pipeline.git.revision >> \
-              > tmp/docker-lake-<< pipeline.git.revision >>.tar
+              lake:<< pipeline.git.revision >> \
+              > tmp/docker-lake-<< parameters.arch >>-<< pipeline.git.revision >>.tar
       - save_cache:
           key: docker-<< parameters.arch >>-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
@@ -381,35 +381,35 @@ jobs:
       - run:
           name: Restore docker image
           command: |
-            docker load < tmp/docker-lake-arm64.tar
-            docker load < tmp/docker-lake-amd64.tar
+            docker load < tmp/docker-lake-arm64-<< pipeline.git.revision >>.tar
+            docker load < tmp/docker-lake-amd64-<< pipeline.git.revision >>.tar
       - run:
           name: Publish to docker.io
           command: |
             export VERSION=$(cat /home/circleci/project/VERSION)
             export META=$(cat /home/circleci/project/META)
 
-            docker images
+            docker tag lake:amd64-<< pipeline.git.revision >> docker.io/openbank/lake:amd64-${VERSION}.${META}
+            docker tag lake:arm64-<< pipeline.git.revision >> docker.io/openbank/lake:arm64-${VERSION}.${META}
 
-            exit 1
+            echo ${DOCKER_PASSWORD} | docker login docker.io -u ${DOCKER_USER} --password-stdin
 
-            #echo ${DOCKER_PASSWORD} | docker login docker.io -u ${DOCKER_USER} --password-stdin
+            docker push docker.io/openbank/lake:${ARCH}-${VERSION}.${META}
 
-            #docker push docker.io/openbank/lake:${ARCH}-${VERSION}.${META}
-
-            #rm -f /home/circleci/.docker/config.json
+            rm -f /home/circleci/.docker/config.json
       - run:
           name: Publish to docker.pkg.github.com
           command: |
             export VERSION=$(cat /home/circleci/project/VERSION)
-            
-            docker load < rook-ceph.tar
 
-            #echo ${GITHUB_RELEASE_TOKEN} | docker login docker.pkg.github.com -u ${DOCKER_USER} --password-stdin
+            docker tag lake:amd64-<< pipeline.git.revision >> docker.pkg.github.com/jancajthaml-openbank/lake/lake:amd64-${VERSION}
+            docker tag lake:arm64-<< pipeline.git.revision >> docker.pkg.github.com/jancajthaml-openbank/lake/lake:arm64-${VERSION}
 
-            #docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake:${ARCH}-${VERSION}
+            echo ${GITHUB_RELEASE_TOKEN} | docker login docker.pkg.github.com -u ${DOCKER_USER} --password-stdin
 
-            #rm -f /home/circleci/.docker/config.json
+            docker push docker.pkg.github.com/jancajthaml-openbank/lake/lake:${ARCH}-${VERSION}
+
+            rm -f /home/circleci/.docker/config.json
 
   # -------------------------------------------------------------------------- #
 
