@@ -355,7 +355,7 @@ jobs:
             mkdir -p tmp
 
             docker build \
-              -t docker.io/openbank/lake:<< parameters.arch >>-<< pipeline.git.revision >> \
+              -t lake:<< parameters.arch >>-<< pipeline.git.revision >> \
               -f ./packaging/docker/<< parameters.arch >>/Dockerfile .
 
             docker save \
