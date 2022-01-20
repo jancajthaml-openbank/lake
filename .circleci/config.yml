@@ -76,7 +76,7 @@ workflows:
               arch: [amd64, arm64]
           requires:
             - unit-test
-            - blackbox-test-<< matrix.arch >>
+            - blackbox-test
           filters:
             branches:
               ignore: /.*/
@@ -126,7 +126,7 @@ workflows:
               arch: [amd64, arm64]
           requires:
             - unit-test
-            - blackbox-test-<< matrix.arch >>
+            - blackbox-test
 
   rolling_contract:
     triggers:
@@ -257,32 +257,6 @@ jobs:
           no_output_timeout: 5m
       - store_test_results:
           path: /home/circleci/project/reports/unit-tests
-
-  # -------------------------------------------------------------------------- #
-
-  compile-amd64:
-    executor: machine-amd64
-    working_directory: /home/circleci/project
-    environment:
-      ARCH: amd64
-    steps:
-      - restore_cache:
-          key: code-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - restore_cache:
-          key: dependencies-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-      - run: docker pull docker.io/jancajthaml/rust:amd64
-      - run:
-          name: Compile lake binary
-          command: |
-            docker-compose run --rm package \
-              --arch linux/amd64 \
-              --source /rust/src/github.com/jancajthaml-openbank/lake \
-              --output /project/packaging/bin
-          no_output_timeout: 5m
-      - save_cache:
-          key: binaries-amd64-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - /home/circleci/project/packaging/bin
 
   # -------------------------------------------------------------------------- #
 
