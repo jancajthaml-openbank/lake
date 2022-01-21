@@ -224,7 +224,7 @@ jobs:
       - run:
           name: Unit test lake
           command: |
-            /project/dev/lifecycle/test \
+            /home/circleci/project/dev/lifecycle/test \
               --source /home/circleci/project/services/lake \
               --output /home/circleci/project/reports/unit-tests
           no_output_timeout: 5m
