@@ -14,12 +14,6 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - versions:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
       - deps:
           requires:
             - checkout
@@ -53,7 +47,6 @@ workflows:
               arch: [amd64, arm64]
           requires:
             - compile-<< matrix.arch >>
-            - versions
           filters:
             branches:
               ignore: /.*/
@@ -65,7 +58,6 @@ workflows:
               arch: [amd64, arm64]
           requires:
             - package-debian-<< matrix.arch >>
-            - versions
           filters:
             branches:
               ignore: /.*/
@@ -104,7 +96,6 @@ workflows:
   commit:
     jobs:
       - checkout
-      - versions
       - deps:
           requires:
             - checkout
@@ -123,14 +114,12 @@ workflows:
               arch: [amd64, arm64]
           requires:
             - compile-<< matrix.arch >>
-            - versions
       - package-docker:
           matrix:
             parameters:
               arch: [amd64, arm64]
           requires:
             - package-debian-<< matrix.arch >>
-            - versions
       - blackbox-test:
           matrix:
             parameters:
@@ -163,11 +152,18 @@ executors:
 
   git:
     docker:
-      - image: docker.io/alpine/git
+      image: docker.io/alpine/git
+      resource_class: small
 
   docker:
     docker:
-      - image: docker.io/amd64/docker
+      image: docker.io/amd64/docker
+      resource_class: small
+
+  debian:
+    docker:
+      image: docker.io/jancajthaml/debian-packager
+      resource_class: small
 
   machine-arm64:
     machine:
@@ -181,10 +177,6 @@ executors:
       docker_layer_caching: false
       resource_class: medium
 
-  debian:
-    docker:
-      - image: docker.io/jancajthaml/debian-packager:latest
-
 # ---------------------------------------------------------------------------- #
 
 jobs:
@@ -192,24 +184,6 @@ jobs:
   # -------------------------------------------------------------------------- #
 
   checkout:
-    executor: git
-    working_directory: /home/circleci/project
-    steps:
-      - checkout
-      - save_cache:
-          key: code-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - /home/circleci/project/.git
-            - /home/circleci/project/dev
-            - /home/circleci/project/services
-            - /home/circleci/project/packaging
-            - /home/circleci/project/Dockerfile
-            - /home/circleci/project/docker-compose.yml
-            - /home/circleci/project/Makefile
-
-  # -------------------------------------------------------------------------- #
-
-  versions:
     executor: git
     working_directory: /home/circleci/project
     steps:
@@ -229,6 +203,16 @@ jobs:
               echo -e "<< pipeline.git.tag >>" | sed -e "s/^v//" > /home/circleci/project/VERSION
               echo -e "main" > /home/circleci/project/META
             fi
+      - save_cache:
+          key: code-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - /home/circleci/project/.git
+            - /home/circleci/project/dev
+            - /home/circleci/project/services
+            - /home/circleci/project/packaging
+            - /home/circleci/project/Dockerfile
+            - /home/circleci/project/docker-compose.yml
+            - /home/circleci/project/Makefile
       - save_cache:
           key: versions-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Environment.CIRCLE_SHA1 }}
           paths:
