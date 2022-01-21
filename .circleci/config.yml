@@ -152,18 +152,18 @@ executors:
 
   git:
     docker:
-      image: docker.io/alpine/git
-      resource_class: small
+      - image: docker.io/alpine/git
+      - resource_class: small
 
   docker:
     docker:
-      image: docker.io/amd64/docker
-      resource_class: small
+      - image: docker.io/amd64/docker
+      - resource_class: small
 
   debian:
     docker:
-      image: docker.io/jancajthaml/debian-packager
-      resource_class: small
+      - image: docker.io/jancajthaml/debian-packager
+      - resource_class: small
 
   machine-arm64:
     machine:
