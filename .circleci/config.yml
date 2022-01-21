@@ -14,17 +14,9 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - dependencies:
-          requires:
-            - checkout
-          filters:
-            branches:
-              only: main
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
       - unit-test:
           requires:
-            - dependencies
+            - checkout
           filters:
             branches:
               ignore: /.*/
@@ -35,7 +27,7 @@ workflows:
             parameters:
               arch: [amd64, arm64]
           requires:
-            - dependencies
+            - checkout
           filters:
             branches:
               ignore: /.*/
@@ -96,18 +88,15 @@ workflows:
   commit:
     jobs:
       - checkout
-      - dependencies:
-          requires:
-            - checkout
       - unit-test:
           requires:
-            - dependencies
+            - checkout
       - compile:
           matrix:
             parameters:
               arch: [amd64, arm64]
           requires:
-            - dependencies
+            - checkout
       - package-debian:
           matrix:
             parameters:
@@ -160,12 +149,7 @@ executors:
       - image: docker.io/amd64/docker
     resource_class: small
 
-  rust-arm64:
-    docker:
-      - image: docker.io/jancajthaml/rust:arm64
-    resource_class: small
-
-  rust-amd64:
+  rust:
     docker:
       - image: docker.io/jancajthaml/rust:amd64
     resource_class: small
@@ -231,41 +215,18 @@ jobs:
 
   # -------------------------------------------------------------------------- #
 
-  dependencies:
-    executor: machine-amd64
-    working_directory: /home/circleci/project
-    environment:
-      ARCH: amd64
-    steps:
-      - restore_cache:
-          key: code-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-<< pipeline.git.revision >>
-      - run:
-          name: Sync lake dependencies
-          command: |
-            docker-compose run \
-              --rm sync \
-              --source /home/circleci/project/services/lake
-      - save_cache:
-          key: dependencies-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-<< pipeline.git.revision >>
-          paths:
-            - /home/circleci/project/services/lake/target
-
-  # -------------------------------------------------------------------------- #
-
   unit-test:
-    executor: rust-amd64
+    executor: rust
     working_directory: /home/circleci/project
     steps:
       - restore_cache:
           key: code-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-<< pipeline.git.revision >>
-      - restore_cache:
-          key: dependencies-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-<< pipeline.git.revision >>
       - run:
           name: Unit test lake
           command: |
-            /home/circleci/project/dev/lifecycle/test \
+            /project/dev/lifecycle/test \
               --source /home/circleci/project/services/lake \
-              --output /project/reports/unit-tests
+              --output /home/circleci/project/reports/unit-tests
           no_output_timeout: 5m
       - store_test_results:
           path: /home/circleci/project/reports/unit-tests
@@ -276,20 +237,21 @@ jobs:
     parameters:
       arch:
         type: string
-    executor: rust-<< parameters.arch >>
+    executor: machine-<< parameters.arch >>
     working_directory: /home/circleci/project
+    environment:
+      ARCH: << parameters.arch >>
     steps:
       - restore_cache:
           key: code-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-<< pipeline.git.revision >>
-      - restore_cache:
-          key: dependencies-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-<< pipeline.git.revision >>
+      - run: docker pull docker.io/jancajthaml/rust:<< parameters.arch >>
       - run:
           name: Compile lake binary
           command: |
-            /home/circleci/project/dev/lifecycle/package \
+            docker-compose run --rm package \
               --arch linux/<< parameters.arch >> \
-              --source /home/circleci/project/services/lake \
-              --output /home/circleci/project/packaging/bin
+              --source /rust/src/github.com/jancajthaml-openbank/lake \
+              --output /project/packaging/bin
           no_output_timeout: 5m
       - save_cache:
           key: binaries-<< parameters.arch >>-<< pipeline.git.tag >>-{{ .Environment.CIRCLE_PROJECT_REPONAME }}-<< pipeline.git.revision >>
