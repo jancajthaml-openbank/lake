@@ -161,15 +161,15 @@ executors:
 
   machine-arm64:
     machine:
-      image: ubuntu-2004:202111-01
-      docker_layer_caching: false
-      resource_class: arm.medium
+      - image: ubuntu-2004:202111-01
+      - docker_layer_caching: false
+    resource_class: arm.medium
 
   machine-amd64:
     machine:
-      image: ubuntu-2004:202111-01
-      docker_layer_caching: false
-      resource_class: medium
+      - image: ubuntu-2004:202111-01
+      - docker_layer_caching: false
+    resource_class: medium
 
 # ---------------------------------------------------------------------------- #
 
