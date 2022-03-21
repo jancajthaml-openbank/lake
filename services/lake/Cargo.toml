@@ -7,7 +7,7 @@ edition = "2021"
 statsd = { version = "0.15.0" }
 log = { version = "0.4.14", features = ["std"] }
 zmq-sys = { version = "0.11.0" }
-libc = { version = "0.2.119" }
+libc = { version = "0.2.121" }
 colored = { version = "1.6.1" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
