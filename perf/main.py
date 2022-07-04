@@ -5,6 +5,7 @@ import os
 import sys
 import json
 import glob
+import traceback
 from functools import partial
 from collections import OrderedDict
 from utils import warn, info, interrupt_stdout, timeit
@@ -14,10 +15,6 @@ from metrics.plot import Graph
 from appliance_manager import ApplianceManager
 from messaging.publisher import Publisher
 from logs.collector import LogsCollector
-
-import multiprocessing
-import traceback
-import time
 
 
 def main():

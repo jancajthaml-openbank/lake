@@ -2,12 +2,6 @@
 
 from helpers.eventually import eventually
 from openbank_testkit import Shell
-import subprocess
-import multiprocessing
-import string
-import threading
-import signal
-import time
 import os
 
 
