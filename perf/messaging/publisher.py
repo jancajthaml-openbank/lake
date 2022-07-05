@@ -3,7 +3,6 @@
 
 import time
 import zmq
-#import zmq.green as zmq
 import math
 import itertools
 from multiprocessing import Process

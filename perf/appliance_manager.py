@@ -3,10 +3,6 @@
 from utils import info, print_daemon
 from openbank_testkit import Shell, Package, Platform
 from unit.lake import Lake
-import platform
-import tarfile
-import tempfile
-import errno
 import os
 
 
@@ -23,7 +19,7 @@ class ApplianceManager(object):
 
     assert version, 'VERSION not provided'
 
-    cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
+    cwd = os.path.realpath('{}/..'.format(os.path.dirname(__file__)))
 
     filename = '{}/packaging/bin/lake_{}_{}.deb'.format(cwd, version, Platform.arch)
 
@@ -55,7 +51,7 @@ class ApplianceManager(object):
 
     package = Package('lake')
 
-    cwd = os.path.realpath('{}/../..'.format(os.path.dirname(__file__)))
+    cwd = os.path.realpath('{}/..'.format(os.path.dirname(__file__)))
 
     assert package.download(version, meta, '{}/packaging/bin'.format(cwd)), 'unable to download package lake'
 

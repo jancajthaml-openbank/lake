@@ -82,7 +82,9 @@ impl Metrics {
 fn mem_bytes() -> f64 {
     if let Ok(me) = procfs::process::Process::myself() {
         if let Ok(page_size) = procfs::page_size() {
-            return (me.stat.rss * page_size) as f64;
+            if let Ok(stat) = me.stat() {
+                return (stat.rss * page_size) as f64;
+            };
         };
     };
     0_f64
