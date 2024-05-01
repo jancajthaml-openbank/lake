@@ -11,7 +11,7 @@ libc = { version = "0.2.154" }
 colored = { version = "1.6.1" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-procfs = { version = "0.15.1" }
+procfs = { version = "0.16.0" }
 
 [profile.dev]
 opt-level = 0
