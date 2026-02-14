@@ -146,3 +146,61 @@ The topology suggests the following ADR area groupings, derived from the deploym
 | 01-platform | Language, build system, compiler, cross-compilation, libzmq linking strategy | Language/runtime, Build system, ZMQ binding, libzmq dependency, Cross-compilation |
 | 02-runtime | Relay loop, threading, atomics, signal handling, shutdown, sd_notify, configuration, logging | Relay loop, Thread management, Cross-thread coordination, POSIX signal handling, systemd sd_notify, Configuration loading, Logging, Metrics client, Memory monitoring |
 | 03-packaging | Debian packaging, Docker images, CI/CD pipeline | Debian packaging, Docker packaging, CI/CD pipeline |
+
+---
+
+## Phase 04.5 — Reduction pass
+
+### Component inventory
+
+Every distinct infrastructure component that the operator must install, configure, monitor, backup, or upgrade — extracted from all 10 ADRs:
+
+| # | Component | Introduced in | Role |
+|---|-----------|---------------|------|
+| 1 | `/usr/bin/lake` (Zig binary) | ADR-01-01, ADR-01-02 | The relay binary — the single deployment artifact |
+| 2 | `libzmq5.so` (shared library) | ADR-01-04 | ZMTP 3.0 messaging substrate (dynamic link) |
+
+That is the complete inventory. No other runtime components are introduced by any ADR. The 02-runtime ADRs (relay loop, lifecycle, threading, observability) describe internal code within the binary — they do not introduce separate processes, daemons, databases, caches, message brokers, or external services. The 03-packaging ADRs describe build-time artifacts (Dockerfiles, CI configs, `.deb` scripts) — not runtime components.
+
+### Challenge each component
+
+| Component | Absorption | Proportionality | Constraint compliance | Topology compliance | Verdict |
+|-----------|-----------|-----------------|----------------------|--------------------|---------| 
+| `/usr/bin/lake` | Cannot be absorbed — it IS the system | Proportional — one binary for one function (relay messages) | Compliant with all constraints: single host, minimal operator, commodity hardware, no internet at runtime, Linux-only, dual-arch, <1s startup, <3s shutdown | Present in topology as the deployment unit | **Keep** |
+| `libzmq5.so` | Could be absorbed by static linking (ADR-01-04 considered and rejected this as default; available as future build flag) | Proportional — the relay's only external dependency, provides the entire ZMTP 3.0 protocol implementation | Compliant: the `.deb` declares the dependency, `apt` manages it, the operator does not configure it manually. Within component budget of 2. | Present in topology | **Keep** — dynamic linking preserves packaging contract. Static linking remains a documented future option. |
+
+### Reduction table
+
+| Component | Current role | Can be absorbed by | Constraint violation | Recommendation | Rationale |
+|-----------|-------------|-------------------|---------------------|----------------|-----------|
+| `/usr/bin/lake` | Relay binary | None — it is the system | None | Keep | The binary is the deployment unit. Cannot be reduced. |
+| `libzmq5.so` | ZMTP protocol library | Could be statically linked into the binary (reducing component count to 1) | None if static; preserves invariant 8 either way | Keep (dynamic) | ADR-01-04 decided dynamic linking to preserve `.deb` dependency contract and enable independent security patching. Static linking available as future build flag but not default. No reduction applied. |
+
+### Coherence check across ADRs
+
+| ADR pair | Contradiction? | Missed elimination? | Verdict |
+|----------|---------------|---------------------|---------|
+| ADR-01-03 (ZMQ binding) ↔ ADR-02-01 (relay loop) | No — 02-01 calls C functions via the `@cImport` decided in 01-03 | No — the topology already eliminated wrapper structs in 01-03 | Clean |
+| ADR-01-04 (dynamic linking) ↔ ADR-03-01 (Debian packaging) | No — 03-01 preserves the `.deb` dependency on libzmq5, consistent with 01-04's dynamic linking decision | No | Clean |
+| ADR-02-02 (lifecycle) ↔ ADR-02-03 (threading) | No — 02-02 defines the shutdown sequence, 02-03 defines the shared state; both reference each other's join order | No | Clean |
+| ADR-02-03 (threading) ↔ ADR-02-04 (observability) | No — 02-04's metrics thread reads the atomic counter defined in 02-03 | Could the metrics thread be eliminated and metrics sent from the relay thread? The relay thread runs a tight blocking loop — adding UDP sends to it would add latency to the hot path (~10-50µs per sendto). The 1-second reporting interval requires a sleep, which cannot happen in the relay loop. Separate thread is justified. | **No elimination** — metrics thread serves a distinct timing requirement incompatible with the relay loop |
+| ADR-02-01 (relay loop) ↔ ADR-02-02 (lifecycle) | No — 02-01's loop breaks on ETERM from 02-02's `zmq_ctx_shutdown` | No | Clean |
+| ADR-01-01 (language) ↔ ADR-03-02 (CI/CD) | No — 03-02 adapts CI for the language decision in 01-01 | No | Clean |
+| ADR-01-02 (build) ↔ ADR-03-01 (packaging) | No — 03-01's packaging consumes the binary produced by 01-02's build system | No | Clean |
+
+No contradictions found. No missed eliminations. The topology's prior elimination of 7 mapping rows (Phase 03.5) was thorough — the ADRs did not re-introduce any eliminated component.
+
+### Final component count
+
+| Metric | Value |
+|--------|-------|
+| Components before reduction | 2 |
+| Components eliminated | 0 |
+| Components merged | 0 |
+| Components after reduction | 2 |
+| Component budget (from constraints) | 2 |
+| Within budget | **Yes** |
+
+### Reduction pass conclusion
+
+No reductions found. The design is already at minimum viable component count (2: binary + shared library). The topology's Phase 03.5 elimination pass removed 7 mapping rows before ADRs were written, and the ADRs respected those eliminations — no eliminated component was reintroduced. The only theoretical reduction (static linking to merge libzmq into the binary, reducing to 1 component) was considered in ADR-01-04 and deliberately deferred to preserve the packaging contract. The 10 ADRs introduce zero additional infrastructure components beyond what the topology defined.
