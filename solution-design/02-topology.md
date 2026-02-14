@@ -43,7 +43,6 @@ The relay operates in a single trust domain. There is one trust boundary: the ho
 | lake binary (PUB socket) | ZMQ subscribers (external) | ZMTP 3.0 / TCP | Arbitrary binary messages (passthrough from PULL) | Subscribers miss messages sent while disconnected (PUB/SUB has no persistence); lake errors on send to slow subscriber (ZMQ_XPUB_NODROP=1) | Outbound |
 | lake binary | StatsD daemon (external) | UDP | StatsD line protocol: counters and gauges with `openbank.lake` prefix | Fire-and-forget — UDP send silently fails if StatsD is unreachable. Relay continues operating. No retry, no queue. | Outbound |
 | lake binary | systemd (PID 1) | Unix datagram | `READY=1`, `STOPPING=1` to `$NOTIFY_SOCKET` | Not applicable — systemd is always local. If the socket is missing, the notify call fails silently and systemd times out, killing the binary. | Outbound |
-| lake binary (relay thread) | lake binary (PULL socket) | ZMTP 3.0 / TCP (loopback) | Empty message (shutdown unblock) | Not applicable — internal loopback | Internal |
 | lake binary | `/proc/self/statm` | Filesystem read | RSS memory in pages | Not applicable — `/proc` is always available on Linux | Internal |
 | systemd | lake binary | POSIX signal | SIGTERM | Not applicable — local process signal | Inbound |
 | Operator / systemd | `/etc/lake/conf.d/init.conf` | Filesystem | Environment variable key=value pairs | Not applicable — local filesystem | Inbound |
