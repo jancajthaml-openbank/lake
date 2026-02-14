@@ -1,0 +1,45 @@
+# Prima Materia — Lake
+
+Lake is a high-performance ZMQ message relay for the OpenBank platform, currently implemented in Rust (edition 2021) as a single binary crate (~400 lines, 9 modules). It receives messages on a ZMQ PULL socket and fans them out via a ZMQ PUB socket over ZMTP 3.0/TCP, enabling inter-service communication at ~750K messages/sec. The target is a full conversion from Rust to Zig, retaining the identical ZMQ wire protocol, systemd integration, and packaging contracts while improving reliability (eliminating unsafe FFI indirection, strengthening error handling) and performance (reducing allocation overhead, leveraging Zig's comptime and direct C interop).
+
+## Domain capabilities
+
+| Domain | Purpose | Cloud touchpoints |
+|--------|---------|-------------------|
+| Message relay | Receives messages from upstream services via ZMQ PULL and fans them out to downstream subscribers via ZMQ PUB, providing a decoupled communication bus for the OpenBank platform | None |
+| Metrics reporting | Periodically reports message throughput count and process memory usage (RSS) to a StatsD daemon over UDP for operational observability | None |
+| Process lifecycle | Manages daemon startup and graceful shutdown with systemd sd_notify integration (READY/STOPPING) and POSIX signal handling (SIGTERM) | None |
+| Configuration | Loads runtime parameters (ports, log level, StatsD endpoint) from environment variables with sensible defaults; config file watched by systemd for restart-on-change | None |
+| Logging | Structured timestamped log output with ISO-8601 UTC timestamps and colored level indicators to stdout for journald capture | None |
+| Error handling | Maps ZMQ C library errno codes to named error variants with human-readable messages for diagnostics | None |
+
+## Current → desired mapping
+
+| Capability | Current | Desired | ADR | Challenged |
+|-----------|---------|---------|-----|-----------|
+| Language / runtime | Rust 2021 (compiled, no runtime) | Zig (compiled, no runtime) | TBD | necessary — user-directed conversion target |
+| Build system | Cargo (single crate, Cargo.toml/lock) | Zig build system (`build.zig`) | TBD | necessary — Zig requires its own build system |
+| ZMQ binding | `zmq-sys` 0.11.0 (Rust FFI crate wrapping libzmq C API via `pkg-config`) | Zig `@cImport` of libzmq headers (direct C interop, no binding generator) | TBD | necessary — core messaging capability |
+| ZMQ context/socket abstraction | Custom `Context`/`Socket` structs in `socket.rs` with `unsafe` FFI calls and manual Drop | Zig structs with `defer`-based cleanup and direct C function calls (no unsafe boundary) | TBD | necessary — structural code that wraps ZMQ |
+| ZMQ message abstraction | Custom `Message` struct in `message.rs` with unsafe alloc/close | Zig struct with `defer zmq_msg_close` pattern | TBD | necessary — message lifecycle management |
+| ZMQ error handling | Custom `Error` enum in `error.rs` mapping errno ints to named variants via `zmq_strerror` | Zig error set from C errno values, using `@cImport` constants directly | TBD | necessary — error propagation |
+| Relay loop | Blocking `zmq_msg_recv` → `zmq_msg_send` in spawned OS thread (`relay.rs`) | Blocking recv → send in spawned OS thread (Zig `std.Thread`) | TBD | necessary — core relay logic |
+| Metrics client | `statsd` 0.16.0 crate (UDP StatsD) | Zig StatsD UDP client (hand-rolled or minimal dependency) | TBD | necessary — operational observability contract |
+| Memory monitoring | `procfs` 0.15.1 crate (reads `/proc/self/stat` RSS, Linux only) | Direct `/proc/self/statm` read via Zig `std.fs` (no third-party crate) | TBD | necessary — metrics contract requires memory gauge |
+| Logging implementation | Custom `log::Log` trait impl in `logger.rs` using `colored` crate | Zig `std.log` or custom writer with ANSI escape codes | TBD | necessary — operational logging |
+| Coloured terminal output | `colored` 1.6.1 crate | Direct ANSI escape sequences in Zig (no dependency needed) | TBD | questionable — cosmetic; Zig can emit ANSI directly without a library |
+| POSIX signal handling | `libc` 0.2.154 crate (`sigwait`, `signal`, `raise`, `sigfillset`, `sigaddset`) | Zig `std.os.linux` / `std.c` signal functions or direct syscall wrappers | TBD | necessary — daemon lifecycle |
+| Cross-thread coordination | `Arc<AtomicBool>` / `Arc<AtomicUsize>` with `Ordering::Relaxed` | Zig `std.atomic.Value` with `.store`/`.load`/`.fetchAdd` | TBD | necessary — shutdown and metrics coordination |
+| Thread management | `std::thread::spawn` + `JoinHandle` in `Option` + join-on-Drop | `std.Thread.spawn` + `thread.join()` in `deinit` functions | TBD | necessary — relay and metrics threads |
+| systemd sd_notify | Unix datagram to `$NOTIFY_SOCKET` via `std::os::unix::net::UnixDatagram` | Zig `std.net` or `std.os.linux` sendto on Unix socket | TBD | necessary — systemd integration contract |
+| Configuration loading | `std::env::var_os` with fallback helpers in `config.rs` | `std.process.getEnvMap()` or `std.os.getenv` with fallback helpers | TBD | necessary — runtime config |
+| Debian packaging | `.deb` via `dpkg-deb` with systemd units, init.conf, control file | Same `.deb` structure; update binary path and build commands | TBD | necessary — deployment contract |
+| Docker packaging | Debian sid-slim Dockerfiles installing `.deb` | Same Dockerfile structure; install the Zig-built `.deb` | TBD | necessary — deployment contract |
+| CI/CD pipeline | CircleCI + GitHub Actions + Jenkins, using `jancajthaml/rust:{arch}` image | Update CI to use Zig compiler image; adapt build/test/package steps | TBD | necessary — build and release pipeline |
+| Cross-compilation | Cargo targets `x86_64-unknown-linux-gnu` / `aarch64-unknown-linux-gnu` with clang-13 LTO | Zig native cross-compilation (`-target x86_64-linux` / `aarch64-linux`) — no external linker needed | TBD | necessary — multi-arch support |
+| Blackbox tests | Python behave BDD (6 features, ~10 scenarios) testing .deb install, ZMQ relay, metrics, systemd lifecycle | Unchanged — tests exercise the binary externally via ZMQ and systemd, language-agnostic | TBD | necessary — verification contract, but no code conversion needed |
+| Performance tests | Python perf suite pushing 1K–1B messages through ZMQ | Unchanged — exercises the binary externally | TBD | necessary — performance regression gate, but no code conversion needed |
+| libzmq runtime dependency | Dynamic link to `libzmq5 >= 4.3, < 4.4` (Debian package dependency) | Same dynamic link — or optionally static link via Zig build system | TBD | necessary — ZMQ C library is the messaging substrate |
+| Rust formatter config | `.rustfmt.toml` (edition 2018) | Remove; replace with `zig fmt` conventions | TBD | artifact — Rust-specific tooling config |
+| Clippy lint config | `#[allow(clippy::*)]` attributes in source | Remove; Zig has its own compile warnings | TBD | artifact — Rust-specific lint noise |
+| Dependabot cargo config | `.github/dependabot.yml` for cargo ecosystem | Remove or replace with Zig dependency update mechanism | TBD | artifact — Rust-specific dependency management |
